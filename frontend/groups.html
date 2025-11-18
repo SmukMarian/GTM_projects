@@ -306,6 +306,44 @@
         align-items: center;
       }
 
+      .group-projects {
+        margin-top: 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+      }
+
+      .group-project-card {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-muted);
+        align-items: center;
+      }
+
+      .group-project-cover {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+
+      .group-project-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+      }
+
       .space-between {
         justify-content: space-between;
       }
@@ -816,6 +854,46 @@
         selectedGroupId = id;
         const group = groups.find((g) => g.id === id);
         if (!group) return;
+        const related = groupProjects(group.id);
+        const projectsBlock =
+          related.length === 0
+            ? '<p class="muted" style="margin:8px 0 0">В этой группе пока нет проектов.</p>'
+            : `<div class="group-projects">${related
+                .map((project) => {
+                  const cover = projectCoverUrl(project);
+                  const progress = projectStageProgress(project);
+                  const overdue = hasOverdue(project);
+                  return `
+                    <div class="group-project-card">
+                      <img class="group-project-cover" src="${cover || coverPlaceholder}" alt="Обложка проекта" />
+                      <div>
+                        <div class="flex space-between" style="align-items:flex-start">
+                          <div>
+                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap">
+                              <strong>${project.name}</strong>
+                              <span class="chip">${project.market || "Рынок не указан"}</span>
+                              ${project.priority ? `<span class="chip">Приоритет: ${project.priority}</span>` : ""}
+                            </div>
+                            <div class="muted" style="margin-top:2px">Группа: ${group.name} · Бренд: ${project.brand || "—"}</div>
+                          </div>
+                          <span class="badge ${project.status === "archived" ? "archived" : project.status === "closed" ? "closed" : ""}">
+                            ${project.status === "archived" ? "Архив" : project.status === "closed" ? "Закрыт" : "Активен"}
+                          </span>
+                        </div>
+                        <div class="progress-bar" style="margin:8px 0 4px"><div class="progress-fill" style="width:${progress}%"></div></div>
+                        <div class="muted" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+                          <span>Прогресс: ${progress}%</span>
+                          ${overdue ? '<span class="chip warn">⚠️ Просрочки</span>' : ""}
+                          ${project.created_at ? `<span>Создан: ${project.created_at.slice(0, 10)}</span>` : ""}
+                        </div>
+                        <div class="group-project-actions">
+                          <button class="ghost" onclick="window.location.href='/project.html?id=${project.id}'">Перейти в проект</button>
+                          <button class="ghost" onclick="window.location.href='/projects.html?id=${project.id}'">Открыть в списке</button>
+                        </div>
+                      </div>
+                    </div>`;
+                })
+                .join("")}</div>`;
         detailBlock.style.display = "block";
         detailContent.innerHTML = `
           <div class="flex space-between">
@@ -833,6 +911,8 @@
           <div><strong>Описание:</strong> ${group.description || "—"}</div>
           <div><strong>Бренды:</strong> ${renderBrands(group.brands)}</div>
           <div><strong>Пользовательские поля:</strong> ${renderExtra(group.extra_fields)}</div>
+          <h4 style="margin:16px 0 8px">Проекты группы</h4>
+          ${projectsBlock}
         `;
       }
 

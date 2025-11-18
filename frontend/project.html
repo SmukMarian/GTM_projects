@@ -336,6 +336,29 @@
         box-shadow: var(--shadow);
       }
 
+      .modal h3 {
+        margin: 0 0 10px;
+      }
+
+      .modal form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .modal form label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .modal .modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -511,6 +534,38 @@
       .inline-textarea {
         min-height: 34px;
         resize: vertical;
+      }
+
+      .filters-card {
+        margin: 8px 0 14px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-muted);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        align-items: end;
+      }
+
+      .filters-card .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .checkbox-lite {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+      }
+
+      .checkbox-lite input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
       }
 
       .progress-line {
@@ -847,6 +902,22 @@
         gap: 8px;
       }
 
+      .risk-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-weight: 600;
+      }
+
+      .risk-chip.warn {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
       .progress-bar {
         width: 100%;
         height: 10px;
@@ -943,6 +1014,7 @@
                 <strong id="gtm-progress-label">Нет этапов</strong>
               </div>
               <div id="gtm-progress-badge" class="badge">0%</div>
+              <div class="risk-chip" id="project-risk">Риски: нет</div>
             </div>
             <div class="progress-bar" aria-label="Прогресс по GTM">
               <div id="gtm-progress-fill" class="progress-fill" style="width: 0%"></div>
@@ -1060,8 +1132,8 @@
           <button id="taskViewToggle" onclick="toggleTaskView()">Переключить вид: список</button>
         </div>
       </div>
-      <div class="toolbar" style="gap: 16px">
-        <label style="width: 200px">
+      <div class="filters-card">
+        <label>
           Статус
           <select id="taskStatusFilter">
             <option value="all">Все</option>
@@ -1070,7 +1142,7 @@
             <option value="done">Готово</option>
           </select>
         </label>
-        <label style="width: 200px">
+        <label>
           Сроки
           <select id="taskDueFilter">
             <option value="all">Все сроки</option>
@@ -1078,15 +1150,19 @@
             <option value="overdue">Просроченные</option>
           </select>
         </label>
-        <label style="width: 220px">
+        <label>
           GTM-этап
           <select id="taskGtmFilter">
             <option value="">Все этапы</option>
           </select>
         </label>
-        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
+        <label class="checkbox-lite">
           <input type="checkbox" id="taskHideDone" /> Скрыть выполненные
         </label>
+        <div class="actions">
+          <button class="ghost" type="button" onclick="resetTaskFilters()">Сбросить</button>
+          <button class="primary" type="button" onclick="applyTaskFilters()">Применить фильтры</button>
+        </div>
       </div>
       <div id="tasks"></div>
     </div>
@@ -1230,7 +1306,7 @@
           <label style="display: flex; align-items: center; gap: 8px">
             <input type="checkbox" id="stageRisk" /> Отметить риск
           </label>
-          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end">
+          <div class="modal-actions">
             <button type="button" onclick="closeModal()">Отмена</button>
             <button class="primary" type="submit">Сохранить</button>
           </div>
@@ -1276,7 +1352,7 @@
               <input type="checkbox" id="taskImportant" /> Отметить как важную
             </label>
           </div>
-          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end">
+          <div class="modal-actions">
             <button type="button" onclick="closeTaskModal()">Отмена</button>
             <button class="primary" type="submit">Сохранить</button>
           </div>
@@ -1355,6 +1431,7 @@
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
+      const projectRiskEl = document.getElementById("project-risk");
       const taskStatusWeight = { not_started: 0, todo: 0, in_progress: 0.5, done: 1, cancelled: 0 };
 
       let project = null;
@@ -1424,23 +1501,35 @@
 
       taskStatusFilter.addEventListener("change", (event) => {
         taskFilters.status = event.target.value;
-        loadTasks();
       });
 
       taskDueFilter.addEventListener("change", (event) => {
         taskFilters.due = event.target.value;
-        renderTasks();
       });
 
       taskGtmFilter.addEventListener("change", (event) => {
         taskFilters.gtm = event.target.value;
-        loadTasks();
       });
 
       taskHideDone.addEventListener("change", (event) => {
         taskFilters.hideDone = event.target.checked;
-        loadTasks();
       });
+
+      function applyTaskFilters() {
+        loadTasks();
+      }
+
+      function resetTaskFilters() {
+        taskFilters.status = "all";
+        taskFilters.due = "all";
+        taskFilters.gtm = "";
+        taskFilters.hideDone = false;
+        taskStatusFilter.value = "all";
+        taskDueFilter.value = "all";
+        taskGtmFilter.value = "";
+        taskHideDone.checked = false;
+        loadTasks();
+      }
 
       async function loadData() {
         await loadGroupList();
@@ -1772,11 +1861,25 @@
         return { label: `Завершено ${completed} из ${totalStages}`, percent, completed };
       }
 
+      function calcProjectRisk() {
+        const today = new Date();
+        const overdueStage = gtmStages.some(
+          (s) => s.planned_end && ["done", "cancelled"].indexOf(s.status) === -1 && new Date(s.planned_end) < today
+        );
+        const overdueTask = tasks.some((t) => t.due_date && t.status !== "done" && new Date(t.due_date) < today);
+        return overdueStage || overdueTask;
+      }
+
       function renderGtmProgress() {
         const progress = calcProjectProgress();
         gtmProgressLabel.textContent = progress.label;
         gtmProgressFill.style.width = `${progress.percent}%`;
         gtmProgressBadge.textContent = `${progress.percent}%`;
+        const risky = calcProjectRisk();
+        if (projectRiskEl) {
+          projectRiskEl.textContent = risky ? "⚠️ Есть просрочки" : "Риски: нет";
+          projectRiskEl.classList.toggle("warn", risky);
+        }
       }
 
       function openStageContextMenu(event, stage, index) {
