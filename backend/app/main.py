@@ -17,8 +17,12 @@ from .models import (
     CharacteristicField,
     CharacteristicSection,
     CharacteristicTemplate,
+    Comment,
+    FileAttachment,
     GTMStage,
     GTMTemplate,
+    HistoryEvent,
+    ImageAttachment,
     ProductGroup,
     Project,
     ProjectStatus,
@@ -506,6 +510,173 @@ def delete_subtask(project_id: UUID, task_id: UUID, subtask_id: UUID, repo: Loca
         if "Task" in message:
             raise HTTPException(status_code=404, detail="Задача не найдена")
         raise HTTPException(status_code=404, detail="Подзадача не найдена")
+
+
+@app.get("/api/projects/{project_id}/files", response_model=list[FileAttachment])
+def list_files(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[FileAttachment]:
+    try:
+        return repo.list_files(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/files", response_model=FileAttachment, status_code=201)
+def add_file(project_id: UUID, file: FileAttachment, repo: LocalRepository = Depends(get_repository)) -> FileAttachment:
+    try:
+        return repo.add_file(project_id, file)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.put("/api/projects/{project_id}/files/{file_id}", response_model=FileAttachment)
+def update_file(
+    project_id: UUID, file_id: UUID, file: FileAttachment, repo: LocalRepository = Depends(get_repository)
+) -> FileAttachment:
+    aligned = file.model_copy(update={"id": file_id})
+    try:
+        return repo.update_file(project_id, file_id, aligned)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Файл не найден или проект не существует")
+
+
+@app.delete("/api/projects/{project_id}/files/{file_id}", status_code=204)
+def delete_file(project_id: UUID, file_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_file(project_id, file_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Файл не найден или проект не существует")
+
+
+@app.get("/api/projects/{project_id}/images", response_model=list[ImageAttachment])
+def list_images(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[ImageAttachment]:
+    try:
+        return repo.list_images(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/images", response_model=ImageAttachment, status_code=201)
+def add_image(project_id: UUID, image: ImageAttachment, repo: LocalRepository = Depends(get_repository)) -> ImageAttachment:
+    try:
+        return repo.add_image(project_id, image)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.put("/api/projects/{project_id}/images/{image_id}", response_model=ImageAttachment)
+def update_image(
+    project_id: UUID, image_id: UUID, image: ImageAttachment, repo: LocalRepository = Depends(get_repository)
+) -> ImageAttachment:
+    aligned = image.model_copy(update={"id": image_id})
+    try:
+        return repo.update_image(project_id, image_id, aligned)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Изображение не найдено или проект не существует")
+
+
+@app.delete("/api/projects/{project_id}/images/{image_id}", status_code=204)
+def delete_image(project_id: UUID, image_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_image(project_id, image_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Изображение не найдено или проект не существует")
+
+
+@app.get("/api/projects/{project_id}/comments", response_model=list[Comment])
+def list_project_comments(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[Comment]:
+    try:
+        return repo.list_project_comments(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/comments", response_model=Comment, status_code=201)
+def add_project_comment(project_id: UUID, comment: Comment, repo: LocalRepository = Depends(get_repository)) -> Comment:
+    try:
+        return repo.add_project_comment(project_id, comment)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.delete("/api/projects/{project_id}/comments/{comment_id}", status_code=204)
+def delete_project_comment(project_id: UUID, comment_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_project_comment(project_id, comment_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Комментарий не найден или проект не существует")
+
+
+@app.get(
+    "/api/projects/{project_id}/tasks/{task_id}/comments",
+    response_model=list[Comment],
+)
+def list_task_comments(project_id: UUID, task_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[Comment]:
+    try:
+        return repo.list_task_comments(project_id, task_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
+
+@app.post(
+    "/api/projects/{project_id}/tasks/{task_id}/comments",
+    response_model=Comment,
+    status_code=201,
+)
+def add_task_comment(project_id: UUID, task_id: UUID, comment: Comment, repo: LocalRepository = Depends(get_repository)) -> Comment:
+    try:
+        return repo.add_task_comment(project_id, task_id, comment)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
+
+@app.delete(
+    "/api/projects/{project_id}/tasks/{task_id}/comments/{comment_id}",
+    status_code=204,
+)
+def delete_task_comment(
+    project_id: UUID, task_id: UUID, comment_id: UUID, repo: LocalRepository = Depends(get_repository)
+) -> None:
+    try:
+        repo.delete_task_comment(project_id, task_id, comment_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "Task" in message:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        raise HTTPException(status_code=404, detail="Комментарий не найден")
+
+
+@app.get("/api/projects/{project_id}/history", response_model=list[HistoryEvent])
+def list_history(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[HistoryEvent]:
+    try:
+        return repo.list_history(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/history", response_model=HistoryEvent, status_code=201)
+def add_history_event(
+    project_id: UUID, event: HistoryEvent, repo: LocalRepository = Depends(get_repository)
+) -> HistoryEvent:
+    try:
+        return repo.add_history_event(project_id, event)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.delete("/api/projects/{project_id}/history/{event_id}", status_code=204)
+def delete_history_event(project_id: UUID, event_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_history_event(project_id, event_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Событие не найдено или проект не существует")
 
 
 if FRONTEND_DIR.exists():

@@ -19,8 +19,12 @@ from .models import (
     CharacteristicField,
     CharacteristicSection,
     CharacteristicTemplate,
+    Comment,
+    FileAttachment,
     GTMTemplate,
     GTMStage,
+    HistoryEvent,
+    ImageAttachment,
     ProductGroup,
     Project,
     ProjectStatus,
@@ -157,6 +161,12 @@ class LocalRepository:
             if section.id == section_id:
                 return idx, section
         raise KeyError(f"Characteristic section {section_id} not found")
+
+    def _get_task_with_index(self, project: Project, task_id: UUID) -> tuple[int, Task]:
+        for idx, task in enumerate(project.tasks):
+            if task.id == task_id:
+                return idx, task
+        raise KeyError(f"Task {task_id} not found")
 
     # --- GTM templates ---
     def list_gtm_templates(self) -> list[GTMTemplate]:
@@ -478,3 +488,152 @@ class LocalRepository:
         self.store.projects[p_idx] = target_project
         self.save()
         return new_sections
+
+    # --- Files ---
+    def list_files(self, project_id: UUID) -> list[FileAttachment]:
+        _, project = self._get_project_with_index(project_id)
+        return list(project.files)
+
+    def add_file(self, project_id: UUID, file: FileAttachment) -> FileAttachment:
+        p_idx, project = self._get_project_with_index(project_id)
+        project.files.append(file)
+        self.store.projects[p_idx] = project
+        self.save()
+        return file
+
+    def update_file(self, project_id: UUID, file_id: UUID, updated: FileAttachment) -> FileAttachment:
+        p_idx, project = self._get_project_with_index(project_id)
+        for f_idx, file in enumerate(project.files):
+            if file.id == file_id:
+                project.files[f_idx] = updated
+                self.store.projects[p_idx] = project
+                self.save()
+                return updated
+        raise KeyError(f"File {file_id} not found in project {project_id}")
+
+    def delete_file(self, project_id: UUID, file_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for f_idx, file in enumerate(project.files):
+            if file.id == file_id:
+                project.files.pop(f_idx)
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"File {file_id} not found in project {project_id}")
+
+    # --- Images ---
+    def list_images(self, project_id: UUID) -> list[ImageAttachment]:
+        _, project = self._get_project_with_index(project_id)
+        return list(project.images)
+
+    def _normalize_cover(self, project: Project, cover_image_id: UUID | None) -> None:
+        if cover_image_id is None:
+            return
+        for img in project.images:
+            if img.id != cover_image_id and img.is_cover:
+                img.is_cover = False
+
+    def add_image(self, project_id: UUID, image: ImageAttachment) -> ImageAttachment:
+        p_idx, project = self._get_project_with_index(project_id)
+        if image.order == 0 and project.images:
+            image = image.model_copy(update={"order": len(project.images)})
+        project.images.append(image)
+        self._normalize_cover(project, image.id if image.is_cover else None)
+        self.store.projects[p_idx] = project
+        self.save()
+        return image
+
+    def update_image(
+        self, project_id: UUID, image_id: UUID, updated: ImageAttachment
+    ) -> ImageAttachment:
+        p_idx, project = self._get_project_with_index(project_id)
+        for img_idx, image in enumerate(project.images):
+            if image.id == image_id:
+                project.images[img_idx] = updated
+                if updated.is_cover:
+                    self._normalize_cover(project, updated.id)
+                self.store.projects[p_idx] = project
+                self.save()
+                return updated
+        raise KeyError(f"Image {image_id} not found in project {project_id}")
+
+    def delete_image(self, project_id: UUID, image_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for img_idx, image in enumerate(project.images):
+            if image.id == image_id:
+                project.images.pop(img_idx)
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"Image {image_id} not found in project {project_id}")
+
+    # --- Project comments ---
+    def list_project_comments(self, project_id: UUID) -> list[Comment]:
+        _, project = self._get_project_with_index(project_id)
+        return list(project.comments)
+
+    def add_project_comment(self, project_id: UUID, comment: Comment) -> Comment:
+        p_idx, project = self._get_project_with_index(project_id)
+        project.comments.insert(0, comment)
+        self.store.projects[p_idx] = project
+        self.save()
+        return comment
+
+    def delete_project_comment(self, project_id: UUID, comment_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for c_idx, comment in enumerate(project.comments):
+            if comment.id == comment_id:
+                project.comments.pop(c_idx)
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"Comment {comment_id} not found in project {project_id}")
+
+    # --- Task comments ---
+    def list_task_comments(self, project_id: UUID, task_id: UUID) -> list[Comment]:
+        _, project = self._get_project_with_index(project_id)
+        _, task = self._get_task_with_index(project, task_id)
+        return list(task.comments)
+
+    def add_task_comment(self, project_id: UUID, task_id: UUID, comment: Comment) -> Comment:
+        p_idx, project = self._get_project_with_index(project_id)
+        t_idx, task = self._get_task_with_index(project, task_id)
+        task.comments.insert(0, comment)
+        project.tasks[t_idx] = task
+        self.store.projects[p_idx] = project
+        self.save()
+        return comment
+
+    def delete_task_comment(self, project_id: UUID, task_id: UUID, comment_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        t_idx, task = self._get_task_with_index(project, task_id)
+        for c_idx, comment in enumerate(task.comments):
+            if comment.id == comment_id:
+                task.comments.pop(c_idx)
+                project.tasks[t_idx] = task
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"Comment {comment_id} not found in task {task_id}")
+
+    # --- History ---
+    def list_history(self, project_id: UUID) -> list[HistoryEvent]:
+        _, project = self._get_project_with_index(project_id)
+        return list(project.history)
+
+    def add_history_event(self, project_id: UUID, event: HistoryEvent) -> HistoryEvent:
+        p_idx, project = self._get_project_with_index(project_id)
+        project.history.insert(0, event)
+        self.store.projects[p_idx] = project
+        self.save()
+        return event
+
+    def delete_history_event(self, project_id: UUID, event_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for e_idx, event in enumerate(project.history):
+            if event.id == event_id:
+                project.history.pop(e_idx)
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"History event {event_id} not found in project {project_id}")

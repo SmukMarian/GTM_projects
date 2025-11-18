@@ -61,3 +61,20 @@
 - `POST /api/projects/{project_id}/tasks/{task_id}/subtasks` — добавление подзадачи.
 - `PUT /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — обновление подзадачи (например, отметка выполнено).
 - `DELETE /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — удаление подзадачи.
+- `GET /api/projects/{project_id}/files` — список файлов проекта.
+- `POST /api/projects/{project_id}/files` — добавление файла (метаданные и путь).
+- `PUT /api/projects/{project_id}/files/{file_id}` — обновление описания/категории/имени файла.
+- `DELETE /api/projects/{project_id}/files/{file_id}` — удаление файла.
+- `GET /api/projects/{project_id}/images` — список изображений проекта.
+- `POST /api/projects/{project_id}/images` — добавление изображения (метаданные, подпись, флаг обложки).
+- `PUT /api/projects/{project_id}/images/{image_id}` — обновление изображения/подписи/обложки.
+- `DELETE /api/projects/{project_id}/images/{image_id}` — удаление изображения.
+- `GET /api/projects/{project_id}/comments` — комментарии к проекту.
+- `POST /api/projects/{project_id}/comments` — добавить комментарий к проекту.
+- `DELETE /api/projects/{project_id}/comments/{comment_id}` — удалить комментарий проекта.
+- `GET /api/projects/{project_id}/tasks/{task_id}/comments` — комментарии к задаче.
+- `POST /api/projects/{project_id}/tasks/{task_id}/comments` — добавить комментарий к задаче.
+- `DELETE /api/projects/{project_id}/tasks/{task_id}/comments/{comment_id}` — удалить комментарий задачи.
+- `GET /api/projects/{project_id}/history` — лента истории проекта.
+- `POST /api/projects/{project_id}/history` — добавить событие в историю.
+- `DELETE /api/projects/{project_id}/history/{event_id}` — удалить событие истории.
