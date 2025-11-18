@@ -1,1 +1,137 @@
-# GTM_projects
+# Haier Project Tracker
+
+Локальное веб-приложение для личного ведения проектов по запуску новых продуктов на рынок. Основной источник требований — файл
+`Haier_Project_Tracker_TZ.md` в корне репозитория.
+
+## Структура
+
+- `backend/` — минимальный сервер на FastAPI, сейчас отдаёт health-check и статику, содержит модели данных, файловое хранилище и настройки путей хранения.
+- `frontend/` — заглушка главной страницы, раздаётся сервером как статический контент.
+- `Haier_Project_Tracker_TZ.md` — полное ТЗ.
+- `project-plan.md` — план реализации.
+- `dev_tasks.md` — чек-лист задач.
+- `data_model.md` — текстовая схема сущностей и связей.
+
+### Хранилище и бэкапы
+
+- Основной файл данных: `data/project_tracker.json` (создаётся автоматически).
+- Резервные копии сохраняются в `data/backups/` и именуются `project_tracker_<UTC-метка>.json`.
+- Файлы можно копировать вручную для дополнительного бэкапа вне приложения.
+
+## Локальный запуск
+
+### Быстрый старт (одна команда)
+
+1. Установить зависимости backend: `pip install -r backend/requirements.txt`.
+2. Запустить приложение локально: `python launch.py`.
+   - Скрипт поднимет сервер на `http://127.0.0.1:8000` и автоматически откроет страницу в браузере.
+   - Для разработки можно добавить `--reload`, чтобы сервер перезапускался при изменениях кода.
+   - Флаг `--no-browser` отключает автозапуск браузера, `--port`/`--host` позволяют сменить адрес.
+
+### Создание ярлыка/иконки
+
+- **Windows:** создайте ярлык, указывающий команду `python launch.py` из корня проекта (или `.bat`, вызывающий эту команду). Запустив ярлык, сервер стартует и откроет браузер.
+- **macOS/Linux:** создайте `.desktop`/`*.command` файл или shell-скрипт с вызовом `python launch.py` из корня проекта и сделайте его исполняемым (`chmod +x`).
+
+Страница фронтенда раздаётся сервером автоматически (статические файлы из каталога `frontend/`).
+
+### Главная страница (Дашборд)
+
+- Использует endpoint `GET /api/dashboard` и `GET /api/groups` для подгрузки агрегированных данных.
+- Показывает сводку по статусам проектов, карточки продуктовых групп с индикатором риска, ближайшие дедлайны этапов/важных задач и ленту изменений.
+- Поддерживает фильтры по группе, бренду, статусу проекта и опцию «Показывать архив».
+- Клики по названиям групп и проектов ведут на страницы управления списками и карточку проекта.
+- Контекстное меню по правой кнопке мыши доступно на карточках групп, строках ближайших дат и элементах ленты изменений, позволяя быстро открыть объект или применить фильтр по его группе.
+
+### Страница «Продуктовые группы»
+
+- Доступна по адресу `/groups.html` из ссылки на дашборде.
+- Показывает список групп в виде плитки или таблицы, с возможностью переключения отображения.
+- Поддерживает фильтры по статусу, бренду, произвольному пользовательскому полю и флаг «Показывать архивные».
+- Реализованы операции создать, редактировать, архивировать/восстанавливать и удалять группу (с подтверждением и сообщением об ошибке при наличии проектов).
+- Правый клик по карточке/строке открывает контекстное меню с действиями: открыть, редактировать, архивировать/восстановить, удалить.
+- Карточка группы показывает описание, бренды и пользовательские поля и доступна по клику.
+
+### Страница «Проекты»
+
+- Доступна по адресу `/projects.html` из ссылок на дашборде и странице групп.
+- Два вида отображения: плитка и таблица с быстрым переключением.
+- Фильтры: бренд, продуктовая группа, статус (множественный выбор), текущий GTM-этап, плановый период запуска и флаг «Показывать архив».
+- Операции: создание, редактирование, смена статуса (активный/закрыт/архив), восстановление, удаление с подтверждением.
+- Поддерживаются пользовательские поля, выбор приоритета, плановой/фактической дат запуска и установка текущего GTM-этапа по id.
+- Контекстное меню по правой кнопке мыши содержит быстрые действия: открыть карточку, редактировать, закрыть/активировать, архивировать/восстановить, удалить.
+- Карточка проекта отображает основную информацию, план/факт дат, приоритет и пользовательские поля.
+
+### Карточка проекта (GTM)
+
+- Доступна по адресу `/project.html?id=<uuid>` из дашборда и списка проектов.
+- Показывает базовую информацию о проекте и карточки GTM-этапов с чек-листом, датами и статусами.
+- Поддерживает операции: добавление/редактирование/удаление этапов, изменение порядка (кнопками/контекстным меню), смену статусов и флага риска, управление чек-листом, применение шаблона, сохранение структуры как шаблона, импорт/экспорт Excel, контекстное меню по правому клику на этапе.
+- Реализация характеристик, задач, галереи и файлов появится по мере закрытия следующих пунктов чек-листа.
+
+### Минимальные API-эндпоинты (черновик)
+
+- `GET /api/dashboard` — агрегированные данные для главной страницы (сводка по статусам, группы, ближайшие даты, лента изменений). Поддерживает фильтры `include_archived`, `group_id`, `brand`, `statuses`.
+- `GET /api/groups` — список продуктовых групп; поддерживает `include_archived`, фильтр по `brand`, список статусов `status` и фильтр по пользовательским полям (`extra_key`, `extra_value`).
+- `GET /api/groups/{group_id}` — получение одной группы.
+- `POST /api/groups` — создание группы. Принимает `ProductGroup`.
+- `PUT /api/groups/{group_id}` — обновление группы по идентификатору.
+- `DELETE /api/groups/{group_id}` — удаление группы; если есть связанные проекты, вернёт ошибку 400.
+- `GET /api/projects` — список проектов; поддерживает фильтры `include_archived`, `group_id`, `status` (можно несколько значений), `brand`, `current_stage_id`, `planned_from`, `planned_to`.
+- `GET /api/export/projects` — экспорт списка проектов в Excel; поддерживает `include_archived`, `status`, `brand`, `current_stage_id`, `planned_from`, `planned_to`.
+- `GET /api/projects/{project_id}` — получение проекта по id.
+- `POST /api/projects` — создание проекта, валидирует наличие группы.
+- `PUT /api/projects/{project_id}` — обновление проекта; валидирует группу.
+- `DELETE /api/projects/{project_id}` — удаление проекта.
+- `GET /api/gtm-templates` — список шаблонов GTM.
+- `POST /api/gtm-templates` — создание шаблона GTM.
+- `PUT /api/gtm-templates/{template_id}` — обновление шаблона GTM.
+- `DELETE /api/gtm-templates/{template_id}` — удаление шаблона GTM.
+- `GET /api/characteristic-templates` — список шаблонов характеристик.
+- `POST /api/characteristic-templates` — создание шаблона характеристик.
+- `PUT /api/characteristic-templates/{template_id}` — обновление шаблона характеристик.
+- `DELETE /api/characteristic-templates/{template_id}` — удаление шаблона характеристик.
+- `GET /api/projects/{project_id}/gtm-stages` — список GTM-этапов проекта.
+- `POST /api/projects/{project_id}/gtm-stages` — добавление GTM-этапа в проект.
+- `PUT /api/projects/{project_id}/gtm-stages/{stage_id}` — обновление GTM-этапа проекта.
+- `DELETE /api/projects/{project_id}/gtm-stages/{stage_id}` — удаление GTM-этапа проекта.
+- `POST /api/projects/{project_id}/gtm-stages/apply-template?template_id=` — заменить этапы проекта этапами шаблона.
+- `POST /api/projects/{project_id}/gtm-stages/import` — импорт структуры GTM-этапов из Excel, с валидацией статусов и заголовков.
+- `GET /api/projects/{project_id}/gtm-stages/export` — экспорт текущих GTM-этапов проекта в Excel.
+- `POST /api/projects/{project_id}/gtm-stages/save-template` — сохранить структуру этапов проекта как новый шаблон GTM.
+- `GET /api/projects/{project_id}/characteristics/sections` — список секций характеристик проекта.
+- `POST /api/projects/{project_id}/characteristics/sections` — добавление секции характеристик.
+- `PUT /api/projects/{project_id}/characteristics/sections/{section_id}` — обновление секции характеристик.
+- `DELETE /api/projects/{project_id}/characteristics/sections/{section_id}` — удаление секции характеристик.
+- `POST /api/projects/{project_id}/characteristics/sections/{section_id}/fields` — добавление поля в секцию.
+- `PUT /api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}` — обновление поля характеристики.
+- `DELETE /api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}` — удаление поля характеристики.
+- `POST /api/projects/{project_id}/characteristics/apply-template?template_id=` — заменить структуру характеристик проектом из шаблона (значения обнуляются).
+- `POST /api/projects/{project_id}/characteristics/copy-structure?source_project_id=` — скопировать структуру секций/полей из другого проекта без значений.
+- `GET /api/projects/{project_id}/tasks` — список задач проекта с фильтрами `status`, `only_active`, `gtm_stage_id`.
+- `POST /api/projects/{project_id}/tasks` — создание задачи.
+- `PUT /api/projects/{project_id}/tasks/{task_id}` — обновление задачи (включая смену статуса или даты).
+- `DELETE /api/projects/{project_id}/tasks/{task_id}` — удаление задачи.
+- `POST /api/projects/{project_id}/tasks/{task_id}/subtasks` — добавление подзадачи.
+- `PUT /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — обновление подзадачи (например, отметка выполнено).
+- `DELETE /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — удаление подзадачи.
+- `GET /api/projects/{project_id}/files` — список файлов проекта.
+- `POST /api/projects/{project_id}/files` — добавление файла (метаданные и путь).
+- `PUT /api/projects/{project_id}/files/{file_id}` — обновление описания/категории/имени файла.
+- `DELETE /api/projects/{project_id}/files/{file_id}` — удаление файла.
+- `GET /api/projects/{project_id}/images` — список изображений проекта.
+- `POST /api/projects/{project_id}/images` — добавление изображения (метаданные, подпись, флаг обложки).
+- `PUT /api/projects/{project_id}/images/{image_id}` — обновление изображения/подписи/обложки.
+- `DELETE /api/projects/{project_id}/images/{image_id}` — удаление изображения.
+- `GET /api/projects/{project_id}/comments` — комментарии к проекту.
+- `POST /api/projects/{project_id}/comments` — добавить комментарий к проекту.
+- `DELETE /api/projects/{project_id}/comments/{comment_id}` — удалить комментарий проекта.
+- `GET /api/projects/{project_id}/tasks/{task_id}/comments` — комментарии к задаче.
+- `POST /api/projects/{project_id}/tasks/{task_id}/comments` — добавить комментарий к задаче.
+- `DELETE /api/projects/{project_id}/tasks/{task_id}/comments/{comment_id}` — удалить комментарий задачи.
+- `GET /api/projects/{project_id}/history` — лента истории проекта.
+- `POST /api/projects/{project_id}/history` — добавить событие в историю.
+- `DELETE /api/projects/{project_id}/history/{event_id}` — удалить событие истории.
+- `GET /api/backups` — список резервных копий.
+- `POST /api/backups` — создать резервную копию текущего хранилища.
+- `POST /api/backups/restore` — восстановить данные из резервной копии по имени файла.
