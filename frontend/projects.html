@@ -528,7 +528,7 @@
         const stageMap = new Map();
         projects.forEach((p) => {
           p.gtm_stages.forEach((s) => {
-            if (!stageMap.has(s.id)) stageMap.set(s.id, s.name);
+            if (!stageMap.has(s.id)) stageMap.set(s.id, s.title || s.name);
           });
         });
         stageOptions = Array.from(stageMap.entries());
@@ -749,7 +749,8 @@
         contextMenu.hidden = false;
         contextMenuList.innerHTML = "";
         const actions = [
-          { label: "Открыть", fn: () => openDetails(project.id) },
+          { label: "Открыть карточку", fn: () => (window.location.href = `/project.html?id=${project.id}`) },
+          { label: "Быстрый просмотр", fn: () => openDetails(project.id) },
           { label: "Редактировать", fn: () => openEdit(project.id) },
           project.status === "archived"
             ? { label: "Восстановить", fn: () => restoreProject(project.id) }

@@ -10,12 +10,16 @@ from io import BytesIO
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
-from .exporters import export_projects_to_excel
+from .exporters import (
+    export_gtm_stages_to_excel,
+    export_projects_to_excel,
+    import_gtm_stages_from_excel,
+)
 from .models import (
     BackupInfo,
     BackupRestoreRequest,
@@ -33,6 +37,7 @@ from .models import (
     ProductGroup,
     Project,
     ProjectStatus,
+    TemplateFromProjectRequest,
     Subtask,
     Task,
     TaskStatus,
@@ -354,6 +359,54 @@ def apply_gtm_template(project_id: UUID, template_id: UUID, repo: LocalRepositor
         if "Project" in message:
             raise HTTPException(status_code=404, detail="Проект не найден")
         raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+
+
+@app.post(
+    "/api/projects/{project_id}/gtm-stages/import",
+    response_model=list[GTMStage],
+    status_code=201,
+)
+async def import_gtm_stages(
+    project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
+) -> list[GTMStage]:
+    if repo.get_project(project_id) is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    content = await file.read()
+    stages, errors = import_gtm_stages_from_excel(content)
+    if errors:
+        raise HTTPException(status_code=400, detail={"message": "Ошибка импорта GTM", "errors": errors})
+
+    return repo.replace_gtm_stages(project_id, stages)
+
+
+@app.get("/api/projects/{project_id}/gtm-stages/export")
+def export_gtm_stages(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> StreamingResponse:
+    project = repo.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    payload = export_gtm_stages_to_excel(project)
+    headers = {"Content-Disposition": f"attachment; filename=gtm_stages_{project_id}.xlsx"}
+    return StreamingResponse(
+        BytesIO(payload),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@app.post(
+    "/api/projects/{project_id}/gtm-stages/save-template",
+    response_model=GTMTemplate,
+    status_code=201,
+)
+def save_gtm_template_from_project(
+    project_id: UUID, payload: TemplateFromProjectRequest, repo: LocalRepository = Depends(get_repository)
+) -> GTMTemplate:
+    try:
+        return repo.create_gtm_template_from_project(project_id, payload.name, payload.description)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
 
 
 @app.get(

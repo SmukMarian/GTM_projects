@@ -322,9 +322,9 @@ class LocalRepository:
             for s_idx, stage in enumerate(project.gtm_stages):
                 if stage.id == stage_id:
                     project.gtm_stages.pop(s_idx)
-                    self.store.projects[p_idx] = project
-                    self.save()
-                    return
+                self.store.projects[p_idx] = project
+                self.save()
+                return
             raise KeyError(f"Stage {stage_id} not found in project {project_id}")
         raise KeyError(f"Project {project_id} not found")
 
@@ -340,6 +340,45 @@ class LocalRepository:
                 self.store.projects[p_idx] = project
                 self.save()
                 return new_stages
+        raise KeyError(f"Project {project_id} not found")
+
+    def replace_gtm_stages(self, project_id: UUID, stages: list[GTMStage]) -> list[GTMStage]:
+        for p_idx, project in enumerate(self.store.projects):
+            if project.id != project_id:
+                continue
+            project.gtm_stages = stages
+            self.store.projects[p_idx] = project
+            self.save()
+            return stages
+        raise KeyError(f"Project {project_id} not found")
+
+    def create_gtm_template_from_project(self, project_id: UUID, name: str, description: str | None = None) -> GTMTemplate:
+        for project in self.store.projects:
+            if project.id != project_id:
+                continue
+
+            def clone_stage(stage: GTMStage) -> GTMStage:
+                cloned_checklist = [
+                    item.model_copy(update={"id": uuid4(), "done": False}) for item in sorted(stage.checklist, key=lambda c: c.order)
+                ]
+                return stage.model_copy(
+                    update={
+                        "id": uuid4(),
+                        "planned_start": None,
+                        "planned_end": None,
+                        "actual_end": None,
+                        "status": StageStatus.NOT_STARTED,
+                        "risk_flag": False,
+                        "checklist": cloned_checklist,
+                    }
+                )
+
+            cloned_stages = [clone_stage(stage) for stage in sorted(project.gtm_stages, key=lambda s: s.order)]
+            template = GTMTemplate(name=name, description=description, stages=cloned_stages)
+            self.store.gtm_templates.append(template)
+            self.save()
+            return template
+
         raise KeyError(f"Project {project_id} not found")
 
     # --- Tasks ---

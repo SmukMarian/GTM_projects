@@ -229,7 +229,7 @@
             card.className = "card";
             card.dataset.groupId = group.id;
             const risk = group.risk ? " ⚠️" : "";
-            card.innerHTML = `<strong><a href="/api/groups/${group.id}" target="_blank">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
+            card.innerHTML = `<strong><a href="/groups.html?group=${group.id}">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
             card.addEventListener("contextmenu", (event) => {
               event.preventDefault();
               openContextMenu(event, "group", group);
@@ -247,7 +247,7 @@
           const body = rows
             .map((row) => {
               const marker = row.risk || row.days_delta < 0 ? "⚠️" : "";
-              return `<tr data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/api/projects/${row.project_id}" target="_blank">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
+              return `<tr data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/project.html?id=${row.project_id}">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
             })
             .join("");
           upcomingTable.innerHTML = header + body;
@@ -274,7 +274,7 @@
         items.forEach((item) => {
           const li = document.createElement("li");
           const date = new Date(item.occurred_at).toLocaleString();
-          li.innerHTML = `<strong><a href="/api/projects/${item.project_id}" target="_blank">${item.project_name}</a></strong> (${item.group_name}) — ${item.summary}<br /><small>${date}</small>`;
+          li.innerHTML = `<strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> (${item.group_name}) — ${item.summary}<br /><small>${date}</small>`;
           if (item.details) {
             li.innerHTML += `<div>${item.details}</div>`;
           }
@@ -295,7 +295,7 @@
       function openContextMenu(event, type, data) {
         const actions = [];
         if (type === "group") {
-          actions.push({ label: "Открыть группу", href: `/api/groups/${data.id}` });
+          actions.push({ label: "Открыть группу", href: `/groups.html?group=${data.id}` });
           actions.push({
             label: "Показать только эту группу",
             action: () => {
@@ -304,7 +304,7 @@
             },
           });
         } else if (type === "project") {
-          actions.push({ label: "Открыть проект", href: `/api/projects/${data.id}` });
+          actions.push({ label: "Открыть проект", href: `/project.html?id=${data.id}` });
           if (data.group_id) {
             actions.push({
               label: "Фильтр по группе проекта",

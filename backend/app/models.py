@@ -118,6 +118,11 @@ class GTMTemplate(BaseModel):
     stages: list[GTMStage] = Field(default_factory=list)
 
 
+class TemplateFromProjectRequest(BaseModel):
+    name: str
+    description: str | None = None
+
+
 class Subtask(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     title: str

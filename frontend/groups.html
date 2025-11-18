@@ -364,6 +364,8 @@
       let viewMode = "cards";
       let groups = [];
       let selectedGroupId = null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialGroupId = urlParams.get("group");
       let editingGroupId = null;
 
       function hideContextMenu() {
@@ -663,9 +665,10 @@
         renderSummary();
         renderCardView();
         renderTableView();
-        if (selectedGroupId) {
-          openDetails(selectedGroupId);
+        if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
+          selectedGroupId = initialGroupId;
         }
+        if (selectedGroupId) openDetails(selectedGroupId);
       }
 
       applyFilters.addEventListener("click", loadGroups);
