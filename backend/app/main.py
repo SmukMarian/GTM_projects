@@ -5,14 +5,16 @@
 и раздача статических файлов из каталога ``frontend``.
 """
 
+from io import BytesIO
 from pathlib import Path
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
+from .exporters import export_projects_to_excel
 from .models import (
     BackupInfo,
     BackupRestoreRequest,
@@ -108,6 +110,30 @@ def list_projects(
 
     statuses = set(status) if status else None
     return repo.list_projects(include_archived=include_archived, group_id=group_id, statuses=statuses)
+
+
+@app.get("/api/export/projects", response_class=StreamingResponse)
+def export_projects(
+    include_archived: bool = True,
+    status: list[ProjectStatus] | None = Query(default=None),
+    repo: LocalRepository = Depends(get_repository),
+) -> StreamingResponse:
+    """Экспортировать список проектов в Excel со статусами и основными полями."""
+
+    statuses = set(status) if status else None
+    export_bytes = export_projects_to_excel(
+        projects=repo.list_projects(include_archived=True),
+        groups=repo.list_groups(include_archived=True),
+        statuses=statuses,
+        include_archived=include_archived,
+    )
+
+    headers = {"Content-Disposition": "attachment; filename=projects.xlsx"}
+    return StreamingResponse(
+        BytesIO(export_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
 
 
 @app.post("/api/projects", response_model=Project, status_code=201)

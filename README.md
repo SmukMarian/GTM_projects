@@ -34,6 +34,7 @@
 - `PUT /api/groups/{group_id}` — обновление группы по идентификатору.
 - `DELETE /api/groups/{group_id}` — удаление группы; если есть связанные проекты, вернёт ошибку 400.
 - `GET /api/projects` — список проектов; поддерживает фильтры `include_archived`, `group_id`, `status` (можно несколько значений).
+- `GET /api/export/projects` — экспорт списка проектов в Excel; поддерживает `include_archived` и несколько `status`.
 - `GET /api/projects/{project_id}` — получение проекта по id.
 - `POST /api/projects` — создание проекта, валидирует наличие группы.
 - `PUT /api/projects/{project_id}` — обновление проекта; валидирует группу.
