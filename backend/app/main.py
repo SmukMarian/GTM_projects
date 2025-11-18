@@ -8,13 +8,14 @@
 import logging
 import shutil
 import time
+import zipfile
 from datetime import date
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -1017,6 +1018,41 @@ def delete_image(project_id: UUID, image_id: UUID, repo: LocalRepository = Depen
         log_event(repo, project_id, "Удалено изображение", image.filename)
     except KeyError:
         raise HTTPException(status_code=404, detail="Изображение не найдено или проект не существует")
+
+
+@app.post("/api/projects/{project_id}/images/clear-cover", status_code=204)
+def clear_project_cover(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> Response:
+    """Снять обложку проекта, оставив изображения без флага is_cover."""
+
+    try:
+        repo.clear_cover(project_id)
+        log_event(repo, project_id, "Снята обложка проекта")
+        return Response(status_code=204)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.get("/api/projects/{project_id}/images/archive")
+def download_images_archive(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> StreamingResponse:
+    """Скачать все изображения проекта единым архивом."""
+
+    try:
+        images = repo.list_images(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for image in images:
+            path = resolve_storage_path(image.path)
+            if not path.exists():
+                continue
+            zf.write(path, arcname=image.filename)
+
+    buffer.seek(0)
+    headers = {"Content-Disposition": "attachment; filename=project-images.zip"}
+    log_event(repo, project_id, "Скачан архив изображений")
+    return StreamingResponse(buffer, media_type="application/zip", headers=headers)
 
 
 @app.get("/api/projects/{project_id}/images/{image_id}/download")

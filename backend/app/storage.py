@@ -666,6 +666,20 @@ class LocalRepository:
             if img.id != cover_image_id and img.is_cover:
                 img.is_cover = False
 
+    def clear_cover(self, project_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        changed = False
+        for img in project.images:
+            if img.is_cover:
+                img.is_cover = False
+                changed = True
+        if changed:
+            self.store.projects[p_idx] = project
+            self.save()
+        else:
+            # Сохраняем порядок даже если обложка не была задана
+            self.store.projects[p_idx] = project
+
     def add_image(self, project_id: UUID, image: ImageAttachment) -> ImageAttachment:
         p_idx, project = self._get_project_with_index(project_id)
         if image.order == 0 and project.images:

@@ -587,8 +587,26 @@
 
       .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 10px;
+      }
+
+      @media (max-width: 1200px) {
+        .gallery-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 980px) {
+        .gallery-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .gallery-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
       .image-card {
@@ -1077,6 +1095,7 @@
       <div class="stage-header" style="margin-bottom: 8px">
         <h2>Галерея и обложка</h2>
         <div class="toolbar" style="margin: 0">
+          <button class="ghost" onclick="downloadAllImages()">Скачать все</button>
           <button class="primary" onclick="triggerImageUpload()">Загрузить изображения</button>
         </div>
       </div>
@@ -1336,6 +1355,7 @@
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
+      const taskStatusWeight = { not_started: 0, todo: 0, in_progress: 0.5, done: 1, cancelled: 0 };
 
       let project = null;
       let groupInfo = null;
@@ -1718,19 +1738,45 @@
         });
       }
 
-      function renderGtmProgress() {
-        const total = gtmStages.length;
-        const done = gtmStages.filter((stage) => stage.status === "done").length;
-        const percent = total ? Math.round((done / total) * 100) : 0;
-        if (!total) {
-          gtmProgressLabel.textContent = "Этапы не заданы";
-          gtmProgressFill.style.width = "0%";
-          gtmProgressBadge.textContent = "0%";
-          return;
+      function taskProgressScore(task) {
+        if (!task) return 0;
+        const subtasks = task.subtasks || [];
+        if (subtasks.length) {
+          const done = subtasks.filter((s) => s.done).length;
+          return subtasks.length ? done / subtasks.length : 0;
         }
-        gtmProgressLabel.textContent = `Завершено ${done} из ${total}`;
-        gtmProgressFill.style.width = `${percent}%`;
-        gtmProgressBadge.textContent = `${percent}%`;
+        if (task.status === "done") return 1;
+        if (task.status === "in_progress") return 0.5;
+        return 0;
+      }
+
+      function stageProgressScore(stage) {
+        const relatedTasks = tasks.filter((task) => task.gtm_stage_id === stage.id);
+        if (!relatedTasks.length) {
+          if (stage.status === "done") return 1;
+          if (stage.status === "in_progress") return 0.5;
+          return 0;
+        }
+        const total = relatedTasks.reduce((acc, task) => acc + taskProgressScore(task), 0);
+        return total / relatedTasks.length;
+      }
+
+      function calcProjectProgress() {
+        const totalStages = gtmStages.length;
+        if (!totalStages) {
+          return { label: "Этапы не заданы", percent: 0, completed: 0 };
+        }
+        const stageScores = gtmStages.map((stage) => stageProgressScore(stage));
+        const percent = Math.round((stageScores.reduce((a, b) => a + b, 0) / totalStages) * 100);
+        const completed = stageScores.filter((score) => score >= 0.999).length;
+        return { label: `Завершено ${completed} из ${totalStages}`, percent, completed };
+      }
+
+      function renderGtmProgress() {
+        const progress = calcProjectProgress();
+        gtmProgressLabel.textContent = progress.label;
+        gtmProgressFill.style.width = `${progress.percent}%`;
+        gtmProgressBadge.textContent = `${progress.percent}%`;
       }
 
       function openStageContextMenu(event, stage, index) {
@@ -2000,6 +2046,7 @@
         const res = await fetch(`/api/projects/${projectId}/tasks?${params.toString()}`);
         tasks = res.ok ? await res.json() : [];
         renderTasks();
+        renderGtmProgress();
       }
 
       function renderTaskFilters() {
@@ -2595,7 +2642,7 @@
           coverImage.src = `/api/projects/${projectId}/images/${cover.id}/download`;
           coverImage.style.display = "block";
           coverPlaceholder.style.display = "none";
-          clearCoverButton.disabled = !cover.is_cover;
+          clearCoverButton.disabled = false;
         } else {
           coverImage.removeAttribute("src");
           coverImage.style.display = "none";
@@ -2605,9 +2652,7 @@
       }
 
       function getCoverImage() {
-        const explicit = images.find((img) => img.is_cover);
-        if (explicit) return explicit;
-        return images.length ? images[0] : null;
+        return images.find((img) => img.is_cover) || null;
       }
 
       function triggerImageUpload() {
@@ -2654,22 +2699,29 @@
       });
 
       async function clearCover() {
-        const cover = getCoverImage();
-        if (!cover || !cover.is_cover) {
-          renderCoverPanel();
-          return;
-        }
-        const payload = { ...cover, is_cover: false };
-        const res = await fetch(`/api/projects/${projectId}/images/${cover.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const res = await fetch(`/api/projects/${projectId}/images/clear-cover`, { method: "POST" });
         if (!res.ok) {
           alert("Не удалось снять обложку");
           return;
         }
         await loadImages();
+      }
+
+      async function downloadAllImages() {
+        const res = await fetch(`/api/projects/${projectId}/images/archive`);
+        if (!res.ok) {
+          alert("Не удалось скачать архив изображений");
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `project-${projectId}-images.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
       }
 
       function scrollToGallery() {

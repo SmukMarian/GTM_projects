@@ -716,7 +716,7 @@
       function currentStageName(project) {
         if (!project.current_gtm_stage_id) return "—";
         const stage = project.gtm_stages.find((s) => s.id === project.current_gtm_stage_id);
-        return stage ? stage.name : "—";
+        return stage ? stage.title || stage.name || "—" : "—";
       }
 
       function renderSummary() {
@@ -739,12 +739,35 @@
         return cover ? `/api/projects/${project.id}/images/${cover.id}/download` : null;
       }
 
+      function taskProgress(task) {
+        const subtasks = task.subtasks || [];
+        if (subtasks.length) {
+          const done = subtasks.filter((s) => s.done).length;
+          return subtasks.length ? done / subtasks.length : 0;
+        }
+        if (task.status === "done") return 1;
+        if (task.status === "in_progress") return 0.5;
+        return 0;
+      }
+
+      function stageProgress(project, stage) {
+        const relatedTasks = (project.tasks || []).filter((t) => t.gtm_stage_id === stage.id);
+        if (!relatedTasks.length) {
+          if (stage.status === "done") return 1;
+          if (stage.status === "in_progress") return 0.5;
+          return 0;
+        }
+        const sum = relatedTasks.reduce((acc, task) => acc + taskProgress(task), 0);
+        return sum / relatedTasks.length;
+      }
+
       function projectProgress(project) {
         const stages = project.gtm_stages || [];
         if (!stages.length) return { percent: 0, label: "Нет этапов" };
-        const done = stages.filter((s) => s.status === "done").length;
-        const percent = Math.round((done / stages.length) * 100);
-        return { percent, label: `${done}/${stages.length} завершено` };
+        const scores = stages.map((stage) => stageProgress(project, stage));
+        const percent = Math.round((scores.reduce((a, b) => a + b, 0) / stages.length) * 100);
+        const completed = Math.round(scores.filter((s) => s >= 0.999).length);
+        return { percent, label: `${completed}/${stages.length} завершено` };
       }
 
       function renderCardView() {
