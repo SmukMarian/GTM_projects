@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/theme.js" defer></script>
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <title>Карточка проекта — Haier Project Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+        --warning: #fbbf24;
+      }
+
+      body {
+        margin: 0 auto;
+        max-width: 1200px;
+        padding: 34px 20px 72px;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 4px 0 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        color: var(--accent);
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .badge.archived {
+        background: rgba(248, 113, 113, 0.15);
+        color: #dc2626;
+      }
+
+      .badge.closed {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 9px 14px;
+        border-radius: 12px;
+        color: var(--text);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font: inherit;
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .stage-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: var(--surface);
+      }
+
+      .stage-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: var(--surface-muted);
+        border-radius: 8px;
+        font-size: 0.85rem;
+      }
+
+      .chip.warn {
+        background: rgba(248, 113, 113, 0.16);
+        color: #fca5a5;
+      }
+
+      .checklist li {
+        list-style: none;
+        margin: 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .context-menu {
+        position: absolute;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        padding: 6px 0;
+        display: none;
+        z-index: 20;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        min-width: 200px;
+      }
+
+      .context-menu li {
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+
+      .context-menu li:hover {
+        background: var(--accent-soft);
+      }
+
+      .context-menu li.disabled {
+        color: var(--muted);
+        cursor: not-allowed;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+      }
+
+      .modal {
+        background: var(--surface);
+        padding: 20px;
+        border-radius: 14px;
+        width: min(640px, 92vw);
+        max-height: 90vh;
+        overflow: auto;
+        box-shadow: var(--shadow);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--surface-muted);
+        font-weight: 700;
+      }
+
+      .inline-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: var(--surface-muted);
+        color: var(--text-primary);
+        min-height: 36px;
+        resize: vertical;
+      }
+
+      .inline-input:focus {
+        outline: 2px solid var(--accent);
+        background: var(--surface);
+      }
+
+      .inline-checkbox {
+        width: 20px;
+        height: 20px;
+      }
+
+      .inline-status {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      tr.saving td {
+        background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+      }
+
+      tr.save-error td {
+        background: color-mix(in srgb, #ef4444 18%, transparent);
+      }
+
+      .characteristics-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--surface);
+      }
+
+      .task-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--surface);
+        margin-bottom: 12px;
+      }
+
+      .task-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: var(--surface-muted);
+        border-radius: 10px;
+        font-size: 0.85rem;
+      }
+
+      .status-chip.todo {
+        background: #eef2ff;
+        color: #312e81;
+      }
+
+      .status-chip.in_progress {
+        background: #e0f2fe;
+        color: #075985;
+      }
+
+      .status-chip.done {
+        background: #ecfdf3;
+        color: #166534;
+      }
+
+      .task-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .task-column {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        background: var(--surface);
+      }
+
+      .tag {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: var(--surface-muted);
+        font-size: 0.85rem;
+      }
+
+      .tag.due-overdue {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+
+      .tag.due-soon {
+        background: #fffbeb;
+        color: #92400e;
+      }
+
+      .subtasks {
+        margin-top: 10px;
+        padding-left: 0;
+      }
+
+      .subtasks li {
+        list-style: none;
+        margin: 6px 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 8px;
+        border-radius: 8px;
+        background: var(--surface-muted);
+      }
+
+      .subtask-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .inline-input,
+      .inline-textarea,
+      .inline-select {
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .inline-textarea {
+        min-height: 34px;
+        resize: vertical;
+      }
+
+      .progress-line {
+        width: 100%;
+        height: 6px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-line .fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+      }
+
+      .rich-editor {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .rich-editor-toolbar {
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .rich-editor-toolbar button {
+        border: 1px solid var(--border);
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .rich-editor-area {
+        padding: 8px;
+        min-height: 60px;
+      }
+
+      .comment-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+
+      .comment-item {
+        background: var(--surface-muted);
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .image-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .image-thumb {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        background: var(--surface-muted);
+      }
+
+      .image-meta {
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .file-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .file-table th,
+      .file-table td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 8px;
+        text-align: left;
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1200;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
+      }
+
+      .project-hero {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .project-hero-left {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .project-hero-right {
+        background: var(--surface-muted);
+        border: 1px dashed var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 100%;
+      }
+
+      .cover-frame {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08));
+        border: 1px solid var(--border);
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .cover-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cover-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--muted-text);
+        text-align: center;
+        padding: 12px;
+      }
+
+      .cover-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+      }
+
+      .meta-tile {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .meta-tile span {
+        color: var(--muted-text);
+        font-size: 12px;
+      }
+
+      .progress-shell {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong, #2dd4bf));
+        transition: width 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="toolbar">
+      <a href="/projects.html">← К списку проектов</a>
+      <a href="/groups.html">Группы</a>
+      <a href="/index.html">Дашборд</a>
+    </div>
+
+    <div id="project-card" class="card">
+      <div class="project-hero">
+        <div class="project-hero-left">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap">
+            <div>
+              <p class="pill">Карточка проекта</p>
+              <h1 id="project-name">Проект</h1>
+            </div>
+            <div id="project-badges" style="display: flex; gap: 8px; flex-wrap: wrap"></div>
+          </div>
+          <div id="project-meta" class="muted"></div>
+          <div class="meta-grid">
+            <div class="meta-tile">
+              <span>Группа</span>
+              <strong id="project-group">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Бренд</span>
+              <strong id="project-brand">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Рынок</span>
+              <strong id="project-market">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Плановая дата запуска</span>
+              <strong id="project-planned">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Фактическая дата запуска</span>
+              <strong id="project-actual">—</strong>
+            </div>
+          </div>
+          <div class="progress-shell">
+            <div style="display:flex; justify-content: space-between; align-items:center; gap: 8px; flex-wrap: wrap">
+              <div style="display:flex; flex-direction: column; gap: 4px">
+                <span class="muted">Прогресс по GTM-этапам</span>
+                <strong id="gtm-progress-label">Нет этапов</strong>
+              </div>
+              <div id="gtm-progress-badge" class="badge">0%</div>
+            </div>
+            <div class="progress-bar" aria-label="Прогресс по GTM">
+              <div id="gtm-progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <p id="project-desc" class="muted"></p>
+        </div>
+        <div class="project-hero-right">
+          <div class="cover-frame" id="cover-frame">
+            <div id="cover-placeholder" class="cover-placeholder">
+              <div style="font-size: 28px">🖼️</div>
+              <div>Добавьте обложку проекта</div>
+            </div>
+            <img id="cover-image" alt="Обложка проекта" style="display: none" />
+          </div>
+          <div class="cover-actions">
+            <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
+            <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
+            <button class="ghost" onclick="scrollToGallery()">Галерея</button>
+          </div>
+          <input type="file" id="coverUpload" accept="image/*" style="display: none" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>GTM-этапы</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="openStageForm()">Добавить этап</button>
+          <select id="templateSelect"></select>
+          <button onclick="applyTemplate()">Применить шаблон</button>
+          <button onclick="saveTemplate()">Сохранить как шаблон</button>
+          <button onclick="triggerImport()">Импорт Excel</button>
+          <button onclick="exportStages()">Экспорт Excel</button>
+          <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+        </div>
+      </div>
+      <div id="stages"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Характеристики (RU / EN)</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="promptSection()">Добавить секцию</button>
+          <select id="characteristicTemplateSelect"></select>
+          <button onclick="applyCharacteristicTemplate()">Применить шаблон</button>
+          <button onclick="saveCharacteristicTemplate()">Сохранить как шаблон</button>
+          <button onclick="copyCharacteristicStructure()">Копировать структуру</button>
+          <button onclick="triggerCharacteristicImport()">Импорт Excel</button>
+          <button onclick="exportCharacteristics()">Экспорт Excel</button>
+          <input type="file" id="characteristicImport" accept=".xlsx" style="display: none" />
+        </div>
+      </div>
+      <div id="characteristics"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Задачи и подзадачи</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="openTaskForm()">Новая задача</button>
+          <button id="taskViewToggle" onclick="toggleTaskView()">Переключить вид: список</button>
+        </div>
+      </div>
+      <div class="toolbar" style="gap: 16px">
+        <label style="width: 200px">
+          Статус
+          <select id="taskStatusFilter">
+            <option value="all">Все</option>
+            <option value="todo">ToDo</option>
+            <option value="in_progress">В работе</option>
+            <option value="done">Готово</option>
+          </select>
+        </label>
+        <label style="width: 200px">
+          Сроки
+          <select id="taskDueFilter">
+            <option value="all">Все сроки</option>
+            <option value="upcoming">Ближайшие 7 дней</option>
+            <option value="overdue">Просроченные</option>
+          </select>
+        </label>
+        <label style="width: 220px">
+          GTM-этап
+          <select id="taskGtmFilter">
+            <option value="">Все этапы</option>
+          </select>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
+          <input type="checkbox" id="taskHideDone" /> Скрыть выполненные
+        </label>
+      </div>
+      <div id="tasks"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Галерея и обложка</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="triggerImageUpload()">Загрузить изображения</button>
+        </div>
+      </div>
+      <p class="muted">Выберите изображение как обложку проекта через меню или кнопку. Поддерживается загрузка нескольких файлов.</p>
+      <div id="gallery" class="gallery-grid"></div>
+      <input type="file" id="imageUploadInput" accept="image/*" style="display: none" multiple />
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Файлы и документы</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="triggerFileUpload()">Загрузить файл</button>
+        </div>
+      </div>
+      <p class="muted">Файлы сохраняются локально в каталоге данных приложения. Используйте контекстное меню для скачивания и правок.</p>
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>Описание</th>
+            <th>Категория</th>
+            <th>Дата загрузки</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="fileTable"></tbody>
+      </table>
+      <input type="file" id="fileUploadInput" style="display: none" />
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Комментарии по проекту</h2>
+        <div style="display:flex; flex-direction: column; gap: 8px; width: 100%;">
+          <div id="projectCommentEditor" class="rich-editor" style="max-width: 640px">
+            <div class="rich-editor-toolbar">
+              <button type="button" onclick="formatSelection('bold')">B</button>
+              <button type="button" onclick="formatSelection('italic')"><em>I</em></button>
+              <button type="button" onclick="formatSelection('insertUnorderedList')">• Список</button>
+              <button type="button" onclick="addLinkToSelection()">Ссылка</button>
+            </div>
+            <div id="projectCommentArea" class="rich-editor-area" contenteditable="true" aria-label="Комментарий по проекту"></div>
+          </div>
+          <div class="toolbar" style="margin:0; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="primary" onclick="addProjectComment()">Добавить</button>
+            <button class="ghost" onclick="clearEditor('projectCommentArea')">Очистить</button>
+          </div>
+        </div>
+      </div>
+      <ul id="projectComments" class="comment-list"></ul>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>История изменений</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="ghost" onclick="addHistoryEvent()">Добавить событие</button>
+        </div>
+      </div>
+      <div id="history"></div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    <div id="modal" class="modal-backdrop">
+      <div class="modal">
+        <h3 id="modalTitle">Этап</h3>
+        <form id="stageForm">
+          <input type="hidden" id="stageId" />
+          <div class="grid-two">
+            <label>
+              Название этапа
+              <input required id="stageTitle" />
+            </label>
+            <label>
+              Порядок
+              <input type="number" id="stageOrder" min="0" />
+            </label>
+          </div>
+          <label>
+            Описание
+            <textarea id="stageDescription" rows="3"></textarea>
+          </label>
+          <div class="grid-two">
+            <label>
+              Плановая дата начала
+              <input type="date" id="stagePlannedStart" />
+            </label>
+            <label>
+              Плановая дата окончания
+              <input type="date" id="stagePlannedEnd" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              Фактическая дата завершения
+              <input type="date" id="stageActualEnd" />
+            </label>
+            <label>
+              Статус
+              <select id="stageStatus">
+                <option value="not_started">Не начат</option>
+                <option value="in_progress">В работе</option>
+                <option value="done">Завершён</option>
+                <option value="cancelled">Отменён</option>
+              </select>
+            </label>
+          </div>
+          <label style="display: flex; align-items: center; gap: 8px">
+            <input type="checkbox" id="stageRisk" /> Отметить риск
+          </label>
+          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end">
+            <button type="button" onclick="closeModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="taskModal" class="modal-backdrop">
+      <div class="modal">
+        <h3 id="taskModalTitle">Задача</h3>
+        <form id="taskForm">
+          <input type="hidden" id="taskId" />
+          <label>
+            Заголовок
+            <input required id="taskTitle" />
+          </label>
+          <label>
+            Описание
+            <textarea id="taskDescription" rows="3"></textarea>
+          </label>
+          <div class="grid-two">
+            <label>
+              Статус
+              <select id="taskStatus">
+                <option value="todo">ToDo</option>
+                <option value="in_progress">В работе</option>
+                <option value="done">Готово</option>
+              </select>
+            </label>
+            <label>
+              Срок выполнения
+              <input type="date" id="taskDueDate" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              GTM-этап
+              <select id="taskGtmStage">
+                <option value="">Не задан</option>
+              </select>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
+              <input type="checkbox" id="taskImportant" /> Отметить как важную
+            </label>
+          </div>
+          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end">
+            <button type="button" onclick="closeTaskModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const projectId = params.get("id");
+      const stagesContainer = document.getElementById("stages");
+      const templateSelect = document.getElementById("templateSelect");
+      const importInput = document.getElementById("importInput");
+      const characteristicContainer = document.getElementById("characteristics");
+      const characteristicTemplateSelect = document.getElementById("characteristicTemplateSelect");
+      const characteristicImport = document.getElementById("characteristicImport");
+      const tasksContainer = document.getElementById("tasks");
+      const taskStatusFilter = document.getElementById("taskStatusFilter");
+      const taskDueFilter = document.getElementById("taskDueFilter");
+      const taskGtmFilter = document.getElementById("taskGtmFilter");
+      const taskHideDone = document.getElementById("taskHideDone");
+      const taskViewToggle = document.getElementById("taskViewToggle");
+      const taskModal = document.getElementById("taskModal");
+      const taskGtmStageSelect = document.getElementById("taskGtmStage");
+
+      const galleryContainer = document.getElementById("gallery");
+      const imageUploadInput = document.getElementById("imageUploadInput");
+      const fileUploadInput = document.getElementById("fileUploadInput");
+      const fileTable = document.getElementById("fileTable");
+      const projectCommentArea = document.getElementById("projectCommentArea");
+      const projectCommentsList = document.getElementById("projectComments");
+      const historyContainer = document.getElementById("history");
+
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+      const coverImage = document.getElementById("cover-image");
+      const coverPlaceholder = document.getElementById("cover-placeholder");
+      const coverUploadInput = document.getElementById("coverUpload");
+      const clearCoverButton = document.getElementById("clear-cover");
+      const gallerySection = document.getElementById("gallery");
+      const projectGroupEl = document.getElementById("project-group");
+      const projectBrandEl = document.getElementById("project-brand");
+      const projectMarketEl = document.getElementById("project-market");
+      const projectPlannedEl = document.getElementById("project-planned");
+      const projectActualEl = document.getElementById("project-actual");
+      const gtmProgressLabel = document.getElementById("gtm-progress-label");
+      const gtmProgressFill = document.getElementById("gtm-progress-fill");
+      const gtmProgressBadge = document.getElementById("gtm-progress-badge");
+
+      let project = null;
+      let groupInfo = null;
+      let gtmTemplates = [];
+      let gtmStages = [];
+      let characteristicTemplates = [];
+      let characteristicSections = [];
+      let tasks = [];
+      let images = [];
+      let files = [];
+      let projectComments = [];
+      let historyEvents = [];
+      let taskView = "list";
+      const taskFilters = { status: "all", due: "all", gtm: "", hideDone: false };
+
+      if (!projectId) {
+        stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
+      } else {
+        loadData();
+      }
+
+      function formatSelection(command, value = null) {
+        document.execCommand(command, false, value);
+      }
+
+      function addLinkToSelection() {
+        const url = prompt("Ссылка");
+        if (url) {
+          document.execCommand("createLink", false, url);
+        }
+      }
+
+      function clearEditor(areaId) {
+        const area = document.getElementById(areaId);
+        if (area) area.innerHTML = "";
+      }
+
+      function editorHtml(area) {
+        return (area?.innerHTML || "").trim();
+      }
+
+      taskStatusFilter.addEventListener("change", (event) => {
+        taskFilters.status = event.target.value;
+        loadTasks();
+      });
+
+      taskDueFilter.addEventListener("change", (event) => {
+        taskFilters.due = event.target.value;
+        renderTasks();
+      });
+
+      taskGtmFilter.addEventListener("change", (event) => {
+        taskFilters.gtm = event.target.value;
+        loadTasks();
+      });
+
+      taskHideDone.addEventListener("change", (event) => {
+        taskFilters.hideDone = event.target.checked;
+        loadTasks();
+      });
+
+      async function loadData() {
+        await Promise.all([
+          loadProject(),
+          loadTemplates(),
+          loadStages(),
+          loadCharacteristicTemplates(),
+          loadCharacteristics(),
+        ]);
+        await Promise.all([loadTasks(), loadImages(), loadFiles(), loadProjectComments(), loadHistory()]);
+      }
+
+      function taskProgress(task) {
+        const total = task.subtasks?.length || 0;
+        if (!total) {
+          const base = task.status === "done" ? 100 : task.status === "in_progress" ? 60 : 10;
+          return { percent: base, label: "Без подзадач" };
+        }
+        const done = task.subtasks.filter((s) => s.done).length;
+        const percent = Math.round((done / total) * 100);
+        return { percent, label: `${done}/${total}` };
+      }
+
+      async function loadProject() {
+        const res = await fetch(`/api/projects/${projectId}`);
+        if (!res.ok) {
+          stagesContainer.innerHTML = "<p>Проект не найден</p>";
+          return;
+        }
+        project = await res.json();
+        await loadGroupInfo();
+        renderProject();
+      }
+
+      async function loadGroupInfo() {
+        if (!project?.group_id) return;
+        const res = await fetch(`/api/groups/${project.group_id}`);
+        groupInfo = res.ok ? await res.json() : null;
+      }
+
+      async function loadTemplates() {
+        const res = await fetch("/api/gtm-templates");
+        gtmTemplates = res.ok ? await res.json() : [];
+        renderTemplates();
+      }
+
+      async function loadStages() {
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages`);
+        gtmStages = res.ok ? await res.json() : [];
+        renderStages();
+        renderTaskFilters();
+        renderGtmProgress();
+      }
+
+      async function loadCharacteristicTemplates() {
+        const res = await fetch("/api/characteristic-templates");
+        characteristicTemplates = res.ok ? await res.json() : [];
+        renderCharacteristicTemplates();
+      }
+
+      async function loadCharacteristics() {
+        const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
+        characteristicSections = res.ok ? await res.json() : [];
+        renderCharacteristics();
+      }
+
+      function renderProject() {
+        document.getElementById("project-name").textContent = project.name;
+        document.getElementById("project-desc").textContent = project.short_description || "Описание отсутствует";
+        const metaParts = [];
+        if (groupInfo?.name) metaParts.push(`Группа: ${groupInfo.name}`);
+        if (project.brand) metaParts.push(`Бренд: ${project.brand}`);
+        if (project.market) metaParts.push(`Рынок: ${project.market}`);
+        if (project.planned_launch) metaParts.push(`Плановая дата: ${project.planned_launch}`);
+        if (project.actual_launch) metaParts.push(`Факт: ${project.actual_launch}`);
+        document.getElementById("project-meta").textContent = metaParts.join(" · ") || "Данные проекта";
+        projectGroupEl.textContent = groupInfo?.name || "—";
+        projectBrandEl.textContent = project.brand || "—";
+        projectMarketEl.textContent = project.market || "—";
+        projectPlannedEl.textContent = project.planned_launch || "—";
+        projectActualEl.textContent = project.actual_launch || "—";
+
+        const badges = [];
+        if (project.status === "archived") {
+          badges.push(`<span class="badge archived">Архив</span>`);
+        } else if (project.status === "closed") {
+          badges.push(`<span class="badge closed">Закрыт</span>`);
+        } else {
+          badges.push(`<span class="badge">Активен</span>`);
+        }
+        if (project.priority) {
+          const titles = { low: "Низкий", medium: "Средний", high: "Высокий" };
+          badges.push(`<span class="badge">Приоритет: ${titles[project.priority] || project.priority}</span>`);
+        }
+        document.getElementById("project-badges").innerHTML = badges.join("");
+        renderGtmProgress();
+        renderCoverPanel();
+      }
+
+      function renderTemplates() {
+        templateSelect.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Выберите шаблон";
+        templateSelect.appendChild(defaultOption);
+        gtmTemplates.forEach((tpl) => {
+          const option = document.createElement("option");
+          option.value = tpl.id;
+          option.textContent = tpl.name;
+          templateSelect.appendChild(option);
+        });
+      }
+
+      function renderCharacteristicTemplates() {
+        characteristicTemplateSelect.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Шаблоны характеристик";
+        characteristicTemplateSelect.appendChild(defaultOption);
+        characteristicTemplates.forEach((tpl) => {
+          const option = document.createElement("option");
+          option.value = tpl.id;
+          option.textContent = tpl.name;
+          characteristicTemplateSelect.appendChild(option);
+        });
+      }
+
+      function statusLabel(value) {
+        return {
+          not_started: "Не начат",
+          in_progress: "В работе",
+          done: "Завершён",
+          cancelled: "Отменён",
+        }[value] || value;
+      }
+
+      function renderStages() {
+        gtmStages.sort((a, b) => a.order - b.order);
+        if (!gtmStages.length) {
+          stagesContainer.innerHTML = "<p class=\"muted\">Этапы ещё не добавлены.</p>";
+          return;
+        }
+
+        stagesContainer.innerHTML = "";
+        gtmStages.forEach((stage, index) => {
+          const card = document.createElement("div");
+          card.className = "stage-card";
+          card.dataset.stageId = stage.id;
+          card.innerHTML = `
+            <div class="stage-header">
+              <div>
+                <strong>${stage.order}. ${stage.title}</strong>
+                <div class="muted">${stage.description || "Без описания"}</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                <span class="chip">${statusLabel(stage.status)}</span>
+                ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
+                <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
+                <button class="ghost" onclick="moveStage('${stage.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
+                <button class="ghost" onclick="moveStage('${stage.id}', 1)" ${index === gtmStages.length - 1 ? "disabled" : ""}>↓</button>
+                <button class="ghost" onclick="deleteStage('${stage.id}')">🗑️</button>
+              </div>
+            </div>
+            <div class="grid-two" style="margin-top:8px">
+              <div class="chip">План: ${stage.planned_start || "—"} → ${stage.planned_end || "—"}</div>
+              <div class="chip">Факт завершения: ${stage.actual_end || "—"}</div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:500">
+                Статус
+                <select onchange="changeStatus('${stage.id}', this.value)">
+                  <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                  <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                  <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                  <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                </select>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:500">
+                <input type="checkbox" ${stage.risk_flag ? "checked" : ""} onchange="toggleRisk('${stage.id}', this.checked)" /> Риск
+              </label>
+              <button class="ghost" onclick="promptChecklist('${stage.id}')">+ Добавить пункт</button>
+            </div>
+            <ul class="checklist">
+              ${stage.checklist
+                .sort((a, b) => a.order - b.order)
+                .map(
+                  (item) => `
+                  <li>
+                    <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleChecklistItem('${stage.id}', '${item.id}', this.checked)" />
+                    <span ${item.done ? 'style="text-decoration: line-through; color:#94a3b8"' : ''}>${item.title}</span>
+                    <button class="ghost" onclick="editChecklistItem('${stage.id}', '${item.id}')">Изменить</button>
+                    <button class="ghost" onclick="deleteChecklistItem('${stage.id}', '${item.id}')">Удалить</button>
+                  </li>
+                `)
+                .join("")}
+            </ul>
+          `;
+
+          card.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openStageContextMenu(event, stage, index);
+          });
+
+          stagesContainer.appendChild(card);
+        });
+      }
+
+      function renderGtmProgress() {
+        const total = gtmStages.length;
+        const done = gtmStages.filter((stage) => stage.status === "done").length;
+        const percent = total ? Math.round((done / total) * 100) : 0;
+        if (!total) {
+          gtmProgressLabel.textContent = "Этапы не заданы";
+          gtmProgressFill.style.width = "0%";
+          gtmProgressBadge.textContent = "0%";
+          return;
+        }
+        gtmProgressLabel.textContent = `Завершено ${done} из ${total}`;
+        gtmProgressFill.style.width = `${percent}%`;
+        gtmProgressBadge.textContent = `${percent}%`;
+      }
+
+      function openStageContextMenu(event, stage, index) {
+        const actions = [
+          { label: "Редактировать", action: () => openStageForm(stage.id) },
+          { label: stage.risk_flag ? "Снять риск" : "Отметить риск", action: () => toggleRisk(stage.id, !stage.risk_flag) },
+          { label: "Добавить пункт чек-листа", action: () => promptChecklist(stage.id) },
+          { label: "Переместить вверх", disabled: index === 0, action: () => moveStage(stage.id, -1) },
+          { label: "Переместить вниз", disabled: index === gtmStages.length - 1, action: () => moveStage(stage.id, 1) },
+          { label: "Удалить", action: () => deleteStage(stage.id) },
+        ];
+        openContextMenu(event, actions);
+      }
+
+      function openContextMenu(event, actions) {
+        contextMenuList.innerHTML = "";
+        actions.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item.label;
+          if (item.disabled) {
+            li.classList.add("disabled");
+          } else {
+            li.addEventListener("click", () => {
+              item.action();
+              hideContextMenu();
+            });
+          }
+          contextMenuList.appendChild(li);
+        });
+
+        contextMenu.style.display = "block";
+        contextMenu.style.left = `${event.pageX}px`;
+        contextMenu.style.top = `${event.pageY}px`;
+      }
+
+      function hideContextMenu() {
+        contextMenu.style.display = "none";
+      }
+
+      document.addEventListener("click", () => hideContextMenu());
+
+      function openStageForm(stageId = null) {
+        document.getElementById("modal").style.display = "flex";
+        const stage = gtmStages.find((s) => s.id === stageId);
+        document.getElementById("modalTitle").textContent = stage ? "Редактирование этапа" : "Новый этап";
+        document.getElementById("stageId").value = stage ? stage.id : "";
+        document.getElementById("stageTitle").value = stage ? stage.title : "";
+        document.getElementById("stageOrder").value = stage ? stage.order : gtmStages.length;
+        document.getElementById("stageDescription").value = stage?.description || "";
+        document.getElementById("stagePlannedStart").value = stage?.planned_start || "";
+        document.getElementById("stagePlannedEnd").value = stage?.planned_end || "";
+        document.getElementById("stageActualEnd").value = stage?.actual_end || "";
+        document.getElementById("stageStatus").value = stage?.status || "not_started";
+        document.getElementById("stageRisk").checked = stage?.risk_flag || false;
+      }
+
+      function closeModal() {
+        document.getElementById("modal").style.display = "none";
+      }
+
+      document.getElementById("stageForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          title: document.getElementById("stageTitle").value,
+          order: Number(document.getElementById("stageOrder").value || 0),
+          description: document.getElementById("stageDescription").value || null,
+          planned_start: document.getElementById("stagePlannedStart").value || null,
+          planned_end: document.getElementById("stagePlannedEnd").value || null,
+          actual_end: document.getElementById("stageActualEnd").value || null,
+          status: document.getElementById("stageStatus").value,
+          risk_flag: document.getElementById("stageRisk").checked,
+          checklist: [],
+        };
+
+        const stageId = document.getElementById("stageId").value;
+        let res;
+        if (stageId) {
+          const existing = gtmStages.find((s) => s.id === stageId);
+          payload.checklist = existing?.checklist || [];
+          res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } else {
+          res = await fetch(`/api/projects/${projectId}/gtm-stages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }
+
+        if (res.ok) {
+          await loadStages();
+          closeModal();
+        } else {
+          alert("Ошибка сохранения этапа");
+        }
+      });
+
+      async function changeStatus(stageId, value) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage) return;
+        stage.status = value;
+        await saveStage(stage);
+      }
+
+      async function toggleRisk(stageId, value) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage) return;
+        stage.risk_flag = value;
+        await saveStage(stage);
+      }
+
+      async function moveStage(stageId, delta) {
+        const index = gtmStages.findIndex((s) => s.id === stageId);
+        if (index === -1) return;
+        const target = index + delta;
+        if (target < 0 || target >= gtmStages.length) return;
+        const otherId = gtmStages[target].id;
+
+        [gtmStages[index].order, gtmStages[target].order] = [gtmStages[target].order, gtmStages[index].order];
+        const firstSave = saveStage(gtmStages[index]);
+        const secondSave = saveStage(gtmStages[target]);
+        await Promise.all([firstSave, secondSave]);
+        await loadStages();
+      }
+
+      async function deleteStage(stageId) {
+        if (!confirm("Удалить этап?")) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}`, { method: "DELETE" });
+        if (res.ok) {
+          await loadStages();
+        } else {
+          alert("Не удалось удалить этап");
+        }
+      }
+
+      async function saveStage(stage) {
+        await fetch(`/api/projects/${projectId}/gtm-stages/${stage.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(stage),
+        });
+      }
+
+      function promptChecklist(stageId) {
+        const text = prompt("Текст пункта чек-листа");
+        if (!text) return;
+        addChecklistItem(stageId, text);
+      }
+
+      async function addChecklistItem(stageId, title) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage) return;
+        const nextOrder = stage.checklist.length;
+        stage.checklist.push({ id: crypto.randomUUID(), title, done: false, order: nextOrder });
+        await saveStage(stage);
+        await loadStages();
+      }
+
+      async function toggleChecklistItem(stageId, itemId, done) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage) return;
+        const item = stage.checklist.find((c) => c.id === itemId);
+        if (!item) return;
+        item.done = done;
+        await saveStage(stage);
+        await loadStages();
+      }
+
+      async function editChecklistItem(stageId, itemId) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        const item = stage?.checklist.find((c) => c.id === itemId);
+        if (!item) return;
+        const text = prompt("Изменить текст пункта", item.title);
+        if (!text) return;
+        item.title = text;
+        await saveStage(stage);
+        await loadStages();
+      }
+
+      async function deleteChecklistItem(stageId, itemId) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage) return;
+        stage.checklist = stage.checklist.filter((c) => c.id !== itemId);
+        stage.checklist.forEach((c, idx) => (c.order = idx));
+        await saveStage(stage);
+        await loadStages();
+      }
+
+      async function applyTemplate() {
+        const templateId = templateSelect.value;
+        if (!templateId) return alert("Выберите шаблон");
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/apply-template?template_id=${templateId}`, {
+          method: "POST",
+        });
+        if (res.ok) {
+          gtmStages = await res.json();
+          renderStages();
+        } else {
+          alert("Не удалось применить шаблон");
+        }
+      }
+
+      async function saveTemplate() {
+        const name = prompt("Название шаблона", project?.name ? `GTM ${project.name}` : "Новый шаблон");
+        if (!name) return;
+        const description = prompt("Описание шаблона (необязательно)") || null;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/save-template`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, description }),
+        });
+        if (res.ok) {
+          await loadTemplates();
+          alert("Шаблон сохранён");
+        } else {
+          alert("Не удалось сохранить шаблон");
+        }
+      }
+
+      function triggerImport() {
+        importInput.click();
+      }
+
+      importInput.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/import`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          gtmStages = await res.json();
+          renderStages();
+          alert("Этапы импортированы и сохранены");
+        } else {
+          const detail = await res.json();
+          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+        }
+        event.target.value = "";
+      });
+
+      async function exportStages() {
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/export`);
+        if (!res.ok) {
+          alert("Не удалось выгрузить этапы");
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `gtm_stages_${projectId}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      async function loadTasks() {
+        const params = new URLSearchParams();
+        if (taskFilters.status !== "all") params.append("status", taskFilters.status);
+        if (taskFilters.hideDone) params.append("only_active", "true");
+        if (taskFilters.gtm) params.append("gtm_stage_id", taskFilters.gtm);
+        const res = await fetch(`/api/projects/${projectId}/tasks?${params.toString()}`);
+        tasks = res.ok ? await res.json() : [];
+        renderTasks();
+      }
+
+      function renderTaskFilters() {
+        taskGtmFilter.innerHTML = "";
+        const all = document.createElement("option");
+        all.value = "";
+        all.textContent = "Все этапы";
+        taskGtmFilter.appendChild(all);
+
+        taskGtmStageSelect.innerHTML = "";
+        const none = document.createElement("option");
+        none.value = "";
+        none.textContent = "Не задан";
+        taskGtmStageSelect.appendChild(none);
+
+        const sorted = [...gtmStages].sort((a, b) => a.order - b.order);
+        sorted.forEach((stage) => {
+          const option = document.createElement("option");
+          option.value = stage.id;
+          option.textContent = `${stage.order}. ${stage.title}`;
+          taskGtmFilter.appendChild(option.cloneNode(true));
+          taskGtmStageSelect.appendChild(option);
+        });
+
+        taskGtmFilter.value = taskFilters.gtm;
+      }
+
+      function taskStatusLabel(value) {
+        return {
+          todo: "ToDo",
+          in_progress: "В работе",
+          done: "Готово",
+        }[value] || value;
+      }
+
+      function stageTitle(stageId) {
+        if (!stageId) return "Без этапа";
+        const stage = gtmStages.find((s) => s.id === stageId);
+        return stage ? `${stage.order}. ${stage.title}` : "Без этапа";
+      }
+
+      function dueInfo(task) {
+        if (!task.due_date) return { text: "Срок не назначен", className: "tag" };
+        const today = new Date();
+        const due = new Date(task.due_date);
+        const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+        if (task.status === "done") {
+          return { text: `Срок: ${task.due_date}`, className: "tag" };
+        }
+        if (due < today) {
+          return { text: `Просрочено на ${Math.abs(diffDays)} дн.`, className: "tag due-overdue" };
+        }
+        if (diffDays <= 7) {
+          return { text: `До срока ${diffDays} дн.`, className: "tag due-soon" };
+        }
+        return { text: `Срок: ${task.due_date}`, className: "tag" };
+      }
+
+      function applyTaskFilters(list = tasks) {
+        return list.filter((task) => {
+          if (taskFilters.status !== "all" && task.status !== taskFilters.status) return false;
+          if (taskFilters.gtm && task.gtm_stage_id !== taskFilters.gtm) return false;
+          if (taskFilters.due === "overdue") {
+            if (!task.due_date) return false;
+            const due = new Date(task.due_date);
+            if (due >= new Date() || task.status === "done") return false;
+          }
+          if (taskFilters.due === "upcoming") {
+            if (!task.due_date) return false;
+            const due = new Date(task.due_date);
+            const diffDays = Math.floor((due - new Date()) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0 || diffDays > 7) return false;
+          }
+          return true;
+        });
+      }
+
+      function toggleTaskView() {
+        taskView = taskView === "list" ? "board" : "list";
+        renderTasks();
+      }
+
+      function renderTasks() {
+        const filtered = applyTaskFilters();
+        taskViewToggle.textContent = taskView === "list" ? "Переключить вид: доска" : "Переключить вид: список";
+        if (!filtered.length) {
+          tasksContainer.innerHTML = "<p class='muted'>Задачи ещё не созданы или не подходят под фильтр.</p>";
+          return;
+        }
+
+        if (taskView === "board") {
+          renderTaskBoard(filtered);
+        } else {
+          renderTaskList(filtered);
+        }
+      }
+
+      function renderTaskBoard(list) {
+        const statuses = [
+          { key: "todo", title: "ToDo" },
+          { key: "in_progress", title: "В работе" },
+          { key: "done", title: "Готово" },
+        ];
+        const board = document.createElement("div");
+        board.className = "task-board";
+        statuses.forEach((column) => {
+          const col = document.createElement("div");
+          col.className = "task-column";
+          const columnTasks = list.filter((t) => t.status === column.key);
+          col.innerHTML = `<div class="stage-header"><h3 style="margin:0">${column.title}</h3><span class="chip">${columnTasks.length}</span></div>`;
+
+          if (!columnTasks.length) {
+            const empty = document.createElement("p");
+            empty.className = "muted";
+            empty.textContent = "Нет задач";
+            col.appendChild(empty);
+          } else {
+            columnTasks
+              .slice()
+              .sort((a, b) => (a.due_date || "")?.localeCompare(b.due_date || ""))
+              .forEach((task) => {
+                const card = document.createElement("div");
+                card.className = "task-card";
+                const due = dueInfo(task);
+                card.innerHTML = `
+                  <div class="stage-header">
+                    <div>
+                      <strong>${task.title}</strong>
+                      <div class="muted">${stageTitle(task.gtm_stage_id)}</div>
+                    </div>
+                    <div style="display:flex; gap:6px">
+                      <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                      <button class="ghost" onclick="deleteTask('${task.id}')">🗑️</button>
+                    </div>
+                  </div>
+                  <div class="task-meta" style="margin-top:6px">
+                    <span class="status-chip ${task.status}">${taskStatusLabel(task.status)}</span>
+                    <span class="${due.className}">${due.text}</span>
+                    ${task.important ? '<span class="tag">⭐ Важно</span>' : ""}
+                  </div>
+                  <div class="muted" style="margin-top:6px">${task.description || "Без описания"}</div>
+                  <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'todo')">ToDo</button>
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'in_progress')">В работу</button>
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'done')">Готово</button>
+                    <button class="ghost" onclick="addSubtaskPrompt('${task.id}')">+ Подзадача</button>
+                  </div>
+                `;
+                card.addEventListener("contextmenu", (event) => {
+                  event.preventDefault();
+                  const actions = [
+                    { label: "Редактировать", action: () => openTaskForm(task.id) },
+                    { label: "ToDo", action: () => changeTaskStatus(task.id, "todo") },
+                    { label: "В работу", action: () => changeTaskStatus(task.id, "in_progress") },
+                    { label: "Готово", action: () => changeTaskStatus(task.id, "done") },
+                    { label: task.important ? "Снять важность" : "Сделать важной", action: () => toggleImportant(task.id) },
+                    { label: "Удалить", action: () => deleteTask(task.id) },
+                  ];
+                  openContextMenu(event, actions);
+                });
+                col.appendChild(card);
+              });
+          }
+          board.appendChild(col);
+        });
+        tasksContainer.innerHTML = "";
+        tasksContainer.appendChild(board);
+      }
+
+      function renderTaskList(list) {
+        tasksContainer.innerHTML = "";
+        list
+          .slice()
+          .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""))
+          .forEach((task) => {
+            const card = document.createElement("div");
+            card.className = "task-card";
+            const due = dueInfo(task);
+            const progress = taskProgress(task);
+            card.innerHTML = `
+              <div class="stage-header">
+                <div>
+                  <strong>${task.title}</strong>
+                  <div class="muted">${stageTitle(task.gtm_stage_id)}</div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center">
+                  <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                  <button class="ghost" onclick="deleteTask('${task.id}')">🗑️</button>
+                </div>
+              </div>
+              <div class="task-meta" style="margin-top:6px">
+                <span class="status-chip ${task.status}">${taskStatusLabel(task.status)}</span>
+                <span class="${due.className}">${due.text}</span>
+                ${task.important ? '<span class="tag">⭐ Важно</span>' : ""}
+              </div>
+              <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+                <div class="progress-line"><div class="fill" style="width:${progress.percent}%"></div></div>
+                <div class="muted">Прогресс: ${progress.label}</div>
+              </div>
+              <div class="muted" style="margin-top:6px">${task.description || "Без описания"}</div>
+            `;
+
+            const actionBar = document.createElement("div");
+            actionBar.style.display = "flex";
+            actionBar.style.gap = "8px";
+            actionBar.style.flexWrap = "wrap";
+            actionBar.style.marginTop = "8px";
+            [
+              { label: "ToDo", next: "todo" },
+              { label: "В работу", next: "in_progress" },
+              { label: "Готово", next: "done" },
+            ].forEach((action) => {
+              const btn = document.createElement("button");
+              btn.className = "ghost";
+              btn.textContent = action.label;
+              btn.addEventListener("click", () => changeTaskStatus(task.id, action.next));
+              actionBar.appendChild(btn);
+            });
+            const importantBtn = document.createElement("button");
+            importantBtn.className = "ghost";
+            importantBtn.textContent = task.important ? "Снять важность" : "Сделать важной";
+            importantBtn.addEventListener("click", () => toggleImportant(task.id));
+            actionBar.appendChild(importantBtn);
+            card.appendChild(actionBar);
+
+            const subtasksList = document.createElement("ul");
+            subtasksList.className = "subtasks";
+            const subtasks = [...(task.subtasks || [])].sort((a, b) => a.order - b.order);
+            if (!subtasks.length) {
+              const li = document.createElement("li");
+              li.className = "muted";
+              li.textContent = "Подзадач пока нет";
+              subtasksList.appendChild(li);
+            } else {
+              subtasks.forEach((sub) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                  <input type="checkbox" ${sub.done ? "checked" : ""} />
+                  <span ${sub.done ? 'style="text-decoration: line-through; color:#94a3b8"' : ''}>${sub.title}</span>
+                `;
+                li.querySelector("input").addEventListener("change", (event) => {
+                  toggleSubtask(task.id, sub.id, event.target.checked);
+                });
+                const textSpan = li.querySelector("span");
+                textSpan.contentEditable = true;
+                textSpan.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, textSpan.innerText));
+                textSpan.addEventListener("keydown", (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    textSpan.blur();
+                  }
+                });
+                const editBtn = document.createElement("button");
+                editBtn.className = "ghost";
+                editBtn.textContent = "Редактировать";
+                editBtn.addEventListener("click", () => textSpan.focus());
+                const delBtn = document.createElement("button");
+                delBtn.className = "ghost";
+                delBtn.textContent = "Удалить";
+                delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
+                li.appendChild(editBtn);
+                li.appendChild(delBtn);
+                li.addEventListener("contextmenu", (event) => {
+                  event.preventDefault();
+                  const actions = [
+                    { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
+                    { label: "Переименовать", action: () => textSpan.focus() },
+                    { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
+                  ];
+                  openContextMenu(event, actions);
+                });
+                subtasksList.appendChild(li);
+              });
+            }
+            card.appendChild(subtasksList);
+
+            const composer = document.createElement("div");
+            composer.className = "subtask-inline";
+            composer.innerHTML = `
+              <input class="inline-input" placeholder="Новая подзадача" />
+              <button class="ghost">Добавить</button>
+            `;
+            const [subInput, subBtn] = composer.querySelectorAll("input, button");
+            subBtn.addEventListener("click", () => {
+              const title = subInput.value.trim();
+              if (!title) return;
+              addSubtask(task.id, title);
+              subInput.value = "";
+            });
+            card.appendChild(composer);
+
+            const commentsBlock = document.createElement("div");
+            commentsBlock.style.marginTop = "10px";
+            commentsBlock.innerHTML = `<strong>Комментарии</strong>`;
+            const commentList = document.createElement("ul");
+            commentList.className = "comment-list";
+            if (!task.comments?.length) {
+              const empty = document.createElement("li");
+              empty.className = "muted";
+              empty.textContent = "Комментариев нет";
+              commentList.appendChild(empty);
+            } else {
+              task.comments
+                .slice()
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .forEach((comment) => {
+                  const item = document.createElement("li");
+                  item.className = "comment-item";
+                  const created = new Date(comment.created_at).toLocaleString("ru-RU");
+                  item.innerHTML = `<div class="muted" style="font-size:0.85rem">${created}</div><div>${comment.text}</div>`;
+                  const del = document.createElement("button");
+                  del.className = "ghost";
+                  del.textContent = "Удалить";
+                  del.addEventListener("click", () => deleteTaskComment(task.id, comment.id));
+                  item.appendChild(del);
+                  commentList.appendChild(item);
+                });
+            }
+            commentsBlock.appendChild(commentList);
+            const addCommentBtn = document.createElement("button");
+            addCommentBtn.className = "ghost";
+            addCommentBtn.textContent = "+ Комментарий";
+            addCommentBtn.addEventListener("click", () => addTaskComment(task.id));
+            commentsBlock.appendChild(addCommentBtn);
+            card.appendChild(commentsBlock);
+
+            card.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              const actions = [
+                { label: "Редактировать", action: () => openTaskForm(task.id) },
+                { label: "ToDo", action: () => changeTaskStatus(task.id, "todo") },
+                { label: "В работу", action: () => changeTaskStatus(task.id, "in_progress") },
+                { label: "Готово", action: () => changeTaskStatus(task.id, "done") },
+                { label: task.important ? "Снять важность" : "Сделать важной", action: () => toggleImportant(task.id) },
+                { label: "Удалить", action: () => deleteTask(task.id) },
+              ];
+              openContextMenu(event, actions);
+            });
+
+            tasksContainer.appendChild(card);
+          });
+      }
+
+      function openTaskForm(taskId = null) {
+        taskModal.style.display = "flex";
+        const task = tasks.find((t) => t.id === taskId);
+        document.getElementById("taskModalTitle").textContent = task ? "Редактирование задачи" : "Новая задача";
+        document.getElementById("taskId").value = task?.id || "";
+        document.getElementById("taskTitle").value = task?.title || "";
+        document.getElementById("taskDescription").value = task?.description || "";
+        document.getElementById("taskStatus").value = task?.status || "todo";
+        document.getElementById("taskDueDate").value = task?.due_date || "";
+        document.getElementById("taskImportant").checked = task?.important || false;
+        taskGtmStageSelect.value = task?.gtm_stage_id || "";
+      }
+
+      function closeTaskModal() {
+        taskModal.style.display = "none";
+      }
+
+      document.getElementById("taskForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          title: document.getElementById("taskTitle").value,
+          description: document.getElementById("taskDescription").value || null,
+          status: document.getElementById("taskStatus").value,
+          due_date: document.getElementById("taskDueDate").value || null,
+          important: document.getElementById("taskImportant").checked,
+          gtm_stage_id: document.getElementById("taskGtmStage").value || null,
+          subtasks: [],
+          comments: [],
+        };
+        const taskId = document.getElementById("taskId").value;
+        let res;
+        if (taskId) {
+          const existing = tasks.find((t) => t.id === taskId);
+          payload.subtasks = existing?.subtasks || [];
+          payload.comments = existing?.comments || [];
+          payload.id = taskId;
+          res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } else {
+          res = await fetch(`/api/projects/${projectId}/tasks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }
+        if (!res.ok) {
+          alert("Не удалось сохранить задачу");
+          return;
+        }
+        closeTaskModal();
+        await loadTasks();
+      });
+
+      async function changeTaskStatus(taskId, status) {
+        const existing = tasks.find((t) => t.id === taskId);
+        if (!existing) return;
+        const payload = { ...existing, status };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить статус");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function toggleImportant(taskId) {
+        const existing = tasks.find((t) => t.id === taskId);
+        if (!existing) return;
+        const payload = { ...existing, important: !existing.important };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить важность");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteTask(taskId) {
+        if (!confirm("Удалить задачу и её подзадачи?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить задачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function addSubtask(taskId, title) {
+        const prepared = title?.trim();
+        if (!prepared) return;
+        const task = tasks.find((t) => t.id === taskId);
+        const order = task?.subtasks?.length || 0;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: prepared, done: false, order }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      function addSubtaskPrompt(taskId) {
+        const title = prompt("Текст подзадачи");
+        if (!title) return;
+        addSubtask(taskId, title);
+      }
+
+      async function toggleSubtask(taskId, subtaskId, done) {
+        const task = tasks.find((t) => t.id === taskId);
+        const sub = task?.subtasks.find((s) => s.id === subtaskId);
+        if (!task || !sub) return;
+        const payload = { ...sub, done };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function updateSubtaskTitle(taskId, subtaskId, title) {
+        const task = tasks.find((t) => t.id === taskId);
+        const sub = task?.subtasks.find((s) => s.id === subtaskId);
+        const prepared = title?.trim();
+        if (!task || !sub || !prepared) return;
+        const payload = { ...sub, title: prepared };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteSubtask(taskId, subtaskId) {
+        if (!confirm("Удалить подзадачу?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function addTaskComment(taskId) {
+        const text = prompt("Комментарий к задаче");
+        if (!text || !text.trim()) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text.trim() }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteTaskComment(taskId, commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function loadImages() {
+        const res = await fetch(`/api/projects/${projectId}/images`);
+        if (res.ok) {
+          images = await res.json();
+          renderGallery();
+          renderCoverPanel();
+        }
+      }
+
+      function renderGallery() {
+        galleryContainer.innerHTML = "";
+        const sorted = [...images].sort((a, b) => a.order - b.order);
+        if (!sorted.length) {
+          galleryContainer.innerHTML = "<p class='muted'>Изображений пока нет</p>";
+          return;
+        }
+
+        sorted.forEach((img, index) => {
+          const card = document.createElement("div");
+          card.className = "image-card";
+          card.innerHTML = `
+            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" />
+            <div class="image-meta">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap: wrap">
+                <strong>${img.filename}</strong>
+                ${img.is_cover ? '<span class="badge">Обложка</span>' : ""}
+              </div>
+              <div class="muted">${img.caption || "Без подписи"}</div>
+              <div style="display:flex; gap:8px; flex-wrap: wrap">
+                <button class="ghost" onclick="openImage('${img.id}')">Открыть</button>
+                <button class="ghost" onclick="editImageCaption('${img.id}')">Подпись</button>
+                <button class="ghost" onclick="setCover('${img.id}')">Сделать обложкой</button>
+                <button class="ghost" onclick="moveImage('${img.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
+                <button class="ghost" onclick="moveImage('${img.id}', 1)" ${index === sorted.length - 1 ? "disabled" : ""}>↓</button>
+                <button onclick="deleteImage('${img.id}')">Удалить</button>
+              </div>
+            </div>
+          `;
+
+          card.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            const actions = [
+              { label: "Просмотреть", action: () => openImage(img.id) },
+              { label: "Сделать обложкой", action: () => setCover(img.id) },
+              { label: "Изменить подпись", action: () => editImageCaption(img.id) },
+              { label: "Удалить", action: () => deleteImage(img.id) },
+            ];
+            openContextMenu(event, actions);
+          });
+
+          galleryContainer.appendChild(card);
+        });
+      }
+
+      function renderCoverPanel() {
+        const cover = getCoverImage();
+        if (cover) {
+          coverImage.src = `/api/projects/${projectId}/images/${cover.id}/download`;
+          coverImage.style.display = "block";
+          coverPlaceholder.style.display = "none";
+          clearCoverButton.disabled = !cover.is_cover;
+        } else {
+          coverImage.removeAttribute("src");
+          coverImage.style.display = "none";
+          coverPlaceholder.style.display = "flex";
+          clearCoverButton.disabled = true;
+        }
+      }
+
+      function getCoverImage() {
+        const explicit = images.find((img) => img.is_cover);
+        if (explicit) return explicit;
+        return images.length ? images[0] : null;
+      }
+
+      function triggerImageUpload() {
+        imageUploadInput.click();
+      }
+
+      imageUploadInput.addEventListener("change", async (event) => {
+        const selected = Array.from(event.target.files || []);
+        for (const file of selected) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch(`/api/projects/${projectId}/images/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            alert("Не удалось загрузить изображение");
+            break;
+          }
+        }
+        imageUploadInput.value = "";
+        await loadImages();
+      });
+
+      function triggerCoverUpload() {
+        coverUploadInput.click();
+      }
+
+      coverUploadInput.addEventListener("change", async (event) => {
+        const selected = event.target.files?.[0];
+        if (!selected) return;
+        const formData = new FormData();
+        formData.append("file", selected);
+        formData.append("is_cover", "true");
+        const res = await fetch(`/api/projects/${projectId}/images/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          alert("Не удалось загрузить обложку");
+        }
+        coverUploadInput.value = "";
+        await loadImages();
+      });
+
+      async function clearCover() {
+        const cover = getCoverImage();
+        if (!cover || !cover.is_cover) {
+          renderCoverPanel();
+          return;
+        }
+        const payload = { ...cover, is_cover: false };
+        const res = await fetch(`/api/projects/${projectId}/images/${cover.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось снять обложку");
+          return;
+        }
+        await loadImages();
+      }
+
+      function scrollToGallery() {
+        gallerySection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function openImage(imageId) {
+        window.open(`/api/projects/${projectId}/images/${imageId}/download`, "_blank");
+      }
+
+      async function setCover(imageId) {
+        const image = images.find((img) => img.id === imageId);
+        if (!image) return;
+        const payload = { ...image, is_cover: true };
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось назначить обложку");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function editImageCaption(imageId) {
+        const image = images.find((img) => img.id === imageId);
+        if (!image) return;
+        const caption = prompt("Подпись/комментарий", image.caption || "");
+        if (caption === null) return;
+        const payload = { ...image, caption: caption || null };
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подпись");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function moveImage(imageId, delta) {
+        const sorted = [...images].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((img) => img.id === imageId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((img, idx) => (img.order = idx));
+        await Promise.all(
+          sorted.map((img) =>
+            fetch(`/api/projects/${projectId}/images/${img.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(img),
+            })
+          )
+        );
+        await loadImages();
+      }
+
+      async function deleteImage(imageId) {
+        if (!confirm("Удалить изображение?")) return;
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить изображение");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function loadFiles() {
+        const res = await fetch(`/api/projects/${projectId}/files`);
+        if (res.ok) {
+          files = await res.json();
+          renderFiles();
+        }
+      }
+
+      function renderFiles() {
+        fileTable.innerHTML = "";
+        if (!files.length) {
+          const row = document.createElement("tr");
+          row.innerHTML = '<td colspan="5" class="muted">Файлы не добавлены</td>';
+          fileTable.appendChild(row);
+          return;
+        }
+
+        files
+          .slice()
+          .sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at))
+          .forEach((file) => {
+            const row = document.createElement("tr");
+            const date = new Date(file.uploaded_at).toLocaleString("ru-RU");
+            row.innerHTML = `
+              <td>${file.name}</td>
+              <td>${file.description || ""}</td>
+              <td>${file.category || ""}</td>
+              <td>${date}</td>
+              <td>
+                <button class="ghost" onclick="downloadFile('${file.id}')">Скачать</button>
+                <button class="ghost" onclick="editFile('${file.id}')">Править</button>
+                <button onclick="deleteFile('${file.id}')">Удалить</button>
+              </td>
+            `;
+            row.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              const actions = [
+                { label: "Скачать", action: () => downloadFile(file.id) },
+                { label: "Изменить описание/категорию", action: () => editFile(file.id) },
+                { label: "Удалить", action: () => deleteFile(file.id) },
+              ];
+              openContextMenu(event, actions);
+            });
+            fileTable.appendChild(row);
+          });
+      }
+
+      function triggerFileUpload() {
+        fileUploadInput.click();
+      }
+
+      fileUploadInput.addEventListener("change", async (event) => {
+        const selected = Array.from(event.target.files || []);
+        for (const file of selected) {
+          const description = prompt(`Описание для ${file.name} (необязательно)`) || "";
+          const category = prompt(`Категория для ${file.name} (необязательно)`) || "";
+          const formData = new FormData();
+          formData.append("file", file);
+          if (description) formData.append("description", description);
+          if (category) formData.append("category", category);
+          const res = await fetch(`/api/projects/${projectId}/files/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            alert("Не удалось загрузить файл");
+            break;
+          }
+        }
+        fileUploadInput.value = "";
+        await loadFiles();
+      });
+
+      function downloadFile(fileId) {
+        window.open(`/api/projects/${projectId}/files/${fileId}/download`, "_blank");
+      }
+
+      async function editFile(fileId) {
+        const file = files.find((f) => f.id === fileId);
+        if (!file) return;
+        const name = prompt("Имя файла", file.name) || file.name;
+        const description = prompt("Описание", file.description || "") || "";
+        const category = prompt("Категория", file.category || "") || "";
+        const payload = { ...file, name, description: description || null, category: category || null };
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить файл");
+          return;
+        }
+        await loadFiles();
+      }
+
+      async function deleteFile(fileId) {
+        if (!confirm("Удалить файл?")) return;
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить файл");
+          return;
+        }
+        await loadFiles();
+      }
+
+      async function loadProjectComments() {
+        const res = await fetch(`/api/projects/${projectId}/comments`);
+        if (res.ok) {
+          projectComments = await res.json();
+          renderProjectComments();
+        }
+      }
+
+      function renderProjectComments() {
+        projectCommentsList.innerHTML = "";
+        if (!projectComments.length) {
+          const li = document.createElement("li");
+          li.className = "muted";
+          li.textContent = "Комментариев нет";
+          projectCommentsList.appendChild(li);
+          return;
+        }
+        projectComments
+          .slice()
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .forEach((comment) => {
+            const li = document.createElement("li");
+            li.className = "comment-item";
+            const meta = document.createElement("div");
+            meta.className = "muted";
+            meta.style.fontSize = "0.85rem";
+            const edited = comment.edited_at
+              ? ` (изменён ${new Date(comment.edited_at).toLocaleString("ru-RU")})`
+              : "";
+            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${edited}`;
+            const body = document.createElement("div");
+            body.innerHTML = comment.text || "";
+            const actions = document.createElement("div");
+            actions.className = "toolbar";
+            actions.style.margin = "6px 0 0";
+            const editBtn = document.createElement("button");
+            editBtn.className = "ghost";
+            editBtn.textContent = "Редактировать";
+            editBtn.addEventListener("click", () => startProjectCommentEdit(comment));
+            const remove = document.createElement("button");
+            remove.className = "ghost";
+            remove.textContent = "Удалить";
+            remove.addEventListener("click", () => deleteProjectComment(comment.id));
+            actions.appendChild(editBtn);
+            actions.appendChild(remove);
+            li.appendChild(meta);
+            li.appendChild(body);
+            li.appendChild(actions);
+            projectCommentsList.appendChild(li);
+          });
+      }
+
+      async function addProjectComment() {
+        const html = editorHtml(projectCommentArea);
+        if (!html) return;
+        const res = await fetch(`/api/projects/${projectId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: html }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        clearEditor("projectCommentArea");
+        await loadProjectComments();
+      }
+
+      function startProjectCommentEdit(comment) {
+        const existing = Array.from(projectCommentsList.children).find((li) =>
+          li.querySelector(".toolbar button")?.onclick?.toString().includes(comment.id)
+        );
+        const li = existing || document.createElement("li");
+        li.innerHTML = "";
+        li.className = "comment-item";
+        const editor = document.createElement("div");
+        editor.className = "rich-editor";
+        editor.innerHTML = `
+          <div class="rich-editor-toolbar">
+            <button type="button" onclick="formatSelection('bold')">B</button>
+            <button type="button" onclick="formatSelection('italic')"><em>I</em></button>
+            <button type="button" onclick="formatSelection('insertUnorderedList')">• Список</button>
+            <button type="button" onclick="addLinkToSelection()">Ссылка</button>
+          </div>
+          <div class="rich-editor-area" contenteditable="true">${comment.text || ""}</div>
+        `;
+        const actions = document.createElement("div");
+        actions.className = "toolbar";
+        actions.style.marginTop = "6px";
+        const save = document.createElement("button");
+        save.className = "primary";
+        save.textContent = "Сохранить";
+        save.addEventListener("click", async () => {
+          const html = editorHtml(editor.querySelector(".rich-editor-area"));
+          if (!html) return;
+          await updateProjectComment(comment.id, html);
+        });
+        const cancel = document.createElement("button");
+        cancel.className = "ghost";
+        cancel.textContent = "Отмена";
+        cancel.addEventListener("click", renderProjectComments);
+        actions.appendChild(save);
+        actions.appendChild(cancel);
+        li.appendChild(editor);
+        li.appendChild(actions);
+        if (!existing) projectCommentsList.prepend(li);
+      }
+
+      async function updateProjectComment(commentId, text) {
+        const res = await fetch(`/api/projects/${projectId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить комментарий");
+          return;
+        }
+        await loadProjectComments();
+      }
+
+      async function deleteProjectComment(commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadProjectComments();
+      }
+
+      async function loadHistory() {
+        const res = await fetch(`/api/projects/${projectId}/history`);
+        if (res.ok) {
+          historyEvents = await res.json();
+          renderHistory();
+        }
+      }
+
+      function renderHistory() {
+        historyContainer.innerHTML = "";
+        if (!historyEvents.length) {
+          historyContainer.innerHTML = "<p class='muted'>История пока пустая.</p>";
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "comment-list";
+        historyEvents
+          .slice()
+          .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at))
+          .forEach((event) => {
+            const item = document.createElement("li");
+            item.className = "comment-item";
+            item.innerHTML = `
+              <div class="muted" style="font-size:0.85rem">${new Date(event.occurred_at).toLocaleString("ru-RU")}</div>
+              <div><strong>${event.summary}</strong></div>
+              ${event.details ? `<div class="muted">${event.details}</div>` : ""}
+            `;
+            const remove = document.createElement("button");
+            remove.className = "ghost";
+            remove.textContent = "Удалить";
+            remove.addEventListener("click", () => deleteHistoryEvent(event.id));
+            item.appendChild(remove);
+            list.appendChild(item);
+          });
+        historyContainer.appendChild(list);
+      }
+
+      async function addHistoryEvent() {
+        const summary = prompt("Краткое описание события");
+        if (!summary || !summary.trim()) return;
+        const details = prompt("Детали (необязательно)") || null;
+        const res = await fetch(`/api/projects/${projectId}/history`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ summary, details }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить событие");
+          return;
+        }
+        await loadHistory();
+      }
+
+      async function deleteHistoryEvent(eventId) {
+        if (!confirm("Удалить запись истории?")) return;
+        const res = await fetch(`/api/projects/${projectId}/history/${eventId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить запись истории");
+          return;
+        }
+        await loadHistory();
+      }
+
+      function renderCharacteristics() {
+        characteristicContainer.innerHTML = "";
+        const sortedSections = [...characteristicSections].sort((a, b) => a.order - b.order);
+        if (!sortedSections.length) {
+          characteristicContainer.innerHTML = "<p class='muted'>Секции характеристик пока не добавлены.</p>";
+          return;
+        }
+
+        sortedSections.forEach((section, sIndex) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "section-card";
+          wrapper.innerHTML = `
+            <div class=\"stage-header\" style=\"margin-bottom:8px\">
+              <div>
+                <h3 style=\"margin:0\">${section.title}</h3>
+                <div class=\"muted\">Порядок: ${section.order}</div>
+              </div>
+              <div class=\"toolbar\" style=\"margin:0\">
+                <button class=\"ghost\" onclick=\"promptSection('${section.id}')\">Редактировать</button>
+                <button class=\"ghost\" onclick=\"promptField('${section.id}')\">+ Поле</button>
+                <button class=\"ghost\" onclick=\"moveSection('${section.id}', -1)\" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
+                <button class=\"ghost\" onclick=\"moveSection('${section.id}', 1)\" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
+                <button onclick=\"deleteSection('${section.id}')\">Удалить</button>
+              </div>
+            </div>
+          `;
+
+          const table = document.createElement("table");
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Label RU</th>
+                <th>Label EN</th>
+                <th>Value RU</th>
+                <th>Value EN</th>
+                <th>Тип</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          `;
+
+          const tbody = table.querySelector("tbody");
+          const fields = [...section.fields].sort((a, b) => a.order - b.order);
+          if (!fields.length) {
+            const emptyRow = document.createElement("tr");
+            emptyRow.innerHTML = `<td colspan="6" class="muted">Полей пока нет</td>`;
+            tbody.appendChild(emptyRow);
+          } else {
+            fields.forEach((field, fIndex) => {
+              const row = document.createElement("tr");
+              row.dataset.sectionId = section.id;
+              row.dataset.fieldId = field.id;
+
+              const labelRu = document.createElement("td");
+              labelRu.textContent = field.label_ru;
+              const labelEn = document.createElement("td");
+              labelEn.textContent = field.label_en;
+
+              const valueRu = document.createElement("td");
+              valueRu.appendChild(buildCharacteristicValueControl(section.id, field, "value_ru"));
+              const valueEn = document.createElement("td");
+              valueEn.appendChild(buildCharacteristicValueControl(section.id, field, "value_en"));
+
+              const typeCell = document.createElement("td");
+              typeCell.textContent = field.field_type;
+
+              const actions = document.createElement("td");
+              const actionsBar = document.createElement("div");
+              actionsBar.className = "toolbar";
+              actionsBar.style.margin = "0";
+              const editBtn = document.createElement("button");
+              editBtn.className = "ghost";
+              editBtn.textContent = "Редактировать";
+              editBtn.onclick = () => promptField(section.id, field.id);
+              const upBtn = document.createElement("button");
+              upBtn.className = "ghost";
+              upBtn.textContent = "↑";
+              upBtn.disabled = fIndex === 0;
+              upBtn.onclick = () => moveField(section.id, field.id, -1);
+              const downBtn = document.createElement("button");
+              downBtn.className = "ghost";
+              downBtn.textContent = "↓";
+              downBtn.disabled = fIndex === fields.length - 1;
+              downBtn.onclick = () => moveField(section.id, field.id, 1);
+              const delBtn = document.createElement("button");
+              delBtn.textContent = "Удалить";
+              delBtn.onclick = () => deleteField(section.id, field.id);
+              actionsBar.appendChild(editBtn);
+              actionsBar.appendChild(upBtn);
+              actionsBar.appendChild(downBtn);
+              actionsBar.appendChild(delBtn);
+              const status = document.createElement("div");
+              status.className = "inline-status";
+              actions.appendChild(actionsBar);
+              actions.appendChild(status);
+
+              row.appendChild(labelRu);
+              row.appendChild(labelEn);
+              row.appendChild(valueRu);
+              row.appendChild(valueEn);
+              row.appendChild(typeCell);
+              row.appendChild(actions);
+
+              row.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                const actions = [
+                  { label: "Редактировать", action: () => promptField(section.id, field.id) },
+                  { label: "Вверх", disabled: fIndex === 0, action: () => moveField(section.id, field.id, -1) },
+                  { label: "Вниз", disabled: fields.length - 1 === fIndex, action: () => moveField(section.id, field.id, 1) },
+                  { label: "Удалить", action: () => deleteField(section.id, field.id) },
+                ];
+                openContextMenu(event, actions);
+              });
+              tbody.appendChild(row);
+            });
+          }
+
+          wrapper.addEventListener("contextmenu", (event) => {
+            if (event.target.tagName === "BUTTON" || event.target.closest("tr")) return;
+            event.preventDefault();
+            const actions = [
+              { label: "Редактировать секцию", action: () => promptSection(section.id) },
+              { label: "Добавить поле", action: () => promptField(section.id) },
+              { label: "Переместить вверх", disabled: sIndex === 0, action: () => moveSection(section.id, -1) },
+              { label: "Переместить вниз", disabled: sIndex === sortedSections.length - 1, action: () => moveSection(section.id, 1) },
+              { label: "Удалить секцию", action: () => deleteSection(section.id) },
+            ];
+            openContextMenu(event, actions);
+          });
+
+          wrapper.appendChild(table);
+          characteristicContainer.appendChild(wrapper);
+        });
+      }
+
+      const characteristicSaveTimers = new Map();
+
+      function buildCharacteristicValueControl(sectionId, field, key) {
+        if (field.field_type === "checkbox") {
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "inline-checkbox";
+          checkbox.checked = Boolean(field[key]);
+          checkbox.addEventListener("change", () => handleCharacteristicValueChange(sectionId, field.id, key, checkbox));
+          return checkbox;
+        }
+
+        const area = document.createElement("textarea");
+        area.className = "inline-input";
+        area.value = field[key] ?? "";
+        area.rows = Math.min(4, Math.max(1, area.value.split("\n").length));
+        const trigger = () => handleCharacteristicValueChange(sectionId, field.id, key, area);
+        area.addEventListener("change", trigger);
+        area.addEventListener("blur", trigger);
+        return area;
+      }
+
+      function handleCharacteristicValueChange(sectionId, fieldId, key, inputEl) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const field = section.fields.find((f) => f.id === fieldId);
+        if (!field) return;
+        const isCheckbox = inputEl.type === "checkbox";
+        const raw = isCheckbox ? inputEl.checked : inputEl.value;
+        field[key] = isCheckbox ? raw : raw;
+        queueCharacteristicSave(sectionId, fieldId);
+      }
+
+      function setCharacteristicRowState(sectionId, fieldId, text, state = null) {
+        const row = characteristicContainer.querySelector(
+          `tr[data-section-id="${sectionId}"][data-field-id="${fieldId}"]`
+        );
+        if (!row) return;
+        row.classList.remove("saving", "save-error");
+        if (state === "saving") row.classList.add("saving");
+        if (state === "error") row.classList.add("save-error");
+        const status = row.querySelector(".inline-status");
+        if (status) status.textContent = text || "";
+      }
+
+      async function persistCharacteristicField(sectionId, fieldId) {
+        const key = `${sectionId}:${fieldId}`;
+        characteristicSaveTimers.delete(key);
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const field = section.fields.find((f) => f.id === fieldId);
+        if (!field) return;
+        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
+        const payload = { ...field };
+        if (payload.value_ru === "") payload.value_ru = null;
+        if (payload.value_en === "") payload.value_en = null;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+        if (!res.ok) {
+          setCharacteristicRowState(sectionId, fieldId, "Ошибка сохранения", "error");
+          return;
+        }
+        setCharacteristicRowState(sectionId, fieldId, "Сохранено");
+        setTimeout(() => setCharacteristicRowState(sectionId, fieldId, ""), 1800);
+      }
+
+      function queueCharacteristicSave(sectionId, fieldId) {
+        const key = `${sectionId}:${fieldId}`;
+        if (characteristicSaveTimers.has(key)) clearTimeout(characteristicSaveTimers.get(key));
+        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
+        const timer = setTimeout(() => persistCharacteristicField(sectionId, fieldId), 500);
+        characteristicSaveTimers.set(key, timer);
+      }
+
+      async function promptSection(sectionId = null) {
+        const current = characteristicSections.find((s) => s.id === sectionId);
+        const title = prompt("Название секции", current?.title || "");
+        if (title === null || title.trim() === "") return;
+        const order = Number(prompt("Порядок", current?.order ?? characteristicSections.length) || 0);
+
+        const payload = { title: title.trim(), order, fields: current?.fields || [] };
+        if (sectionId) {
+          payload.id = sectionId;
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить секцию");
+            return;
+          }
+        } else {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось создать секцию");
+            return;
+          }
+        }
+        await loadCharacteristics();
+      }
+
+      async function deleteSection(sectionId) {
+        if (!confirm("Удалить секцию и все её поля?")) return;
+        const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить секцию");
+          return;
+        }
+        await loadCharacteristics();
+      }
+
+      async function moveSection(sectionId, delta) {
+        const sorted = [...characteristicSections].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((s) => s.id === sectionId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((section, idx) => (section.order = idx));
+        await Promise.all(
+          sorted.map((section) =>
+            fetch(`/api/projects/${projectId}/characteristics/sections/${section.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(section),
+            })
+          )
+        );
+        characteristicSections = sorted;
+        renderCharacteristics();
+      }
+
+      async function promptField(sectionId, fieldId = null) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const current = section.fields.find((f) => f.id === fieldId);
+        const label_ru = prompt("Label RU", current?.label_ru || "");
+        if (label_ru === null || label_ru.trim() === "") return;
+        const label_en = prompt("Label EN", current?.label_en || "");
+        if (label_en === null || label_en.trim() === "") return;
+        const value_ru = prompt("Value RU", current?.value_ru ?? "");
+        if (value_ru === null) return;
+        const value_en = prompt("Value EN", current?.value_en ?? "");
+        if (value_en === null) return;
+        const field_type = prompt("Тип (text/number/select/checkbox/other)", current?.field_type || "text") || "text";
+
+        const payload = {
+          label_ru: label_ru.trim(),
+          label_en: label_en.trim(),
+          value_ru: value_ru || null,
+          value_en: value_en || null,
+          field_type: field_type.toLowerCase(),
+          order: current?.order ?? section.fields.length,
+        };
+
+        if (fieldId) {
+          payload.id = fieldId;
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить поле");
+            return;
+          }
+        } else {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось добавить поле");
+            return;
+          }
+        }
+        await loadCharacteristics();
+      }
+
+      async function deleteField(sectionId, fieldId) {
+        if (!confirm("Удалить поле?")) return;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          alert("Не удалось удалить поле");
+          return;
+        }
+        await loadCharacteristics();
+      }
+
+      async function moveField(sectionId, fieldId, delta) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const fields = [...section.fields].sort((a, b) => a.order - b.order);
+        const index = fields.findIndex((f) => f.id === fieldId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= fields.length) return;
+        [fields[index], fields[target]] = [fields[target], fields[index]];
+        fields.forEach((field, idx) => (field.order = idx));
+        await Promise.all(
+          fields.map((field) =>
+            fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${field.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(field),
+            })
+          )
+        );
+        await loadCharacteristics();
+      }
+
+      async function applyCharacteristicTemplate() {
+        const templateId = characteristicTemplateSelect.value;
+        if (!templateId) return alert("Выберите шаблон");
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/apply-template?template_id=${templateId}`,
+          { method: "POST" }
+        );
+        if (!res.ok) {
+          alert("Не удалось применить шаблон");
+          return;
+        }
+        characteristicSections = await res.json();
+        renderCharacteristics();
+      }
+
+      async function saveCharacteristicTemplate() {
+        const name = prompt("Название шаблона", project?.name ? `Характеристики ${project.name}` : "Новый шаблон");
+        if (!name) return;
+        const description = prompt("Описание (необязательно)") || null;
+        const payload = { name, description, sections: characteristicSections };
+        const res = await fetch(`/api/characteristic-templates`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          await loadCharacteristicTemplates();
+          alert("Шаблон сохранён");
+        } else {
+          alert("Не удалось сохранить шаблон");
+        }
+      }
+
+      async function copyCharacteristicStructure() {
+        const sourceId = prompt("ID проекта-источника для копирования структуры");
+        if (!sourceId) return;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/copy-structure?source_project_id=${sourceId}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          characteristicSections = await res.json();
+          renderCharacteristics();
+          alert("Структура скопирована, значения сброшены");
+        } else {
+          alert("Не удалось скопировать структуру");
+        }
+      }
+
+      function triggerCharacteristicImport() {
+        characteristicImport.click();
+      }
+
+      characteristicImport.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/projects/${projectId}/characteristics/import`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          characteristicSections = await res.json();
+          renderCharacteristics();
+          alert("Характеристики импортированы");
+        } else {
+          const detail = await res.json();
+          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+        }
+        event.target.value = "";
+      });
+
+      async function exportCharacteristics() {
+        const res = await fetch(`/api/projects/${projectId}/characteristics/export`);
+        if (!res.ok) {
+          alert("Не удалось выгрузить характеристики");
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `characteristics_${projectId}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    </script>
+  </body>
+</html>
