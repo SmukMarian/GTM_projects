@@ -9,7 +9,16 @@ from uuid import UUID
 
 from openpyxl import Workbook, load_workbook
 
-from .models import ChecklistItem, GTMStage, Project, ProjectStatus, ProductGroup, StageStatus
+from .models import (
+    CharacteristicSection,
+    ChecklistItem,
+    FieldType,
+    GTMStage,
+    Project,
+    ProjectStatus,
+    ProductGroup,
+    StageStatus,
+)
 
 
 def _find_current_stage_name(project: Project) -> str | None:
@@ -141,6 +150,42 @@ def export_gtm_stages_to_excel(project: Project) -> bytes:
     return buffer.getvalue()
 
 
+def export_characteristics_to_excel(project: Project) -> bytes:
+    """Сформировать Excel-файл с характеристиками проекта."""
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Характеристики"
+
+    headers = [
+        "Секция",
+        "Label RU",
+        "Label EN",
+        "Value RU",
+        "Value EN",
+        "Тип поля",
+    ]
+    sheet.append(headers)
+
+    for section in sorted(project.characteristics, key=lambda s: s.order):
+        for field in sorted(section.fields, key=lambda f: f.order):
+            sheet.append(
+                [
+                    section.title,
+                    field.label_ru,
+                    field.label_en,
+                    field.value_ru,
+                    field.value_en,
+                    field.field_type.value,
+                ]
+            )
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
 def _parse_bool(value: str | bool | None) -> bool:
     if isinstance(value, bool):
         return value
@@ -258,3 +303,108 @@ def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[s
 
     stages.sort(key=lambda s: s.order)
     return stages, errors
+
+
+FIELD_TYPE_ALIASES = {
+    "text": FieldType.TEXT,
+    "текст": FieldType.TEXT,
+    "number": FieldType.NUMBER,
+    "число": FieldType.NUMBER,
+    "select": FieldType.SELECT,
+    "list": FieldType.SELECT,
+    "список": FieldType.SELECT,
+    "checkbox": FieldType.CHECKBOX,
+    "флажок": FieldType.CHECKBOX,
+    "галочка": FieldType.CHECKBOX,
+    "other": FieldType.OTHER,
+    "другое": FieldType.OTHER,
+}
+
+
+def import_characteristics_from_excel(
+    content: bytes, project: Project
+) -> tuple[list[CharacteristicSection], list[str]]:
+    """Распарсить Excel с характеристиками и вернуть обновлённые секции и ошибки."""
+
+    try:
+        workbook = load_workbook(filename=BytesIO(content))
+    except Exception as exc:  # noqa: BLE001
+        return [], [f"Не удалось прочитать Excel: {exc}"]
+
+    sheet = workbook.active
+
+    try:
+        first_row = next(sheet.iter_rows(max_row=1))
+    except StopIteration:
+        return [], ["Файл Excel пуст"]
+
+    header_row = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
+    header_map = {title.lower(): idx for idx, title in enumerate(header_row) if title}
+
+    required_columns = {"секция", "label ru", "label en"}
+    missing = required_columns - set(header_map)
+    if missing:
+        return [], [f"Отсутствуют обязательные столбцы: {', '.join(sorted(missing))}"]
+
+    errors: list[str] = []
+    sections_copy: list[CharacteristicSection] = [section.model_copy(deep=True) for section in project.characteristics]
+
+    def col(key: str, default: int | None = None) -> int | None:
+        if key in header_map:
+            return header_map[key]
+        return default
+
+    def normalize(value: str | None) -> str:
+        return value.strip().lower() if value else ""
+
+    for row_index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+        if all(cell is None for cell in row):
+            continue
+
+        section_title = row[col("секция")]
+        if not section_title:
+            errors.append(f"Строка {row_index}: не заполнено название секции")
+            continue
+
+        label_ru = row[col("label ru")]
+        label_en = row[col("label en")]
+        if not label_ru and not label_en:
+            errors.append(f"Строка {row_index}: не указаны Label RU/EN")
+            continue
+
+        section = next(
+            (s for s in sections_copy if normalize(s.title) == normalize(str(section_title))),
+            None,
+        )
+        if section is None:
+            errors.append(f"Строка {row_index}: секция '{section_title}' не найдена в проекте")
+            continue
+
+        field = next(
+            (
+                f
+                for f in section.fields
+                if normalize(f.label_ru) == normalize(label_ru or "")
+                and normalize(f.label_en) == normalize(label_en or "")
+            ),
+            None,
+        )
+        if field is None:
+            errors.append(
+                f"Строка {row_index}: поле '{label_ru or ''}/{label_en or ''}' не найдено в секции '{section_title}'"
+            )
+            continue
+
+        value_ru_idx = col("value ru")
+        value_en_idx = col("value en")
+        if value_ru_idx is not None:
+            field.value_ru = row[value_ru_idx]
+        if value_en_idx is not None:
+            field.value_en = row[value_en_idx]
+
+        field_type_cell = col("тип поля")
+        if field_type_cell is not None and row[field_type_cell] is not None:
+            type_raw = normalize(str(row[field_type_cell]))
+            field.field_type = FIELD_TYPE_ALIASES.get(type_raw, field.field_type)
+
+    return sections_copy, errors

@@ -16,6 +16,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .exporters import import_characteristics_from_excel as parse_characteristics_from_excel
 from .models import (
     BackupInfo,
     CharacteristicField,
@@ -579,6 +580,19 @@ class LocalRepository:
         self.store.projects[p_idx] = target_project
         self.save()
         return new_sections
+
+    def import_characteristics_from_excel(
+        self, project_id: UUID, content: bytes
+    ) -> tuple[list[CharacteristicSection], list[str]]:
+        p_idx, project = self._get_project_with_index(project_id)
+        sections, errors = parse_characteristics_from_excel(content, project)
+        if errors:
+            return [], errors
+
+        project.characteristics = sections
+        self.store.projects[p_idx] = project
+        self.save()
+        return sections, []
 
     # --- Files ---
     def list_files(self, project_id: UUID) -> list[FileAttachment]:

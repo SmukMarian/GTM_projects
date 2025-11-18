@@ -213,6 +213,37 @@
         overflow: auto;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
       }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+
+      th,
+      td {
+        border: 1px solid #e2e8f0;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f8fafc;
+        font-weight: 700;
+      }
+
+      .characteristics-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
     </style>
   </head>
   <body>
@@ -251,8 +282,20 @@
     </div>
 
     <div class="card">
-      <h2>Другие вкладки</h2>
-      <p class="muted">Характеристики, задачи, галерея и файлы будут добавлены после реализации соответствующих шагов чек-листа.</p>
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Характеристики (RU / EN)</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="promptSection()">Добавить секцию</button>
+          <select id="characteristicTemplateSelect"></select>
+          <button onclick="applyCharacteristicTemplate()">Применить шаблон</button>
+          <button onclick="saveCharacteristicTemplate()">Сохранить как шаблон</button>
+          <button onclick="copyCharacteristicStructure()">Копировать структуру</button>
+          <button onclick="triggerCharacteristicImport()">Импорт Excel</button>
+          <button onclick="exportCharacteristics()">Экспорт Excel</button>
+          <input type="file" id="characteristicImport" accept=".xlsx" style="display: none" />
+        </div>
+      </div>
+      <div id="characteristics"></div>
     </div>
 
     <div id="contextMenu" class="context-menu">
@@ -320,12 +363,17 @@
       const stagesContainer = document.getElementById("stages");
       const templateSelect = document.getElementById("templateSelect");
       const importInput = document.getElementById("importInput");
+      const characteristicContainer = document.getElementById("characteristics");
+      const characteristicTemplateSelect = document.getElementById("characteristicTemplateSelect");
+      const characteristicImport = document.getElementById("characteristicImport");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
 
       let project = null;
       let gtmTemplates = [];
       let gtmStages = [];
+      let characteristicTemplates = [];
+      let characteristicSections = [];
 
       if (!projectId) {
         stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
@@ -334,7 +382,13 @@
       }
 
       async function loadData() {
-        await Promise.all([loadProject(), loadTemplates(), loadStages()]);
+        await Promise.all([
+          loadProject(),
+          loadTemplates(),
+          loadStages(),
+          loadCharacteristicTemplates(),
+          loadCharacteristics(),
+        ]);
       }
 
       async function loadProject() {
@@ -357,6 +411,18 @@
         const res = await fetch(`/api/projects/${projectId}/gtm-stages`);
         gtmStages = res.ok ? await res.json() : [];
         renderStages();
+      }
+
+      async function loadCharacteristicTemplates() {
+        const res = await fetch("/api/characteristic-templates");
+        characteristicTemplates = res.ok ? await res.json() : [];
+        renderCharacteristicTemplates();
+      }
+
+      async function loadCharacteristics() {
+        const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
+        characteristicSections = res.ok ? await res.json() : [];
+        renderCharacteristics();
       }
 
       function renderProject() {
@@ -394,6 +460,20 @@
           option.value = tpl.id;
           option.textContent = tpl.name;
           templateSelect.appendChild(option);
+        });
+      }
+
+      function renderCharacteristicTemplates() {
+        characteristicTemplateSelect.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Шаблоны характеристик";
+        characteristicTemplateSelect.appendChild(defaultOption);
+        characteristicTemplates.forEach((tpl) => {
+          const option = document.createElement("option");
+          option.value = tpl.id;
+          option.textContent = tpl.name;
+          characteristicTemplateSelect.appendChild(option);
         });
       }
 
@@ -470,14 +550,14 @@
 
           card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
-            openContextMenu(event, stage, index);
+            openStageContextMenu(event, stage, index);
           });
 
           stagesContainer.appendChild(card);
         });
       }
 
-      function openContextMenu(event, stage, index) {
+      function openStageContextMenu(event, stage, index) {
         const actions = [
           { label: "Редактировать", action: () => openStageForm(stage.id) },
           { label: stage.risk_flag ? "Снять риск" : "Отметить риск", action: () => toggleRisk(stage.id, !stage.risk_flag) },
@@ -486,7 +566,10 @@
           { label: "Переместить вниз", disabled: index === gtmStages.length - 1, action: () => moveStage(stage.id, 1) },
           { label: "Удалить", action: () => deleteStage(stage.id) },
         ];
+        openContextMenu(event, actions);
+      }
 
+      function openContextMenu(event, actions) {
         contextMenuList.innerHTML = "";
         actions.forEach((item) => {
           const li = document.createElement("li");
@@ -730,6 +813,334 @@
         const a = document.createElement("a");
         a.href = url;
         a.download = `gtm_stages_${projectId}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      function renderCharacteristics() {
+        characteristicContainer.innerHTML = "";
+        const sortedSections = [...characteristicSections].sort((a, b) => a.order - b.order);
+        if (!sortedSections.length) {
+          characteristicContainer.innerHTML = "<p class='muted'>Секции характеристик пока не добавлены.</p>";
+          return;
+        }
+
+        sortedSections.forEach((section, sIndex) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "section-card";
+          wrapper.innerHTML = `
+            <div class="stage-header" style="margin-bottom:8px">
+              <div>
+                <h3 style="margin:0">${section.title}</h3>
+                <div class="muted">Порядок: ${section.order}</div>
+              </div>
+              <div class="toolbar" style="margin:0">
+                <button class="ghost" onclick="promptSection('${section.id}')">Редактировать</button>
+                <button class="ghost" onclick="promptField('${section.id}')">+ Поле</button>
+                <button class="ghost" onclick="moveSection('${section.id}', -1)" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
+                <button class="ghost" onclick="moveSection('${section.id}', 1)" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
+                <button onclick="deleteSection('${section.id}')">Удалить</button>
+              </div>
+            </div>
+          `;
+
+          const table = document.createElement("table");
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Label RU</th>
+                <th>Label EN</th>
+                <th>Value RU</th>
+                <th>Value EN</th>
+                <th>Тип</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          `;
+
+          const tbody = table.querySelector("tbody");
+          const fields = [...section.fields].sort((a, b) => a.order - b.order);
+          if (!fields.length) {
+            const emptyRow = document.createElement("tr");
+            emptyRow.innerHTML = `<td colspan="6" class="muted">Полей пока нет</td>`;
+            tbody.appendChild(emptyRow);
+          } else {
+            fields.forEach((field, fIndex) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${field.label_ru}</td>
+                <td>${field.label_en}</td>
+                <td>${field.value_ru ?? ""}</td>
+                <td>${field.value_en ?? ""}</td>
+                <td>${field.field_type}</td>
+                <td>
+                  <button class="ghost" onclick="promptField('${section.id}', '${field.id}')">Редактировать</button>
+                  <button class="ghost" onclick="moveField('${section.id}', '${field.id}', -1)" ${fIndex === 0 ? "disabled" : ""}>↑</button>
+                  <button class="ghost" onclick="moveField('${section.id}', '${field.id}', 1)" ${fIndex === fields.length - 1 ? "disabled" : ""}>↓</button>
+                  <button onclick="deleteField('${section.id}', '${field.id}')">Удалить</button>
+                </td>
+              `;
+              row.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                const actions = [
+                  { label: "Редактировать", action: () => promptField(section.id, field.id) },
+                  { label: "Вверх", disabled: fIndex === 0, action: () => moveField(section.id, field.id, -1) },
+                  { label: "Вниз", disabled: fIndex === fields.length - 1, action: () => moveField(section.id, field.id, 1) },
+                  { label: "Удалить", action: () => deleteField(section.id, field.id) },
+                ];
+                openContextMenu(event, actions);
+              });
+              tbody.appendChild(row);
+            });
+          }
+
+          wrapper.addEventListener("contextmenu", (event) => {
+            if (event.target.tagName === "BUTTON" || event.target.closest("tr")) return;
+            event.preventDefault();
+            const actions = [
+              { label: "Редактировать секцию", action: () => promptSection(section.id) },
+              { label: "Добавить поле", action: () => promptField(section.id) },
+              { label: "Переместить вверх", disabled: sIndex === 0, action: () => moveSection(section.id, -1) },
+              { label: "Переместить вниз", disabled: sIndex === sortedSections.length - 1, action: () => moveSection(section.id, 1) },
+              { label: "Удалить секцию", action: () => deleteSection(section.id) },
+            ];
+            openContextMenu(event, actions);
+          });
+
+          wrapper.appendChild(table);
+          characteristicContainer.appendChild(wrapper);
+        });
+      }
+
+      async function promptSection(sectionId = null) {
+        const current = characteristicSections.find((s) => s.id === sectionId);
+        const title = prompt("Название секции", current?.title || "");
+        if (title === null || title.trim() === "") return;
+        const order = Number(prompt("Порядок", current?.order ?? characteristicSections.length) || 0);
+
+        const payload = { title: title.trim(), order, fields: current?.fields || [] };
+        if (sectionId) {
+          payload.id = sectionId;
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить секцию");
+            return;
+          }
+        } else {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось создать секцию");
+            return;
+          }
+        }
+        await loadCharacteristics();
+      }
+
+      async function deleteSection(sectionId) {
+        if (!confirm("Удалить секцию и все её поля?")) return;
+        const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить секцию");
+          return;
+        }
+        await loadCharacteristics();
+      }
+
+      async function moveSection(sectionId, delta) {
+        const sorted = [...characteristicSections].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((s) => s.id === sectionId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((section, idx) => (section.order = idx));
+        await Promise.all(
+          sorted.map((section) =>
+            fetch(`/api/projects/${projectId}/characteristics/sections/${section.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(section),
+            })
+          )
+        );
+        characteristicSections = sorted;
+        renderCharacteristics();
+      }
+
+      async function promptField(sectionId, fieldId = null) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const current = section.fields.find((f) => f.id === fieldId);
+        const label_ru = prompt("Label RU", current?.label_ru || "");
+        if (label_ru === null || label_ru.trim() === "") return;
+        const label_en = prompt("Label EN", current?.label_en || "");
+        if (label_en === null || label_en.trim() === "") return;
+        const value_ru = prompt("Value RU", current?.value_ru ?? "");
+        if (value_ru === null) return;
+        const value_en = prompt("Value EN", current?.value_en ?? "");
+        if (value_en === null) return;
+        const field_type = prompt("Тип (text/number/select/checkbox/other)", current?.field_type || "text") || "text";
+
+        const payload = {
+          label_ru: label_ru.trim(),
+          label_en: label_en.trim(),
+          value_ru: value_ru || null,
+          value_en: value_en || null,
+          field_type: field_type.toLowerCase(),
+          order: current?.order ?? section.fields.length,
+        };
+
+        if (fieldId) {
+          payload.id = fieldId;
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить поле");
+            return;
+          }
+        } else {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось добавить поле");
+            return;
+          }
+        }
+        await loadCharacteristics();
+      }
+
+      async function deleteField(sectionId, fieldId) {
+        if (!confirm("Удалить поле?")) return;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          alert("Не удалось удалить поле");
+          return;
+        }
+        await loadCharacteristics();
+      }
+
+      async function moveField(sectionId, fieldId, delta) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const fields = [...section.fields].sort((a, b) => a.order - b.order);
+        const index = fields.findIndex((f) => f.id === fieldId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= fields.length) return;
+        [fields[index], fields[target]] = [fields[target], fields[index]];
+        fields.forEach((field, idx) => (field.order = idx));
+        await Promise.all(
+          fields.map((field) =>
+            fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${field.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(field),
+            })
+          )
+        );
+        await loadCharacteristics();
+      }
+
+      async function applyCharacteristicTemplate() {
+        const templateId = characteristicTemplateSelect.value;
+        if (!templateId) return alert("Выберите шаблон");
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/apply-template?template_id=${templateId}`,
+          { method: "POST" }
+        );
+        if (!res.ok) {
+          alert("Не удалось применить шаблон");
+          return;
+        }
+        characteristicSections = await res.json();
+        renderCharacteristics();
+      }
+
+      async function saveCharacteristicTemplate() {
+        const name = prompt("Название шаблона", project?.name ? `Характеристики ${project.name}` : "Новый шаблон");
+        if (!name) return;
+        const description = prompt("Описание (необязательно)") || null;
+        const payload = { name, description, sections: characteristicSections };
+        const res = await fetch(`/api/characteristic-templates`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          await loadCharacteristicTemplates();
+          alert("Шаблон сохранён");
+        } else {
+          alert("Не удалось сохранить шаблон");
+        }
+      }
+
+      async function copyCharacteristicStructure() {
+        const sourceId = prompt("ID проекта-источника для копирования структуры");
+        if (!sourceId) return;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/copy-structure?source_project_id=${sourceId}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          characteristicSections = await res.json();
+          renderCharacteristics();
+          alert("Структура скопирована, значения сброшены");
+        } else {
+          alert("Не удалось скопировать структуру");
+        }
+      }
+
+      function triggerCharacteristicImport() {
+        characteristicImport.click();
+      }
+
+      characteristicImport.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/projects/${projectId}/characteristics/import`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          characteristicSections = await res.json();
+          renderCharacteristics();
+          alert("Характеристики импортированы");
+        } else {
+          const detail = await res.json();
+          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+        }
+        event.target.value = "";
+      });
+
+      async function exportCharacteristics() {
+        const res = await fetch(`/api/projects/${projectId}/characteristics/export`);
+        if (!res.ok) {
+          alert("Не удалось выгрузить характеристики");
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `characteristics_${projectId}.xlsx`;
         a.click();
         window.URL.revokeObjectURL(url);
       }

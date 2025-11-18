@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .exporters import (
+    export_characteristics_to_excel,
     export_gtm_stages_to_excel,
     export_projects_to_excel,
     import_gtm_stages_from_excel,
@@ -557,7 +558,37 @@ def copy_characteristics_structure(
         message = str(exc)
         if "Project" in message and str(project_id) in message:
             raise HTTPException(status_code=404, detail="Целевой проект не найден")
-        raise HTTPException(status_code=404, detail="Проект-источник не найден")
+    raise HTTPException(status_code=404, detail="Проект-источник не найден")
+
+
+@app.get("/api/projects/{project_id}/characteristics/export")
+def export_characteristics(project_id: UUID, repo: LocalRepository = Depends(get_repository)):
+    """Выгрузить характеристики проекта в Excel."""
+
+    try:
+        project = repo.get_project(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    content = export_characteristics_to_excel(project)
+    filename = f"characteristics_{project_id}.xlsx"
+    headers = {"Content-Disposition": f"attachment; filename={filename}"}
+    return StreamingResponse(BytesIO(content), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers=headers)
+
+
+@app.post(
+    "/api/projects/{project_id}/characteristics/import",
+    response_model=list[CharacteristicSection],
+    status_code=201,
+)
+def import_characteristics(
+    project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
+) -> list[CharacteristicSection]:
+    content = file.file.read()
+    sections, errors = repo.import_characteristics_from_excel(project_id, content)
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+    return sections
 
 
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
