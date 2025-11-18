@@ -16,6 +16,8 @@ class AppSettings(BaseSettings):
     data_dir: Path = DATA_DIR
     primary_store: Path = DATA_DIR / "project_tracker.json"
     backups_dir: Path = DATA_DIR / "backups"
+    files_dir: Path = DATA_DIR / "files"
+    images_dir: Path = DATA_DIR / "images"
 
     model_config = SettingsConfigDict(env_prefix="HPT_", env_file=".env", env_file_encoding="utf-8")
 
@@ -23,3 +25,5 @@ class AppSettings(BaseSettings):
 settings = AppSettings()
 settings.data_dir.mkdir(parents=True, exist_ok=True)
 settings.backups_dir.mkdir(parents=True, exist_ok=True)
+settings.files_dir.mkdir(parents=True, exist_ok=True)
+settings.images_dir.mkdir(parents=True, exist_ok=True)

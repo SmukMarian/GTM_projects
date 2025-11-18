@@ -344,6 +344,47 @@
         border-radius: 8px;
         padding: 6px 8px;
       }
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .image-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .image-thumb {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        background: #f8fafc;
+      }
+
+      .image-meta {
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .file-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .file-table th,
+      .file-table td {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 8px;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
@@ -435,6 +476,62 @@
         </label>
       </div>
       <div id="tasks"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Галерея и обложка</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="triggerImageUpload()">Загрузить изображения</button>
+        </div>
+      </div>
+      <p class="muted">Выберите изображение как обложку проекта через меню или кнопку. Поддерживается загрузка нескольких файлов.</p>
+      <div id="gallery" class="gallery-grid"></div>
+      <input type="file" id="imageUploadInput" accept="image/*" style="display: none" multiple />
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Файлы и документы</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="triggerFileUpload()">Загрузить файл</button>
+        </div>
+      </div>
+      <p class="muted">Файлы сохраняются локально в каталоге данных приложения. Используйте контекстное меню для скачивания и правок.</p>
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>Описание</th>
+            <th>Категория</th>
+            <th>Дата загрузки</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="fileTable"></tbody>
+      </table>
+      <input type="file" id="fileUploadInput" style="display: none" />
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Комментарии по проекту</h2>
+        <div class="toolbar" style="margin: 0">
+          <textarea id="projectCommentInput" rows="2" placeholder="Новый комментарий" style="max-width: 420px"></textarea>
+          <button class="primary" onclick="addProjectComment()">Добавить</button>
+        </div>
+      </div>
+      <ul id="projectComments" class="comment-list"></ul>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>История изменений</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="ghost" onclick="addHistoryEvent()">Добавить событие</button>
+        </div>
+      </div>
+      <div id="history"></div>
     </div>
 
     <div id="contextMenu" class="context-menu">
@@ -560,6 +657,14 @@
       const taskModal = document.getElementById("taskModal");
       const taskGtmStageSelect = document.getElementById("taskGtmStage");
 
+      const galleryContainer = document.getElementById("gallery");
+      const imageUploadInput = document.getElementById("imageUploadInput");
+      const fileUploadInput = document.getElementById("fileUploadInput");
+      const fileTable = document.getElementById("fileTable");
+      const projectCommentInput = document.getElementById("projectCommentInput");
+      const projectCommentsList = document.getElementById("projectComments");
+      const historyContainer = document.getElementById("history");
+
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
 
@@ -569,6 +674,10 @@
       let characteristicTemplates = [];
       let characteristicSections = [];
       let tasks = [];
+      let images = [];
+      let files = [];
+      let projectComments = [];
+      let historyEvents = [];
       let taskView = "list";
       const taskFilters = { status: "all", due: "all", gtm: "", hideDone: false };
 
@@ -606,7 +715,7 @@
           loadCharacteristicTemplates(),
           loadCharacteristics(),
         ]);
-        await loadTasks();
+        await Promise.all([loadTasks(), loadImages(), loadFiles(), loadProjectComments(), loadHistory()]);
       }
 
       async function loadProject() {
@@ -1547,6 +1656,380 @@
           return;
         }
         await loadTasks();
+      }
+
+      async function loadImages() {
+        const res = await fetch(`/api/projects/${projectId}/images`);
+        if (res.ok) {
+          images = await res.json();
+          renderGallery();
+        }
+      }
+
+      function renderGallery() {
+        galleryContainer.innerHTML = "";
+        const sorted = [...images].sort((a, b) => a.order - b.order);
+        if (!sorted.length) {
+          galleryContainer.innerHTML = "<p class='muted'>Изображений пока нет</p>";
+          return;
+        }
+
+        sorted.forEach((img, index) => {
+          const card = document.createElement("div");
+          card.className = "image-card";
+          card.innerHTML = `
+            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" />
+            <div class="image-meta">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap: wrap">
+                <strong>${img.filename}</strong>
+                ${img.is_cover ? '<span class="badge">Обложка</span>' : ""}
+              </div>
+              <div class="muted">${img.caption || "Без подписи"}</div>
+              <div style="display:flex; gap:8px; flex-wrap: wrap">
+                <button class="ghost" onclick="openImage('${img.id}')">Открыть</button>
+                <button class="ghost" onclick="editImageCaption('${img.id}')">Подпись</button>
+                <button class="ghost" onclick="setCover('${img.id}')">Сделать обложкой</button>
+                <button class="ghost" onclick="moveImage('${img.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
+                <button class="ghost" onclick="moveImage('${img.id}', 1)" ${index === sorted.length - 1 ? "disabled" : ""}>↓</button>
+                <button onclick="deleteImage('${img.id}')">Удалить</button>
+              </div>
+            </div>
+          `;
+
+          card.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            const actions = [
+              { label: "Просмотреть", action: () => openImage(img.id) },
+              { label: "Сделать обложкой", action: () => setCover(img.id) },
+              { label: "Изменить подпись", action: () => editImageCaption(img.id) },
+              { label: "Удалить", action: () => deleteImage(img.id) },
+            ];
+            openContextMenu(event, actions);
+          });
+
+          galleryContainer.appendChild(card);
+        });
+      }
+
+      function triggerImageUpload() {
+        imageUploadInput.click();
+      }
+
+      imageUploadInput.addEventListener("change", async (event) => {
+        const selected = Array.from(event.target.files || []);
+        for (const file of selected) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch(`/api/projects/${projectId}/images/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            alert("Не удалось загрузить изображение");
+            break;
+          }
+        }
+        imageUploadInput.value = "";
+        await loadImages();
+      });
+
+      function openImage(imageId) {
+        window.open(`/api/projects/${projectId}/images/${imageId}/download`, "_blank");
+      }
+
+      async function setCover(imageId) {
+        const image = images.find((img) => img.id === imageId);
+        if (!image) return;
+        const payload = { ...image, is_cover: true };
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось назначить обложку");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function editImageCaption(imageId) {
+        const image = images.find((img) => img.id === imageId);
+        if (!image) return;
+        const caption = prompt("Подпись/комментарий", image.caption || "");
+        if (caption === null) return;
+        const payload = { ...image, caption: caption || null };
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подпись");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function moveImage(imageId, delta) {
+        const sorted = [...images].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((img) => img.id === imageId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((img, idx) => (img.order = idx));
+        await Promise.all(
+          sorted.map((img) =>
+            fetch(`/api/projects/${projectId}/images/${img.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(img),
+            })
+          )
+        );
+        await loadImages();
+      }
+
+      async function deleteImage(imageId) {
+        if (!confirm("Удалить изображение?")) return;
+        const res = await fetch(`/api/projects/${projectId}/images/${imageId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить изображение");
+          return;
+        }
+        await loadImages();
+      }
+
+      async function loadFiles() {
+        const res = await fetch(`/api/projects/${projectId}/files`);
+        if (res.ok) {
+          files = await res.json();
+          renderFiles();
+        }
+      }
+
+      function renderFiles() {
+        fileTable.innerHTML = "";
+        if (!files.length) {
+          const row = document.createElement("tr");
+          row.innerHTML = '<td colspan="5" class="muted">Файлы не добавлены</td>';
+          fileTable.appendChild(row);
+          return;
+        }
+
+        files
+          .slice()
+          .sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at))
+          .forEach((file) => {
+            const row = document.createElement("tr");
+            const date = new Date(file.uploaded_at).toLocaleString("ru-RU");
+            row.innerHTML = `
+              <td>${file.name}</td>
+              <td>${file.description || ""}</td>
+              <td>${file.category || ""}</td>
+              <td>${date}</td>
+              <td>
+                <button class="ghost" onclick="downloadFile('${file.id}')">Скачать</button>
+                <button class="ghost" onclick="editFile('${file.id}')">Править</button>
+                <button onclick="deleteFile('${file.id}')">Удалить</button>
+              </td>
+            `;
+            row.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              const actions = [
+                { label: "Скачать", action: () => downloadFile(file.id) },
+                { label: "Изменить описание/категорию", action: () => editFile(file.id) },
+                { label: "Удалить", action: () => deleteFile(file.id) },
+              ];
+              openContextMenu(event, actions);
+            });
+            fileTable.appendChild(row);
+          });
+      }
+
+      function triggerFileUpload() {
+        fileUploadInput.click();
+      }
+
+      fileUploadInput.addEventListener("change", async (event) => {
+        const selected = Array.from(event.target.files || []);
+        for (const file of selected) {
+          const description = prompt(`Описание для ${file.name} (необязательно)`) || "";
+          const category = prompt(`Категория для ${file.name} (необязательно)`) || "";
+          const formData = new FormData();
+          formData.append("file", file);
+          if (description) formData.append("description", description);
+          if (category) formData.append("category", category);
+          const res = await fetch(`/api/projects/${projectId}/files/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            alert("Не удалось загрузить файл");
+            break;
+          }
+        }
+        fileUploadInput.value = "";
+        await loadFiles();
+      });
+
+      function downloadFile(fileId) {
+        window.open(`/api/projects/${projectId}/files/${fileId}/download`, "_blank");
+      }
+
+      async function editFile(fileId) {
+        const file = files.find((f) => f.id === fileId);
+        if (!file) return;
+        const name = prompt("Имя файла", file.name) || file.name;
+        const description = prompt("Описание", file.description || "") || "";
+        const category = prompt("Категория", file.category || "") || "";
+        const payload = { ...file, name, description: description || null, category: category || null };
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить файл");
+          return;
+        }
+        await loadFiles();
+      }
+
+      async function deleteFile(fileId) {
+        if (!confirm("Удалить файл?")) return;
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить файл");
+          return;
+        }
+        await loadFiles();
+      }
+
+      async function loadProjectComments() {
+        const res = await fetch(`/api/projects/${projectId}/comments`);
+        if (res.ok) {
+          projectComments = await res.json();
+          renderProjectComments();
+        }
+      }
+
+      function renderProjectComments() {
+        projectCommentsList.innerHTML = "";
+        if (!projectComments.length) {
+          const li = document.createElement("li");
+          li.className = "muted";
+          li.textContent = "Комментариев нет";
+          projectCommentsList.appendChild(li);
+          return;
+        }
+        projectComments
+          .slice()
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .forEach((comment) => {
+            const li = document.createElement("li");
+            li.className = "comment-item";
+            li.innerHTML = `
+              <div class="muted" style="font-size:0.85rem">${new Date(comment.created_at).toLocaleString("ru-RU")}</div>
+              <div>${comment.text}</div>
+            `;
+            const remove = document.createElement("button");
+            remove.className = "ghost";
+            remove.textContent = "Удалить";
+            remove.addEventListener("click", () => deleteProjectComment(comment.id));
+            li.appendChild(remove);
+            projectCommentsList.appendChild(li);
+          });
+      }
+
+      async function addProjectComment() {
+        const text = projectCommentInput.value.trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        projectCommentInput.value = "";
+        await loadProjectComments();
+      }
+
+      async function deleteProjectComment(commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadProjectComments();
+      }
+
+      async function loadHistory() {
+        const res = await fetch(`/api/projects/${projectId}/history`);
+        if (res.ok) {
+          historyEvents = await res.json();
+          renderHistory();
+        }
+      }
+
+      function renderHistory() {
+        historyContainer.innerHTML = "";
+        if (!historyEvents.length) {
+          historyContainer.innerHTML = "<p class='muted'>История пока пустая.</p>";
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "comment-list";
+        historyEvents
+          .slice()
+          .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at))
+          .forEach((event) => {
+            const item = document.createElement("li");
+            item.className = "comment-item";
+            item.innerHTML = `
+              <div class="muted" style="font-size:0.85rem">${new Date(event.occurred_at).toLocaleString("ru-RU")}</div>
+              <div><strong>${event.summary}</strong></div>
+              ${event.details ? `<div class="muted">${event.details}</div>` : ""}
+            `;
+            const remove = document.createElement("button");
+            remove.className = "ghost";
+            remove.textContent = "Удалить";
+            remove.addEventListener("click", () => deleteHistoryEvent(event.id));
+            item.appendChild(remove);
+            list.appendChild(item);
+          });
+        historyContainer.appendChild(list);
+      }
+
+      async function addHistoryEvent() {
+        const summary = prompt("Краткое описание события");
+        if (!summary || !summary.trim()) return;
+        const details = prompt("Детали (необязательно)") || null;
+        const res = await fetch(`/api/projects/${projectId}/history`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ summary, details }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить событие");
+          return;
+        }
+        await loadHistory();
+      }
+
+      async function deleteHistoryEvent(eventId) {
+        if (!confirm("Удалить запись истории?")) return;
+        const res = await fetch(`/api/projects/${projectId}/history/${eventId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить запись истории");
+          return;
+        }
+        await loadHistory();
       }
 
       function renderCharacteristics() {
