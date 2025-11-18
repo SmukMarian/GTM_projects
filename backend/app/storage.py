@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,6 +20,7 @@ from .models import (
     GTMTemplate,
     ProductGroup,
     Project,
+    ProjectStatus,
 )
 
 
@@ -62,6 +64,12 @@ class LocalRepository:
             groups = [g for g in groups if g.status.value != "archived"]
         return list(groups)
 
+    def get_group(self, group_id: UUID) -> ProductGroup | None:
+        for group in self.store.product_groups:
+            if group.id == group_id:
+                return group
+        return None
+
     def add_group(self, group: ProductGroup) -> ProductGroup:
         self.store.product_groups.append(group)
         self.save()
@@ -75,12 +83,39 @@ class LocalRepository:
                 return updated
         raise KeyError(f"Group {group_id} not found")
 
+    def delete_group(self, group_id: UUID) -> None:
+        for idx, group in enumerate(self.store.product_groups):
+            if group.id == group_id:
+                self.store.product_groups.pop(idx)
+                self.save()
+                return
+        raise KeyError(f"Group {group_id} not found")
+
+    def has_projects_for_group(self, group_id: UUID) -> bool:
+        return any(project.group_id == group_id for project in self.store.projects)
+
     # --- Projects ---
-    def list_projects(self, include_archived: bool = True) -> list[Project]:
+    def list_projects(
+        self,
+        *,
+        include_archived: bool = True,
+        group_id: UUID | None = None,
+        statuses: set[ProjectStatus] | None = None,
+    ) -> list[Project]:
         projects: Iterable[Project] = self.store.projects
         if not include_archived:
             projects = [p for p in projects if p.status.value != "archived"]
+        if group_id:
+            projects = [p for p in projects if p.group_id == group_id]
+        if statuses:
+            projects = [p for p in projects if p.status in statuses]
         return list(projects)
+
+    def get_project(self, project_id: UUID) -> Project | None:
+        for project in self.store.projects:
+            if project.id == project_id:
+                return project
+        return None
 
     def add_project(self, project: Project) -> Project:
         self.store.projects.append(project)
@@ -93,4 +128,12 @@ class LocalRepository:
                 self.store.projects[idx] = updated
                 self.save()
                 return updated
+        raise KeyError(f"Project {project_id} not found")
+
+    def delete_project(self, project_id: UUID) -> None:
+        for idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                self.store.projects.pop(idx)
+                self.save()
+                return
         raise KeyError(f"Project {project_id} not found")
