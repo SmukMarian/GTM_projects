@@ -1022,6 +1022,18 @@ def delete_project_comment(project_id: UUID, comment_id: UUID, repo: LocalReposi
         raise HTTPException(status_code=404, detail="Комментарий не найден или проект не существует")
 
 
+@app.put("/api/projects/{project_id}/comments/{comment_id}", response_model=Comment)
+def update_project_comment(
+    project_id: UUID, comment_id: UUID, comment: Comment, repo: LocalRepository = Depends(get_repository)
+) -> Comment:
+    try:
+        updated = repo.update_project_comment(project_id, comment_id, comment.text)
+        log_event(repo, project_id, "Изменён комментарий к проекту")
+        return updated
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Комментарий не найден или проект не существует")
+
+
 @app.get(
     "/api/projects/{project_id}/tasks/{task_id}/comments",
     response_model=list[Comment],
@@ -1063,6 +1075,26 @@ def delete_task_comment(
     try:
         repo.delete_task_comment(project_id, task_id, comment_id)
         log_event(repo, project_id, "Удалён комментарий задачи")
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "Task" in message:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        raise HTTPException(status_code=404, detail="Комментарий не найден")
+
+
+@app.put(
+    "/api/projects/{project_id}/tasks/{task_id}/comments/{comment_id}",
+    response_model=Comment,
+)
+def update_task_comment(
+    project_id: UUID, task_id: UUID, comment_id: UUID, comment: Comment, repo: LocalRepository = Depends(get_repository)
+) -> Comment:
+    try:
+        updated = repo.update_task_comment(project_id, task_id, comment_id, comment.text)
+        log_event(repo, project_id, "Изменён комментарий задачи")
+        return updated
     except KeyError as exc:
         message = str(exc)
         if "Project" in message:

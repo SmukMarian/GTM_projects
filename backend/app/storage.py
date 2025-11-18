@@ -698,6 +698,17 @@ class LocalRepository:
                 return
         raise KeyError(f"Comment {comment_id} not found in project {project_id}")
 
+    def update_project_comment(self, project_id: UUID, comment_id: UUID, text: str) -> Comment:
+        p_idx, project = self._get_project_with_index(project_id)
+        for comment in project.comments:
+            if comment.id == comment_id:
+                comment.text = text
+                comment.edited_at = datetime.utcnow()
+                self.store.projects[p_idx] = project
+                self.save()
+                return comment
+        raise KeyError(f"Comment {comment_id} not found in project {project_id}")
+
     # --- Task comments ---
     def list_task_comments(self, project_id: UUID, task_id: UUID) -> list[Comment]:
         _, project = self._get_project_with_index(project_id)
@@ -723,6 +734,19 @@ class LocalRepository:
                 self.store.projects[p_idx] = project
                 self.save()
                 return
+        raise KeyError(f"Comment {comment_id} not found in task {task_id}")
+
+    def update_task_comment(self, project_id: UUID, task_id: UUID, comment_id: UUID, text: str) -> Comment:
+        p_idx, project = self._get_project_with_index(project_id)
+        t_idx, task = self._get_task_with_index(project, task_id)
+        for comment in task.comments:
+            if comment.id == comment_id:
+                comment.text = text
+                comment.edited_at = datetime.utcnow()
+                project.tasks[t_idx] = task
+                self.store.projects[p_idx] = project
+                self.save()
+                return comment
         raise KeyError(f"Comment {comment_id} not found in task {task_id}")
 
     # --- History ---

@@ -391,6 +391,71 @@
         display: flex;
         gap: 8px;
         align-items: center;
+        padding: 6px 8px;
+        border-radius: 8px;
+        background: var(--surface-muted);
+      }
+
+      .subtask-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .inline-input,
+      .inline-textarea,
+      .inline-select {
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .inline-textarea {
+        min-height: 34px;
+        resize: vertical;
+      }
+
+      .progress-line {
+        width: 100%;
+        height: 6px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-line .fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+      }
+
+      .rich-editor {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .rich-editor-toolbar {
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .rich-editor-toolbar button {
+        border: 1px solid var(--border);
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .rich-editor-area {
+        padding: 8px;
+        min-height: 60px;
       }
 
       .comment-list {
@@ -777,9 +842,20 @@
     <div class="card">
       <div class="stage-header" style="margin-bottom: 8px">
         <h2>Комментарии по проекту</h2>
-        <div class="toolbar" style="margin: 0">
-          <textarea id="projectCommentInput" rows="2" placeholder="Новый комментарий" style="max-width: 420px"></textarea>
-          <button class="primary" onclick="addProjectComment()">Добавить</button>
+        <div style="display:flex; flex-direction: column; gap: 8px; width: 100%;">
+          <div id="projectCommentEditor" class="rich-editor" style="max-width: 640px">
+            <div class="rich-editor-toolbar">
+              <button type="button" onclick="formatSelection('bold')">B</button>
+              <button type="button" onclick="formatSelection('italic')"><em>I</em></button>
+              <button type="button" onclick="formatSelection('insertUnorderedList')">• Список</button>
+              <button type="button" onclick="addLinkToSelection()">Ссылка</button>
+            </div>
+            <div id="projectCommentArea" class="rich-editor-area" contenteditable="true" aria-label="Комментарий по проекту"></div>
+          </div>
+          <div class="toolbar" style="margin:0; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="primary" onclick="addProjectComment()">Добавить</button>
+            <button class="ghost" onclick="clearEditor('projectCommentArea')">Очистить</button>
+          </div>
         </div>
       </div>
       <ul id="projectComments" class="comment-list"></ul>
@@ -922,7 +998,7 @@
       const imageUploadInput = document.getElementById("imageUploadInput");
       const fileUploadInput = document.getElementById("fileUploadInput");
       const fileTable = document.getElementById("fileTable");
-      const projectCommentInput = document.getElementById("projectCommentInput");
+      const projectCommentArea = document.getElementById("projectCommentArea");
       const projectCommentsList = document.getElementById("projectComments");
       const historyContainer = document.getElementById("history");
 
@@ -962,6 +1038,26 @@
         loadData();
       }
 
+      function formatSelection(command, value = null) {
+        document.execCommand(command, false, value);
+      }
+
+      function addLinkToSelection() {
+        const url = prompt("Ссылка");
+        if (url) {
+          document.execCommand("createLink", false, url);
+        }
+      }
+
+      function clearEditor(areaId) {
+        const area = document.getElementById(areaId);
+        if (area) area.innerHTML = "";
+      }
+
+      function editorHtml(area) {
+        return (area?.innerHTML || "").trim();
+      }
+
       taskStatusFilter.addEventListener("change", (event) => {
         taskFilters.status = event.target.value;
         loadTasks();
@@ -991,6 +1087,17 @@
           loadCharacteristics(),
         ]);
         await Promise.all([loadTasks(), loadImages(), loadFiles(), loadProjectComments(), loadHistory()]);
+      }
+
+      function taskProgress(task) {
+        const total = task.subtasks?.length || 0;
+        if (!total) {
+          const base = task.status === "done" ? 100 : task.status === "in_progress" ? 60 : 10;
+          return { percent: base, label: "Без подзадач" };
+        }
+        const done = task.subtasks.filter((s) => s.done).length;
+        const percent = Math.round((done / total) * 100);
+        return { percent, label: `${done}/${total}` };
       }
 
       async function loadProject() {
@@ -1604,7 +1711,7 @@
                     <button class="ghost" onclick="changeTaskStatus('${task.id}', 'todo')">ToDo</button>
                     <button class="ghost" onclick="changeTaskStatus('${task.id}', 'in_progress')">В работу</button>
                     <button class="ghost" onclick="changeTaskStatus('${task.id}', 'done')">Готово</button>
-                    <button class="ghost" onclick="addSubtask('${task.id}')">+ Подзадача</button>
+                    <button class="ghost" onclick="addSubtaskPrompt('${task.id}')">+ Подзадача</button>
                   </div>
                 `;
                 card.addEventListener("contextmenu", (event) => {
@@ -1637,6 +1744,7 @@
             const card = document.createElement("div");
             card.className = "task-card";
             const due = dueInfo(task);
+            const progress = taskProgress(task);
             card.innerHTML = `
               <div class="stage-header">
                 <div>
@@ -1652,6 +1760,10 @@
                 <span class="status-chip ${task.status}">${taskStatusLabel(task.status)}</span>
                 <span class="${due.className}">${due.text}</span>
                 ${task.important ? '<span class="tag">⭐ Важно</span>' : ""}
+              </div>
+              <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+                <div class="progress-line"><div class="fill" style="width:${progress.percent}%"></div></div>
+                <div class="muted">Прогресс: ${progress.label}</div>
               </div>
               <div class="muted" style="margin-top:6px">${task.description || "Без описания"}</div>
             `;
@@ -1677,11 +1789,6 @@
             importantBtn.textContent = task.important ? "Снять важность" : "Сделать важной";
             importantBtn.addEventListener("click", () => toggleImportant(task.id));
             actionBar.appendChild(importantBtn);
-            const addSubBtn = document.createElement("button");
-            addSubBtn.className = "ghost";
-            addSubBtn.textContent = "+ Подзадача";
-            addSubBtn.addEventListener("click", () => addSubtask(task.id));
-            actionBar.appendChild(addSubBtn);
             card.appendChild(actionBar);
 
             const subtasksList = document.createElement("ul");
@@ -1702,10 +1809,19 @@
                 li.querySelector("input").addEventListener("change", (event) => {
                   toggleSubtask(task.id, sub.id, event.target.checked);
                 });
+                const textSpan = li.querySelector("span");
+                textSpan.contentEditable = true;
+                textSpan.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, textSpan.innerText));
+                textSpan.addEventListener("keydown", (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    textSpan.blur();
+                  }
+                });
                 const editBtn = document.createElement("button");
                 editBtn.className = "ghost";
-                editBtn.textContent = "Изменить";
-                editBtn.addEventListener("click", () => editSubtask(task.id, sub.id));
+                editBtn.textContent = "Редактировать";
+                editBtn.addEventListener("click", () => textSpan.focus());
                 const delBtn = document.createElement("button");
                 delBtn.className = "ghost";
                 delBtn.textContent = "Удалить";
@@ -1716,7 +1832,7 @@
                   event.preventDefault();
                   const actions = [
                     { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
-                    { label: "Переименовать", action: () => editSubtask(task.id, sub.id) },
+                    { label: "Переименовать", action: () => textSpan.focus() },
                     { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
                   ];
                   openContextMenu(event, actions);
@@ -1725,6 +1841,21 @@
               });
             }
             card.appendChild(subtasksList);
+
+            const composer = document.createElement("div");
+            composer.className = "subtask-inline";
+            composer.innerHTML = `
+              <input class="inline-input" placeholder="Новая подзадача" />
+              <button class="ghost">Добавить</button>
+            `;
+            const [subInput, subBtn] = composer.querySelectorAll("input, button");
+            subBtn.addEventListener("click", () => {
+              const title = subInput.value.trim();
+              if (!title) return;
+              addSubtask(task.id, title);
+              subInput.value = "";
+            });
+            card.appendChild(composer);
 
             const commentsBlock = document.createElement("div");
             commentsBlock.style.marginTop = "10px";
@@ -1876,21 +2007,27 @@
         await loadTasks();
       }
 
-      async function addSubtask(taskId) {
-        const title = prompt("Текст подзадачи");
-        if (!title) return;
+      async function addSubtask(taskId, title) {
+        const prepared = title?.trim();
+        if (!prepared) return;
         const task = tasks.find((t) => t.id === taskId);
         const order = task?.subtasks?.length || 0;
         const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, done: false, order }),
+          body: JSON.stringify({ title: prepared, done: false, order }),
         });
         if (!res.ok) {
           alert("Не удалось добавить подзадачу");
           return;
         }
         await loadTasks();
+      }
+
+      function addSubtaskPrompt(taskId) {
+        const title = prompt("Текст подзадачи");
+        if (!title) return;
+        addSubtask(taskId, title);
       }
 
       async function toggleSubtask(taskId, subtaskId, done) {
@@ -1910,13 +2047,12 @@
         await loadTasks();
       }
 
-      async function editSubtask(taskId, subtaskId) {
+      async function updateSubtaskTitle(taskId, subtaskId, title) {
         const task = tasks.find((t) => t.id === taskId);
         const sub = task?.subtasks.find((s) => s.id === subtaskId);
-        if (!task || !sub) return;
-        const title = prompt("Текст подзадачи", sub.title);
-        if (title === null || title.trim() === "") return;
-        const payload = { ...sub, title: title.trim() };
+        const prepared = title?.trim();
+        if (!task || !sub || !prepared) return;
+        const payload = { ...sub, title: prepared };
         const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -2301,32 +2437,101 @@
           .forEach((comment) => {
             const li = document.createElement("li");
             li.className = "comment-item";
-            li.innerHTML = `
-              <div class="muted" style="font-size:0.85rem">${new Date(comment.created_at).toLocaleString("ru-RU")}</div>
-              <div>${comment.text}</div>
-            `;
+            const meta = document.createElement("div");
+            meta.className = "muted";
+            meta.style.fontSize = "0.85rem";
+            const edited = comment.edited_at
+              ? ` (изменён ${new Date(comment.edited_at).toLocaleString("ru-RU")})`
+              : "";
+            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${edited}`;
+            const body = document.createElement("div");
+            body.innerHTML = comment.text || "";
+            const actions = document.createElement("div");
+            actions.className = "toolbar";
+            actions.style.margin = "6px 0 0";
+            const editBtn = document.createElement("button");
+            editBtn.className = "ghost";
+            editBtn.textContent = "Редактировать";
+            editBtn.addEventListener("click", () => startProjectCommentEdit(comment));
             const remove = document.createElement("button");
             remove.className = "ghost";
             remove.textContent = "Удалить";
             remove.addEventListener("click", () => deleteProjectComment(comment.id));
-            li.appendChild(remove);
+            actions.appendChild(editBtn);
+            actions.appendChild(remove);
+            li.appendChild(meta);
+            li.appendChild(body);
+            li.appendChild(actions);
             projectCommentsList.appendChild(li);
           });
       }
 
       async function addProjectComment() {
-        const text = projectCommentInput.value.trim();
-        if (!text) return;
+        const html = editorHtml(projectCommentArea);
+        if (!html) return;
         const res = await fetch(`/api/projects/${projectId}/comments`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text: html }),
         });
         if (!res.ok) {
           alert("Не удалось добавить комментарий");
           return;
         }
-        projectCommentInput.value = "";
+        clearEditor("projectCommentArea");
+        await loadProjectComments();
+      }
+
+      function startProjectCommentEdit(comment) {
+        const existing = Array.from(projectCommentsList.children).find((li) =>
+          li.querySelector(".toolbar button")?.onclick?.toString().includes(comment.id)
+        );
+        const li = existing || document.createElement("li");
+        li.innerHTML = "";
+        li.className = "comment-item";
+        const editor = document.createElement("div");
+        editor.className = "rich-editor";
+        editor.innerHTML = `
+          <div class="rich-editor-toolbar">
+            <button type="button" onclick="formatSelection('bold')">B</button>
+            <button type="button" onclick="formatSelection('italic')"><em>I</em></button>
+            <button type="button" onclick="formatSelection('insertUnorderedList')">• Список</button>
+            <button type="button" onclick="addLinkToSelection()">Ссылка</button>
+          </div>
+          <div class="rich-editor-area" contenteditable="true">${comment.text || ""}</div>
+        `;
+        const actions = document.createElement("div");
+        actions.className = "toolbar";
+        actions.style.marginTop = "6px";
+        const save = document.createElement("button");
+        save.className = "primary";
+        save.textContent = "Сохранить";
+        save.addEventListener("click", async () => {
+          const html = editorHtml(editor.querySelector(".rich-editor-area"));
+          if (!html) return;
+          await updateProjectComment(comment.id, html);
+        });
+        const cancel = document.createElement("button");
+        cancel.className = "ghost";
+        cancel.textContent = "Отмена";
+        cancel.addEventListener("click", renderProjectComments);
+        actions.appendChild(save);
+        actions.appendChild(cancel);
+        li.appendChild(editor);
+        li.appendChild(actions);
+        if (!existing) projectCommentsList.prepend(li);
+      }
+
+      async function updateProjectComment(commentId, text) {
+        const res = await fetch(`/api/projects/${projectId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить комментарий");
+          return;
+        }
         await loadProjectComments();
       }
 
