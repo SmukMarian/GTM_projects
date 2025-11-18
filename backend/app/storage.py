@@ -55,6 +55,7 @@ class DataStore(BaseModel):
     projects: list[Project] = Field(default_factory=list)
     gtm_templates: list[GTMTemplate] = Field(default_factory=list)
     characteristic_templates: list[CharacteristicTemplate] = Field(default_factory=list)
+    next_project_short_id: int = 1
 
     model_config = ConfigDict(arbitrary_types_allowed=True, json_encoders={Path: str})
 
@@ -77,9 +78,27 @@ class LocalRepository:
     def __init__(self, path: Path):
         self.path = path
         self.store = load_store(path)
+        self._ensure_project_short_ids()
 
     def save(self) -> None:
         _write_json(self.path, self.store)
+
+    def _ensure_project_short_ids(self) -> None:
+        """Назначить короткие ID проектам, у которых они отсутствуют."""
+
+        max_id = max((p.short_id or 0 for p in self.store.projects), default=0)
+        counter = max(self.store.next_project_short_id, max_id + 1)
+        changed = False
+        for project in self.store.projects:
+            if project.short_id is None:
+                project.short_id = counter
+                counter += 1
+                changed = True
+        if counter != self.store.next_project_short_id:
+            self.store.next_project_short_id = counter
+            changed = True
+        if changed:
+            self.save()
 
     # --- Product groups ---
     def list_groups(
@@ -185,6 +204,9 @@ class LocalRepository:
         return None
 
     def add_project(self, project: Project) -> Project:
+        if project.short_id is None:
+            project.short_id = self.store.next_project_short_id
+            self.store.next_project_short_id += 1
         self.store.projects.append(project)
         self.save()
         return project
@@ -192,6 +214,8 @@ class LocalRepository:
     def update_project(self, project_id, updated: Project) -> Project:
         for idx, project in enumerate(self.store.projects):
             if project.id == project_id:
+                if updated.short_id is None:
+                    updated = updated.model_copy(update={"short_id": project.short_id})
                 self.store.projects[idx] = updated
                 self.save()
                 return updated

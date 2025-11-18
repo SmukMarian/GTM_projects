@@ -99,16 +99,9 @@
         text-decoration: none;
       }
 
-      .logo span {
+      .logo img {
         width: 36px;
         height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
-        display: inline-grid;
-        place-items: center;
-        color: #fff;
-        font-weight: 900;
-        font-size: 0.95rem;
       }
 
       nav {
@@ -433,17 +426,14 @@
     <div class="app-shell">
       <div class="topbar">
         <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <span>HPT</span>
-          <div>
-            Haier Project Tracker
-            <div class="muted" style="font-weight: 600; font-size: 0.9rem">Локальный GTM-трекер</div>
-          </div>
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
-          <a href="/project.html" aria-disabled="true" title="Откройте конкретный проект из списка">Карточка проекта</a>
+          <a href="/templates.html">Шаблоны</a>
         </nav>
       </div>
     </div>

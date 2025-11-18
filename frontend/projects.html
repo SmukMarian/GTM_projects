@@ -99,16 +99,9 @@
         text-decoration: none;
       }
 
-      .logo span {
+      .logo img {
         width: 36px;
         height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
-        display: inline-grid;
-        place-items: center;
-        color: #fff;
-        font-weight: 900;
-        font-size: 0.95rem;
       }
 
       nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -442,17 +435,14 @@
     <div class="app-shell">
       <div class="topbar">
         <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <span>HPT</span>
-          <div>
-            Haier Project Tracker
-            <div class="muted" style="font-weight: 600; font-size: 0.9rem">Локальный GTM-трекер</div>
-          </div>
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
-          <a href="/project.html" aria-disabled="true" title="Откройте конкретный проект из списка">Карточка проекта</a>
+          <a href="/templates.html">Шаблоны</a>
         </nav>
       </div>
     </div>
@@ -576,6 +566,12 @@
                 <option value="high">Высокий</option>
               </select>
             </label>
+          </div>
+          <div class="row">
+            <label>MOQ <input type="number" step="0.01" name="moq" /></label>
+            <label>Promo (Price) <input type="number" step="0.01" name="promo_price" /></label>
+            <label>RRP (Price) <input type="number" step="0.01" name="rrp_price" /></label>
+            <label>FOB цена <input type="number" step="0.01" name="fob_price" /></label>
           </div>
           <label>
             Текущий GTM-этап (по id этапа)
@@ -874,6 +870,22 @@
               <strong>Приоритет</strong>
               <div>${project.priority ? priorityLabels[project.priority] : "—"}</div>
             </div>
+            <div class="card" style="padding: 12px">
+              <strong>MOQ</strong>
+              <div>${project.moq ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>Promo (Price)</strong>
+              <div>${project.promo_price ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>RRP (Price)</strong>
+              <div>${project.rrp_price ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>FOB цена</strong>
+              <div>${project.fob_price ?? "—"}</div>
+            </div>
           </div>
           <div class="card" style="padding: 12px">
             <strong>Краткое описание</strong>
@@ -910,6 +922,12 @@
         projectForm.dataset.mode = "create";
         projectForm.dataset.id = "";
         projectForm.reset();
+        projectForm.group_id.value = groupFilter.value || "";
+        projectForm.status.value = "active";
+        projectForm.moq.value = "";
+        projectForm.promo_price.value = "";
+        projectForm.rrp_price.value = "";
+        projectForm.fob_price.value = "";
         customFields.innerHTML = "";
         dialog.showModal();
       }
@@ -931,6 +949,10 @@
         projectForm.current_gtm_stage_id.value = project.current_gtm_stage_id || "";
         projectForm.short_description.value = project.short_description || "";
         projectForm.full_description.value = project.full_description || "";
+        projectForm.moq.value = project.moq ?? "";
+        projectForm.promo_price.value = project.promo_price ?? "";
+        projectForm.rrp_price.value = project.rrp_price ?? "";
+        projectForm.fob_price.value = project.fob_price ?? "";
         customFields.innerHTML = "";
         Object.entries(project.custom_fields || {}).forEach(([k, v]) => addCustomFieldRow(k, v ?? ""));
         dialog.showModal();
@@ -951,6 +973,10 @@
         payload.actual_launch = payload.actual_launch || null;
         payload.current_gtm_stage_id = payload.current_gtm_stage_id || null;
         payload.priority = payload.priority || null;
+        payload.moq = payload.moq ? Number(payload.moq) : null;
+        payload.promo_price = payload.promo_price ? Number(payload.promo_price) : null;
+        payload.rrp_price = payload.rrp_price ? Number(payload.rrp_price) : null;
+        payload.fob_price = payload.fob_price ? Number(payload.fob_price) : null;
 
         const mode = projectForm.dataset.mode;
         if (mode === "create") {

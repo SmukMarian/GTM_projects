@@ -190,10 +190,15 @@ class BackupRestoreRequest(BaseModel):
 
 class Project(Timestamped):
     id: UUID = Field(default_factory=uuid4)
+    short_id: int | None = None
     group_id: UUID
     name: str
     brand: str
     market: str
+    moq: float | None = None
+    promo_price: float | None = None
+    rrp_price: float | None = None
+    fob_price: float | None = None
     short_description: str | None = None
     full_description: str | None = None
     status: ProjectStatus = ProjectStatus.ACTIVE

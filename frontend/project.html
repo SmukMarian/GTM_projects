@@ -59,11 +59,71 @@
       }
 
       body {
-        margin: 0 auto;
-        max-width: 1200px;
-        padding: 34px 20px 72px;
+        margin: 0;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
         color: var(--text);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
+      .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 32px 20px 88px;
       }
 
       a {
@@ -527,7 +587,7 @@
 
       .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 10px;
       }
 
@@ -790,19 +850,32 @@
       <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
       <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
     </div>
-    <div class="toolbar">
-      <a href="/projects.html">← К списку проектов</a>
-      <a href="/groups.html">Группы</a>
-      <a href="/index.html">Дашборд</a>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/templates.html">Шаблоны</a>
+        </nav>
+      </div>
     </div>
-
-    <div id="project-card" class="card">
+    <div class="page">
+      <div id="project-card" class="card">
       <div class="project-hero">
         <div class="project-hero-left">
           <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap">
             <div>
               <p class="pill">Карточка проекта</p>
               <h1 id="project-name">Проект</h1>
+              <div class="flex" style="gap: 8px; align-items: center; flex-wrap: wrap">
+                <span class="chip" id="project-short-id">ID —</span>
+                <button class="ghost" type="button" id="copy-id">Скопировать ID</button>
+              </div>
             </div>
             <div id="project-badges" style="display: flex; gap: 8px; flex-wrap: wrap"></div>
           </div>
@@ -827,6 +900,22 @@
             <div class="meta-tile">
               <span>Фактическая дата запуска</span>
               <strong id="project-actual">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>MOQ</span>
+              <strong id="project-moq">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Promo (Price)</span>
+              <strong id="project-promo">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>RRP (Price)</span>
+              <strong id="project-rrp">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>FOB цена</span>
+              <strong id="project-fob">—</strong>
             </div>
           </div>
           <div class="progress-shell">
@@ -859,6 +948,57 @@
           <input type="file" id="coverUpload" accept="image/*" style="display: none" />
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 6px">
+        <h2 style="margin: 0">Основные параметры</h2>
+        <span class="chip" id="basics-id">ID —</span>
+      </div>
+      <form id="projectBasicsForm" class="detail-panel">
+        <div class="row">
+          <label>Название <input id="basicName" required /></label>
+          <label>
+            Продуктовая группа
+            <select id="basicGroup" required></select>
+          </label>
+          <label>Бренд <input id="basicBrand" required /></label>
+          <label>Рынок/регион <input id="basicMarket" /></label>
+        </div>
+        <div class="row">
+          <label>
+            Статус
+            <select id="basicStatus">
+              <option value="active">Активный</option>
+              <option value="closed">Закрыт</option>
+              <option value="archived">Архивирован</option>
+            </select>
+          </label>
+          <label>
+            Приоритет
+            <select id="basicPriority">
+              <option value="">Не задан</option>
+              <option value="low">Низкий</option>
+              <option value="medium">Средний</option>
+              <option value="high">Высокий</option>
+            </select>
+          </label>
+          <label>Плановая дата запуска <input type="date" id="basicPlanned" /></label>
+          <label>Фактическая дата запуска <input type="date" id="basicActual" /></label>
+        </div>
+        <div class="row">
+          <label>MOQ <input type="number" step="0.01" id="basicMoq" /></label>
+          <label>Promo (Price) <input type="number" step="0.01" id="basicPromo" /></label>
+          <label>RRP (Price) <input type="number" step="0.01" id="basicRrp" /></label>
+          <label>FOB цена <input type="number" step="0.01" id="basicFob" /></label>
+        </div>
+        <label>Краткое описание <textarea id="basicShort" rows="2"></textarea></label>
+        <label>Расширенное описание <textarea id="basicFull" rows="4"></textarea></label>
+        <div class="flex" style="justify-content: flex-end; gap: 8px">
+          <button type="button" class="ghost" id="copy-id-secondary">Скопировать ID</button>
+          <button class="primary" type="submit">Сохранить</button>
+        </div>
+      </form>
     </div>
 
     <div class="card">
@@ -1079,10 +1219,10 @@
       </div>
     </div>
 
-    <div id="taskModal" class="modal-backdrop">
-      <div class="modal">
-        <h3 id="taskModalTitle">Задача</h3>
-        <form id="taskForm">
+      <div id="taskModal" class="modal-backdrop">
+        <div class="modal">
+          <h3 id="taskModalTitle">Задача</h3>
+          <form id="taskForm">
           <input type="hidden" id="taskId" />
           <label>
             Заголовок
@@ -1121,8 +1261,10 @@
             <button type="button" onclick="closeTaskModal()">Отмена</button>
             <button class="primary" type="submit">Сохранить</button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
+
     </div>
 
     <script>
@@ -1168,6 +1310,29 @@
       const projectMarketEl = document.getElementById("project-market");
       const projectPlannedEl = document.getElementById("project-planned");
       const projectActualEl = document.getElementById("project-actual");
+      const projectMoqEl = document.getElementById("project-moq");
+      const projectPromoEl = document.getElementById("project-promo");
+      const projectRrpEl = document.getElementById("project-rrp");
+      const projectFobEl = document.getElementById("project-fob");
+      const projectShortChip = document.getElementById("project-short-id");
+      const copyIdBtn = document.getElementById("copy-id");
+      const basicsId = document.getElementById("basics-id");
+      const basicsForm = document.getElementById("projectBasicsForm");
+      const basicName = document.getElementById("basicName");
+      const basicGroup = document.getElementById("basicGroup");
+      const basicBrand = document.getElementById("basicBrand");
+      const basicMarket = document.getElementById("basicMarket");
+      const basicStatus = document.getElementById("basicStatus");
+      const basicPriority = document.getElementById("basicPriority");
+      const basicPlanned = document.getElementById("basicPlanned");
+      const basicActual = document.getElementById("basicActual");
+      const basicMoq = document.getElementById("basicMoq");
+      const basicPromo = document.getElementById("basicPromo");
+      const basicRrp = document.getElementById("basicRrp");
+      const basicFob = document.getElementById("basicFob");
+      const basicShort = document.getElementById("basicShort");
+      const basicFull = document.getElementById("basicFull");
+      const copyIdSecondary = document.getElementById("copy-id-secondary");
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
@@ -1179,6 +1344,7 @@
       let characteristicTemplates = [];
       let characteristicSections = [];
       let tasks = [];
+      let groups = [];
       let images = [];
       let lightboxOrder = [];
       let lightboxIndex = 0;
@@ -1187,6 +1353,10 @@
       let historyEvents = [];
       let taskView = "list";
       const taskFilters = { status: "all", due: "all", gtm: "", hideDone: false };
+
+      basicsForm?.addEventListener("submit", saveBasics);
+      copyIdBtn?.addEventListener("click", copyProjectId);
+      copyIdSecondary?.addEventListener("click", copyProjectId);
 
       if (!projectId) {
         stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
@@ -1253,6 +1423,7 @@
       });
 
       async function loadData() {
+        await loadGroupList();
         await Promise.all([
           loadProject(),
           loadTemplates(),
@@ -1291,6 +1462,14 @@
         groupInfo = res.ok ? await res.json() : null;
       }
 
+      async function loadGroupList() {
+        const res = await fetch("/api/groups?include_archived=true");
+        groups = res.ok ? await res.json() : [];
+        basicGroup.innerHTML = groups
+          .map((g) => `<option value="${g.id}">${g.name}</option>`)
+          .join("");
+      }
+
       async function loadTemplates() {
         const res = await fetch("/api/gtm-templates");
         gtmTemplates = res.ok ? await res.json() : [];
@@ -1320,6 +1499,9 @@
       function renderProject() {
         document.getElementById("project-name").textContent = project.name;
         document.getElementById("project-desc").textContent = project.short_description || "Описание отсутствует";
+        const idLabel = project.short_id ? `ID ${project.short_id}` : "ID —";
+        projectShortChip.textContent = idLabel;
+        basicsId.textContent = idLabel;
         const metaParts = [];
         if (groupInfo?.name) metaParts.push(`Группа: ${groupInfo.name}`);
         if (project.brand) metaParts.push(`Бренд: ${project.brand}`);
@@ -1332,6 +1514,10 @@
         projectMarketEl.textContent = project.market || "—";
         projectPlannedEl.textContent = project.planned_launch || "—";
         projectActualEl.textContent = project.actual_launch || "—";
+        projectMoqEl.textContent = formatMoney(project.moq);
+        projectPromoEl.textContent = formatMoney(project.promo_price);
+        projectRrpEl.textContent = formatMoney(project.rrp_price);
+        projectFobEl.textContent = formatMoney(project.fob_price);
 
         const badges = [];
         if (project.status === "archived") {
@@ -1348,6 +1534,73 @@
         document.getElementById("project-badges").innerHTML = badges.join("");
         renderGtmProgress();
         renderCoverPanel();
+        fillBasicsForm();
+      }
+
+      function copyProjectId() {
+        if (!project?.short_id) return;
+        navigator.clipboard?.writeText(String(project.short_id)).then(() => {
+          if (copyIdBtn) copyIdBtn.textContent = "ID скопирован";
+          if (copyIdSecondary) copyIdSecondary.textContent = "ID скопирован";
+          setTimeout(() => {
+            if (copyIdBtn) copyIdBtn.textContent = "Скопировать ID";
+            if (copyIdSecondary) copyIdSecondary.textContent = "Скопировать ID";
+          }, 1200);
+        });
+      }
+
+      async function saveBasics(event) {
+        event.preventDefault();
+        if (!project) return;
+        const updated = {
+          ...project,
+          name: basicName.value.trim(),
+          group_id: basicGroup.value,
+          brand: basicBrand.value.trim(),
+          market: basicMarket.value.trim(),
+          status: basicStatus.value,
+          priority: basicPriority.value || null,
+          planned_launch: basicPlanned.value || null,
+          actual_launch: basicActual.value || null,
+          moq: basicMoq.value ? parseFloat(basicMoq.value) : null,
+          promo_price: basicPromo.value ? parseFloat(basicPromo.value) : null,
+          rrp_price: basicRrp.value ? parseFloat(basicRrp.value) : null,
+          fob_price: basicFob.value ? parseFloat(basicFob.value) : null,
+          short_description: basicShort.value || null,
+          full_description: basicFull.value || null,
+        };
+        const res = await fetch(`/api/projects/${project.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить основные параметры проекта");
+          return;
+        }
+        project = await res.json();
+        await loadGroupInfo();
+        renderProject();
+      }
+
+      function fillBasicsForm() {
+        if (!project) return;
+        basicName.value = project.name || "";
+        basicBrand.value = project.brand || "";
+        basicMarket.value = project.market || "";
+        basicStatus.value = project.status || "active";
+        basicPriority.value = project.priority || "";
+        basicPlanned.value = project.planned_launch || "";
+        basicActual.value = project.actual_launch || "";
+        basicMoq.value = project.moq ?? "";
+        basicPromo.value = project.promo_price ?? "";
+        basicRrp.value = project.rrp_price ?? "";
+        basicFob.value = project.fob_price ?? "";
+        basicShort.value = project.short_description || "";
+        basicFull.value = project.full_description || "";
+        if (project.group_id) {
+          basicGroup.value = project.group_id;
+        }
       }
 
       function renderTemplates() {
@@ -1385,6 +1638,13 @@
           done: "Завершён",
           cancelled: "Отменён",
         }[value] || value;
+      }
+
+      function formatMoney(value) {
+        if (value === null || value === undefined || value === "") return "—";
+        const num = Number(value);
+        if (Number.isNaN(num)) return "—";
+        return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
       }
 
       function renderStages() {
