@@ -26,6 +26,7 @@ from .models import (
     FileAttachment,
     GTMTemplate,
     GTMStage,
+    GroupStatus,
     HistoryEvent,
     ImageAttachment,
     ProductGroup,
@@ -76,10 +77,33 @@ class LocalRepository:
         _write_json(self.path, self.store)
 
     # --- Product groups ---
-    def list_groups(self, include_archived: bool = True) -> list[ProductGroup]:
+    def list_groups(
+        self,
+        include_archived: bool = True,
+        *,
+        brand: str | None = None,
+        statuses: set[GroupStatus] | None = None,
+        extra_key: str | None = None,
+        extra_value: str | None = None,
+    ) -> list[ProductGroup]:
         groups: Iterable[ProductGroup] = self.store.product_groups
         if not include_archived:
             groups = [g for g in groups if g.status.value != "archived"]
+        if brand:
+            lowered = brand.lower()
+            groups = [g for g in groups if any(lowered in b.lower() for b in g.brands)]
+        if statuses:
+            groups = [g for g in groups if g.status in statuses]
+        if extra_key:
+            key = extra_key.strip()
+            groups = [g for g in groups if key in g.extra_fields]
+            if extra_value:
+                value_lower = extra_value.lower()
+                groups = [
+                    g
+                    for g in groups
+                    if str(g.extra_fields.get(key, "")).lower().find(value_lower) != -1
+                ]
         return list(groups)
 
     def get_group(self, group_id: UUID) -> ProductGroup | None:

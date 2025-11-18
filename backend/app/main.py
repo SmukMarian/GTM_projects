@@ -26,6 +26,7 @@ from .models import (
     FileAttachment,
     GTMStage,
     GTMTemplate,
+    GroupStatus,
     HistoryEvent,
     ImageAttachment,
     ProductGroup,
@@ -77,10 +78,24 @@ def get_dashboard(
 
 
 @app.get("/api/groups", response_model=list[ProductGroup])
-def list_groups(include_archived: bool = True, repo: LocalRepository = Depends(get_repository)) -> list[ProductGroup]:
-    """Вернуть список продуктовых групп."""
+def list_groups(
+    include_archived: bool = True,
+    brand: str | None = None,
+    status: list[GroupStatus] | None = Query(default=None),
+    extra_key: str | None = None,
+    extra_value: str | None = None,
+    repo: LocalRepository = Depends(get_repository),
+) -> list[ProductGroup]:
+    """Вернуть список продуктовых групп с фильтрами по статусу, бренду и пользовательскому полю."""
 
-    return repo.list_groups(include_archived=include_archived)
+    status_set = set(status) if status else None
+    return repo.list_groups(
+        include_archived=include_archived,
+        brand=brand,
+        statuses=status_set,
+        extra_key=extra_key,
+        extra_value=extra_value,
+    )
 
 
 @app.get("/api/groups/{group_id}", response_model=ProductGroup)
