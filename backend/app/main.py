@@ -5,13 +5,16 @@
 и раздача статических файлов из каталога ``frontend``.
 """
 
+import logging
 import shutil
+import time
 from datetime import date
 from io import BytesIO
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -53,10 +56,48 @@ app = FastAPI(title="Haier Project Tracker", version="0.1.0")
 repository = LocalRepository(settings.primary_store)
 
 
+def configure_logging() -> logging.Logger:
+    """Настроить ротацию логов и фиксировать потенциальные 500-ошибки."""
+
+    log_file = settings.logs_dir / "app.log"
+    handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[handler, logging.StreamHandler()],
+        format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    )
+    logger = logging.getLogger("hpt")
+    logger.info("Логи пишутся в %s", log_file)
+    return logger
+
+
+logger = configure_logging()
+
+
 def get_repository() -> LocalRepository:
     """Dependency для доступа к файловому хранилищу."""
 
     return repository
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):  # type: ignore[override]
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception("Unhandled application error", extra={"path": request.url.path, "method": request.method})
+        raise
+
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.info(
+        "HTTP %s %s -> %s (%.1f ms)",
+        request.method,
+        request.url.path,
+        getattr(response, "status_code", "unknown"),
+        duration_ms,
+    )
+    return response
 
 
 def resolve_storage_path(path: Path) -> Path:

@@ -18,6 +18,7 @@ class AppSettings(BaseSettings):
     backups_dir: Path = DATA_DIR / "backups"
     files_dir: Path = DATA_DIR / "files"
     images_dir: Path = DATA_DIR / "images"
+    logs_dir: Path = DATA_DIR / "logs"
 
     model_config = SettingsConfigDict(env_prefix="HPT_", env_file=".env", env_file_encoding="utf-8")
 
@@ -27,3 +28,4 @@ settings.data_dir.mkdir(parents=True, exist_ok=True)
 settings.backups_dir.mkdir(parents=True, exist_ok=True)
 settings.files_dir.mkdir(parents=True, exist_ok=True)
 settings.images_dir.mkdir(parents=True, exist_ok=True)
+settings.logs_dir.mkdir(parents=True, exist_ok=True)
