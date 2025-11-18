@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,6 +21,7 @@ from .models import (
     ProductGroup,
     Project,
     ProjectStatus,
+    GTMStage,
 )
 
 
@@ -136,4 +137,93 @@ class LocalRepository:
                 self.store.projects.pop(idx)
                 self.save()
                 return
+        raise KeyError(f"Project {project_id} not found")
+
+    # --- GTM templates ---
+    def list_gtm_templates(self) -> list[GTMTemplate]:
+        return list(self.store.gtm_templates)
+
+    def get_gtm_template(self, template_id: UUID) -> GTMTemplate | None:
+        for template in self.store.gtm_templates:
+            if template.id == template_id:
+                return template
+        return None
+
+    def add_gtm_template(self, template: GTMTemplate) -> GTMTemplate:
+        self.store.gtm_templates.append(template)
+        self.save()
+        return template
+
+    def update_gtm_template(self, template_id: UUID, updated: GTMTemplate) -> GTMTemplate:
+        for idx, template in enumerate(self.store.gtm_templates):
+            if template.id == template_id:
+                self.store.gtm_templates[idx] = updated
+                self.save()
+                return updated
+        raise KeyError(f"GTM template {template_id} not found")
+
+    def delete_gtm_template(self, template_id: UUID) -> None:
+        for idx, template in enumerate(self.store.gtm_templates):
+            if template.id == template_id:
+                self.store.gtm_templates.pop(idx)
+                self.save()
+                return
+        raise KeyError(f"GTM template {template_id} not found")
+
+    # --- GTM stages inside projects ---
+    def list_gtm_stages(self, project_id: UUID) -> list[GTMStage]:
+        project = self.get_project(project_id)
+        if not project:
+            raise KeyError(f"Project {project_id} not found")
+        return list(project.gtm_stages)
+
+    def add_gtm_stage(self, project_id: UUID, stage: GTMStage) -> GTMStage:
+        for idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                if stage.order == 0 and project.gtm_stages:
+                    stage = stage.model_copy(update={"order": len(project.gtm_stages)})
+                project.gtm_stages.append(stage)
+                self.store.projects[idx] = project
+                self.save()
+                return stage
+        raise KeyError(f"Project {project_id} not found")
+
+    def update_gtm_stage(self, project_id: UUID, stage_id: UUID, updated: GTMStage) -> GTMStage:
+        for p_idx, project in enumerate(self.store.projects):
+            if project.id != project_id:
+                continue
+            for s_idx, stage in enumerate(project.gtm_stages):
+                if stage.id == stage_id:
+                    project.gtm_stages[s_idx] = updated
+                    self.store.projects[p_idx] = project
+                    self.save()
+                    return updated
+            raise KeyError(f"Stage {stage_id} not found in project {project_id}")
+        raise KeyError(f"Project {project_id} not found")
+
+    def delete_gtm_stage(self, project_id: UUID, stage_id: UUID) -> None:
+        for p_idx, project in enumerate(self.store.projects):
+            if project.id != project_id:
+                continue
+            for s_idx, stage in enumerate(project.gtm_stages):
+                if stage.id == stage_id:
+                    project.gtm_stages.pop(s_idx)
+                    self.store.projects[p_idx] = project
+                    self.save()
+                    return
+            raise KeyError(f"Stage {stage_id} not found in project {project_id}")
+        raise KeyError(f"Project {project_id} not found")
+
+    def apply_gtm_template(self, project_id: UUID, template_id: UUID) -> list[GTMStage]:
+        template = self.get_gtm_template(template_id)
+        if template is None:
+            raise KeyError(f"GTM template {template_id} not found")
+
+        for p_idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                new_stages = [stage.model_copy(update={"id": uuid4()}) for stage in template.stages]
+                project.gtm_stages = new_stages
+                self.store.projects[p_idx] = project
+                self.save()
+                return new_stages
         raise KeyError(f"Project {project_id} not found")

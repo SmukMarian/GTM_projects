@@ -6,7 +6,6 @@
 """
 
 from pathlib import Path
-
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -14,7 +13,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
-from .models import ProductGroup, Project, ProjectStatus
+from .models import GTMStage, GTMTemplate, ProductGroup, Project, ProjectStatus
 from .storage import LocalRepository
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -127,6 +126,94 @@ def delete_project(project_id: UUID, repo: LocalRepository = Depends(get_reposit
         repo.delete_project(project_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.get("/api/gtm-templates", response_model=list[GTMTemplate])
+def list_gtm_templates(repo: LocalRepository = Depends(get_repository)) -> list[GTMTemplate]:
+    """Вернуть список шаблонов GTM."""
+
+    return repo.list_gtm_templates()
+
+
+@app.get("/api/gtm-templates/{template_id}", response_model=GTMTemplate)
+def get_gtm_template(template_id: UUID, repo: LocalRepository = Depends(get_repository)) -> GTMTemplate:
+    template = repo.get_gtm_template(template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+    return template
+
+
+@app.post("/api/gtm-templates", response_model=GTMTemplate, status_code=201)
+def create_gtm_template(template: GTMTemplate, repo: LocalRepository = Depends(get_repository)) -> GTMTemplate:
+    return repo.add_gtm_template(template)
+
+
+@app.put("/api/gtm-templates/{template_id}", response_model=GTMTemplate)
+def update_gtm_template(template_id: UUID, template: GTMTemplate, repo: LocalRepository = Depends(get_repository)) -> GTMTemplate:
+    if repo.get_gtm_template(template_id) is None:
+        raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+    aligned = template.model_copy(update={"id": template_id})
+    return repo.update_gtm_template(template_id, aligned)
+
+
+@app.delete("/api/gtm-templates/{template_id}", status_code=204)
+def delete_gtm_template(template_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_gtm_template(template_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+
+
+@app.get("/api/projects/{project_id}/gtm-stages", response_model=list[GTMStage])
+def list_gtm_stages(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[GTMStage]:
+    try:
+        return repo.list_gtm_stages(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/gtm-stages", response_model=GTMStage, status_code=201)
+def create_gtm_stage(project_id: UUID, stage: GTMStage, repo: LocalRepository = Depends(get_repository)) -> GTMStage:
+    try:
+        return repo.add_gtm_stage(project_id, stage)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.put("/api/projects/{project_id}/gtm-stages/{stage_id}", response_model=GTMStage)
+def update_gtm_stage(project_id: UUID, stage_id: UUID, stage: GTMStage, repo: LocalRepository = Depends(get_repository)) -> GTMStage:
+    aligned = stage.model_copy(update={"id": stage_id})
+    try:
+        return repo.update_gtm_stage(project_id, stage_id, aligned)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Этап GTM не найден")
+
+
+@app.delete("/api/projects/{project_id}/gtm-stages/{stage_id}", status_code=204)
+def delete_gtm_stage(project_id: UUID, stage_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_gtm_stage(project_id, stage_id)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Этап GTM не найден")
+
+
+@app.post(
+    "/api/projects/{project_id}/gtm-stages/apply-template",
+    response_model=list[GTMStage],
+    status_code=201,
+)
+def apply_gtm_template(project_id: UUID, template_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[GTMStage]:
+    try:
+        return repo.apply_gtm_template(project_id, template_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
 
 
 if FRONTEND_DIR.exists():

@@ -32,3 +32,12 @@
 - `POST /api/projects` — создание проекта, валидирует наличие группы.
 - `PUT /api/projects/{project_id}` — обновление проекта; валидирует группу.
 - `DELETE /api/projects/{project_id}` — удаление проекта.
+- `GET /api/gtm-templates` — список шаблонов GTM.
+- `POST /api/gtm-templates` — создание шаблона GTM.
+- `PUT /api/gtm-templates/{template_id}` — обновление шаблона GTM.
+- `DELETE /api/gtm-templates/{template_id}` — удаление шаблона GTM.
+- `GET /api/projects/{project_id}/gtm-stages` — список GTM-этапов проекта.
+- `POST /api/projects/{project_id}/gtm-stages` — добавление GTM-этапа в проект.
+- `PUT /api/projects/{project_id}/gtm-stages/{stage_id}` — обновление GTM-этапа проекта.
+- `DELETE /api/projects/{project_id}/gtm-stages/{stage_id}` — удаление GTM-этапа проекта.
+- `POST /api/projects/{project_id}/gtm-stages/apply-template?template_id=` — заменить этапы проекта этапами шаблона.
