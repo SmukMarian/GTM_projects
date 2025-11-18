@@ -148,6 +148,39 @@
         margin: 16px 0;
       }
 
+      .filter-panel {
+        margin: 18px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .filter-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .checkbox-row {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-weight: 600;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
       button {
         cursor: pointer;
         border: 1px solid var(--border);
@@ -459,40 +492,46 @@
         </div>
       </div>
 
-    <div class="toolbar">
-      <label style="width: 220px">
-        Фильтр по бренду
-        <input id="brandFilter" placeholder="Haier" />
-      </label>
-      <label style="width: 220px">
-        Фильтр по группе
-        <select id="groupFilter"></select>
-      </label>
-      <label style="width: 220px">
-        Текущий GTM-этап
-        <select id="stageFilter"></select>
-      </label>
-      <label style="width: 220px">
-        Статусы
-        <div class="flex" style="gap: 8px">
-          <label style="font-weight: 500"><input type="checkbox" value="active" class="status-filter" /> Активные</label>
-          <label style="font-weight: 500"><input type="checkbox" value="closed" class="status-filter" /> Закрытые</label>
-          <label style="font-weight: 500"><input type="checkbox" value="archived" class="status-filter" /> Архив</label>
+    <div class="card filter-panel">
+      <div class="filters-grid">
+        <label>
+          Фильтр по бренду
+          <input id="brandFilter" placeholder="Haier" />
+        </label>
+        <label>
+          Фильтр по группе
+          <select id="groupFilter"></select>
+        </label>
+        <label>
+          Текущий GTM-этап
+          <select id="stageFilter"></select>
+        </label>
+        <label>
+          Статусы
+          <div class="flex" style="gap: 8px; flex-wrap: wrap">
+            <label style="font-weight: 600"><input type="checkbox" value="active" class="status-filter" /> Активные</label>
+            <label style="font-weight: 600"><input type="checkbox" value="closed" class="status-filter" /> Закрытые</label>
+            <label style="font-weight: 600"><input type="checkbox" value="archived" class="status-filter" /> Архив</label>
+          </div>
+        </label>
+        <label>
+          Плановый запуск c
+          <input type="date" id="plannedFrom" />
+        </label>
+        <label>
+          Плановый запуск по
+          <input type="date" id="plannedTo" />
+        </label>
+      </div>
+      <div class="filter-actions">
+        <label class="checkbox-row">
+          <input type="checkbox" id="showArchived" /> Показывать архив
+        </label>
+        <div class="filter-buttons">
+          <button id="applyFilters" class="primary">Применить фильтры</button>
+          <button id="resetFilters">Сбросить</button>
         </div>
-      </label>
-      <label style="width: 220px">
-        Плановый запуск c
-        <input type="date" id="plannedFrom" />
-      </label>
-      <label style="width: 220px">
-        Плановый запуск по
-        <input type="date" id="plannedTo" />
-      </label>
-      <label class="flex" style="margin-top: 22px; gap: 6px; font-weight: 600">
-        <input type="checkbox" id="showArchived" /> Показывать архив
-      </label>
-      <button id="applyFilters">Применить фильтры</button>
-      <button id="resetFilters">Сбросить</button>
+      </div>
     </div>
 
     <div class="toolbar" style="margin-top: 0">

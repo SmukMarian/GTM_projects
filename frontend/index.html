@@ -152,6 +152,16 @@
         font-size: 0.78rem;
       }
 
+      .alert {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.06));
+        color: var(--danger);
+        font-weight: 700;
+      }
+
       .card {
         background: var(--surface);
         color: var(--text);
@@ -288,6 +298,12 @@
         border: 1px solid var(--border);
         border-radius: 12px;
         background: var(--surface-muted);
+      }
+
+      .empty-state {
+        text-align: center;
+        color: var(--muted);
+        padding: 10px 4px;
       }
 
       .group-card {
@@ -524,6 +540,8 @@
         </div>
       </div>
 
+      <div id="dashboardError" class="alert" hidden role="alert"></div>
+
       <div class="card">
         <h2>Ключевые показатели</h2>
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -584,6 +602,7 @@
       const brandList = document.getElementById("brandList");
       const gtmProgress = document.getElementById("gtmProgress");
       const riskList = document.getElementById("riskList");
+      const dashboardError = document.getElementById("dashboardError");
       const filterStorageKey = "hpt-dashboard-filters";
 
       async function loadGroupsForFilter() {
@@ -626,26 +645,35 @@
 
       function renderKPIs(kpis) {
         kpiGrid.innerHTML = "";
+        const total = kpis.total_projects || 0;
+        const active = kpis.active || 0;
+        const closed = kpis.closed || 0;
+        const archived = kpis.archived || 0;
+        const completion = kpis.completion_rate || 0;
+        const overdueProjects = kpis.overdue_projects || 0;
+        const overdueRate = kpis.overdue_rate || 0;
+        const activeGroups = kpis.active_groups || 0;
+        const riskyGroups = kpis.risky_groups || 0;
         const items = [
           {
             title: "Всего проектов",
-            value: kpis.total_projects,
-            note: `${kpis.active} активных, ${kpis.closed} закрытых, ${kpis.archived} архивных`,
-            percent: kpis.completion_rate,
+            value: total,
+            note: `${active} активных, ${closed} закрытых, ${archived} архивных`,
+            percent: completion,
             hint: "Доля завершённых проектов",
           },
           {
             title: "Проекты с рисками",
-            value: kpis.overdue_projects,
-            note: `Риск в ${Math.round(kpis.overdue_rate * 100)}% проектов`,
-            percent: kpis.overdue_rate,
+            value: overdueProjects,
+            note: `Риск в ${Math.round(overdueRate * 100)}% проектов`,
+            percent: overdueRate,
             hint: "Просрочки или ручной флаг риска",
           },
           {
             title: "Продуктовые группы",
-            value: kpis.active_groups,
-            note: `${kpis.risky_groups} с рисками",
-            percent: kpis.risky_groups && kpis.active_groups ? kpis.risky_groups / kpis.active_groups : 0,
+            value: activeGroups,
+            note: `${riskyGroups} с рисками`,
+            percent: riskyGroups && activeGroups ? riskyGroups / activeGroups : 0,
             hint: "Активные и проблемные группы",
           },
         ];
@@ -667,8 +695,8 @@
 
       function renderBrands(brands) {
         brandList.innerHTML = "";
-        if (!brands.length) {
-          brandList.innerHTML = "<p class=\"muted\">Нет данных</p>";
+        if (!brands || !brands.length) {
+          brandList.innerHTML = '<p class="empty-state">Нет данных по брендам</p>';
           return;
         }
         const max = Math.max(...brands.map((b) => b.projects));
@@ -689,11 +717,15 @@
 
       function renderGtmProgress(dist) {
         gtmProgress.innerHTML = "";
+        if (!dist || (!dist.early && !dist.middle && !dist.late && !dist.none)) {
+          gtmProgress.innerHTML = '<p class="empty-state">Нет данных по GTM</p>';
+          return;
+        }
         const rows = [
-          { label: "Стартовые этапы", value: dist.early },
-          { label: "Середина", value: dist.middle },
-          { label: "Финал", value: dist.late },
-          { label: "Без этапов", value: dist.none },
+          { label: "Стартовые этапы", value: dist.early || 0 },
+          { label: "Середина", value: dist.middle || 0 },
+          { label: "Финал", value: dist.late || 0 },
+          { label: "Без этапов", value: dist.none || 0 },
         ];
         const max = Math.max(...rows.map((r) => r.value), 1);
         rows.forEach((row) => {
@@ -713,8 +745,8 @@
 
       function renderGroups(groups) {
         groupGrid.innerHTML = "";
-        if (!groups.length) {
-          groupGrid.innerHTML = "<p class=\"muted\">Нет групп по текущему фильтру</p>";
+        if (!groups || !groups.length) {
+          groupGrid.innerHTML = '<p class="empty-state">Нет групп по текущему фильтру</p>';
           return;
         }
         groups.forEach((group) => {
@@ -736,8 +768,8 @@
 
       function renderUpcoming(rows) {
         const header = `<tr><th>Проект</th><th>Группа</th><th>Тип</th><th>Элемент</th><th>Плановая дата</th><th>Δ дней</th></tr>`;
-        if (!rows.length) {
-          upcomingTable.innerHTML = header + '<tr><td colspan="6" class="muted">Нет ближайших дат</td></tr>';
+        if (!rows || !rows.length) {
+          upcomingTable.innerHTML = header + '<tr><td colspan="6" class="empty-state">Нет ближайших дат</td></tr>';
           return;
         }
         const body = rows
@@ -764,8 +796,8 @@
 
       function renderChanges(items) {
         recentList.innerHTML = "";
-        if (!items.length) {
-          recentList.innerHTML = "<li class=\"muted\">Нет изменений</li>";
+        if (!items || !items.length) {
+          recentList.innerHTML = '<p class="empty-state">Нет изменений</p>';
           return;
         }
         items.forEach((item) => {
@@ -792,8 +824,8 @@
 
       function renderRisks(items) {
         riskList.innerHTML = "";
-        if (!items.length) {
-          riskList.innerHTML = "<li class=\"muted\">Нет рисков</li>";
+        if (!items || !items.length) {
+          riskList.innerHTML = '<p class="empty-state">Нет рисков</p>';
           return;
         }
         items.forEach((item) => {
@@ -875,25 +907,38 @@
       });
 
       async function loadDashboard() {
+        dashboardError.hidden = true;
         const url = new URL(window.location.origin + "/api/dashboard");
         if (groupFilter.value) url.searchParams.set("group_id", groupFilter.value);
         if (brandFilter.value) url.searchParams.set("brand", brandFilter.value);
         if (statusFilter.value) url.searchParams.set("statuses", statusFilter.value);
         if (showArchived.checked) url.searchParams.set("include_archived", "true");
 
-        const res = await fetch(url.toString());
-        if (!res.ok) {
-          console.error("Не удалось загрузить дашборд", await res.text());
-          return;
+        try {
+          const res = await fetch(url.toString());
+          if (!res.ok) {
+            throw new Error(await res.text());
+          }
+          const payload = await res.json();
+          renderKPIs(payload.kpis || {});
+          renderBrands(payload.brands || []);
+          renderGtmProgress(payload.gtm_distribution || []);
+          renderGroups(payload.groups || []);
+          renderRisks(payload.risk_projects || []);
+          renderUpcoming(payload.upcoming || []);
+          renderChanges(payload.recent_changes || []);
+        } catch (err) {
+          console.error("Не удалось загрузить дашборд", err);
+          dashboardError.textContent = `Не удалось загрузить дашборд: ${err.message || err}`;
+          dashboardError.hidden = false;
+          renderKPIs({ total_projects: 0, active: 0, closed: 0, archived: 0, completion_rate: 0, overdue_projects: 0, overdue_rate: 0, active_groups: 0, risky_groups: 0 });
+          renderBrands([]);
+          renderGtmProgress([]);
+          renderGroups([]);
+          renderRisks([]);
+          renderUpcoming([]);
+          renderChanges([]);
         }
-        const payload = await res.json();
-        renderKPIs(payload.kpis);
-        renderBrands(payload.brands);
-        renderGtmProgress(payload.gtm_distribution);
-        renderGroups(payload.groups);
-        renderRisks(payload.risk_projects);
-        renderUpcoming(payload.upcoming);
-        renderChanges(payload.recent_changes);
       }
 
       function resetFiltersState() {
