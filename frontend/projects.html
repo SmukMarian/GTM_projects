@@ -6,7 +6,8 @@
     <script>
       (() => {
         const key = "hpt-theme";
-        const stored = localStorage.getItem(key);
+        const normalize = (value) => (value === "dark" || value === "light" ? value : null);
+        const stored = normalize(localStorage.getItem(key));
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
         const initial = stored || (prefersDark ? "dark" : "light");
         document.documentElement.dataset.theme = initial;
@@ -296,7 +297,7 @@
     </style>
   </head>
   <body>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Переключить тему"></button>
     <div class="flex space-between" style="align-items: baseline">
       <div>
         <p class="pill">Проекты</p>

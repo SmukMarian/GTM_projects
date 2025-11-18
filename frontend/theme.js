@@ -1,5 +1,6 @@
 (() => {
   const STORAGE_KEY = "hpt-theme";
+  const mediaQuery = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
   const refreshButtons = (isDark) => {
     document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
@@ -9,18 +10,29 @@
     });
   };
 
-  const applyTheme = (theme) => {
+  const applyTheme = (theme, { persist = true } = {}) => {
     const normalized = theme === "dark" ? "dark" : "light";
     document.documentElement.dataset.theme = normalized;
     document.documentElement.style.colorScheme = normalized === "dark" ? "dark" : "light";
-    localStorage.setItem(STORAGE_KEY, normalized);
+    if (persist) {
+      localStorage.setItem(STORAGE_KEY, normalized);
+    }
     refreshButtons(normalized === "dark");
   };
 
   const stored = localStorage.getItem(STORAGE_KEY);
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const prefersDark = mediaQuery && mediaQuery.matches;
   const initial = stored || (prefersDark ? "dark" : "light");
-  applyTheme(initial);
+  applyTheme(initial, { persist: Boolean(stored) });
+
+  if (mediaQuery) {
+    mediaQuery.addEventListener("change", (event) => {
+      const userChoice = localStorage.getItem(STORAGE_KEY);
+      if (!userChoice) {
+        applyTheme(event.matches ? "dark" : "light", { persist: false });
+      }
+    });
+  }
 
   window.hptTheme = {
     set(theme) {
