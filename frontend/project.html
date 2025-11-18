@@ -3,25 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/theme.js" defer></script>
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const stored = localStorage.getItem(key);
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const initial = stored || (prefersDark ? "dark" : "light");
+        document.documentElement.dataset.theme = initial;
+        document.documentElement.style.colorScheme = initial === "dark" ? "dark" : "light";
+      })();
+    </script>
     <title>Карточка проекта — Haier Project Tracker</title>
     <style>
       :root {
-        color-scheme: light light;
+        color-scheme: light;
         font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         line-height: 1.5;
+        --bg: #f6f7fb;
+        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.12), transparent 32%),
+          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.1), transparent 30%);
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.2), transparent 32%),
+          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.16), transparent 30%);
+        --surface: #161b22;
+        --surface-muted: #1e2633;
+        --text: #e6edf3;
+        --muted: #9ba7b5;
+        --border: #2d333b;
+        --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+        --warning: #fbbf24;
       }
 
       body {
         margin: 0 auto;
         max-width: 1180px;
         padding: 28px 18px 60px;
-        background: radial-gradient(circle at 20% 20%, rgba(0, 146, 255, 0.08), transparent 30%),
-          radial-gradient(circle at 80% 0%, rgba(0, 146, 255, 0.08), transparent 25%);
-        color: #0f172a;
+        background-color: var(--bg);
+        background-image: var(--bg-gradient);
+        color: var(--text);
       }
 
       a {
-        color: #0a66c2;
+        color: var(--accent);
       }
 
       h1 {
@@ -33,8 +76,8 @@
         align-items: center;
         gap: 6px;
         padding: 6px 12px;
-        background: rgba(0, 146, 255, 0.12);
-        color: #0060a8;
+        background: var(--accent-soft);
+        color: var(--accent);
         border-radius: 999px;
         font-weight: 700;
         font-size: 0.75rem;
@@ -43,11 +86,11 @@
       }
 
       .card {
-        background: rgba(255, 255, 255, 0.94);
+        background: var(--surface);
         border-radius: 14px;
         padding: 16px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-        border: 1px solid #e2e8f0;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
         margin-bottom: 16px;
       }
 
@@ -56,18 +99,18 @@
         padding: 4px 10px;
         border-radius: 999px;
         font-size: 0.8rem;
-        background: #e2f0ff;
-        color: #0f172a;
+        background: var(--accent-soft);
+        color: var(--text);
       }
 
       .badge.archived {
-        background: #fef2f2;
-        color: #991b1b;
+        background: rgba(248, 113, 113, 0.15);
+        color: #dc2626;
       }
 
       .badge.closed {
-        background: #f1f5f9;
-        color: #0f172a;
+        background: var(--surface-muted);
+        color: var(--text);
       }
 
       .toolbar {
@@ -80,15 +123,16 @@
 
       button {
         cursor: pointer;
-        border: 1px solid #cbd5e1;
-        background: #fff;
+        border: 1px solid var(--border);
+        background: var(--surface);
         padding: 8px 12px;
         border-radius: 10px;
+        color: var(--text);
       }
 
       button.primary {
-        background: linear-gradient(135deg, #0077ff, #00a0f0);
-        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        border-color: var(--accent);
         color: #fff;
         font-weight: 600;
       }
@@ -109,9 +153,11 @@
       select {
         width: 100%;
         border-radius: 10px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--border);
         padding: 8px 10px;
         font: inherit;
+        background: var(--surface);
+        color: var(--text);
       }
 
       textarea {
@@ -125,11 +171,11 @@
       }
 
       .stage-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px;
         margin-bottom: 12px;
-        background: #fff;
+        background: var(--surface);
       }
 
       .stage-header {
@@ -144,14 +190,14 @@
         align-items: center;
         gap: 6px;
         padding: 4px 8px;
-        background: #f8fafc;
+        background: var(--surface-muted);
         border-radius: 8px;
         font-size: 0.85rem;
       }
 
       .chip.warn {
-        background: #fff1f2;
-        color: #b91c1c;
+        background: rgba(248, 113, 113, 0.16);
+        color: #fca5a5;
       }
 
       .checklist li {
@@ -163,16 +209,16 @@
       }
 
       .muted {
-        color: #64748b;
+        color: var(--muted);
         font-size: 0.95rem;
       }
 
       .context-menu {
         position: absolute;
-        background: #fff;
-        border: 1px solid #e2e8f0;
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+        box-shadow: var(--shadow);
         padding: 6px 0;
         display: none;
         z-index: 20;
@@ -191,7 +237,12 @@
       }
 
       .context-menu li:hover {
-        background: #f1f5f9;
+        background: var(--accent-soft);
+      }
+
+      .context-menu li.disabled {
+        color: var(--muted);
+        cursor: not-allowed;
       }
 
       .modal-backdrop {
@@ -205,13 +256,13 @@
       }
 
       .modal {
-        background: #fff;
+        background: var(--surface);
         padding: 20px;
         border-radius: 14px;
         width: min(640px, 92vw);
         max-height: 90vh;
         overflow: auto;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        box-shadow: var(--shadow);
       }
 
       table {
@@ -222,14 +273,14 @@
 
       th,
       td {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         padding: 8px 10px;
         text-align: left;
         vertical-align: top;
       }
 
       th {
-        background: #f8fafc;
+        background: var(--surface-muted);
         font-weight: 700;
       }
 
@@ -239,17 +290,17 @@
       }
 
       .section-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px;
-        background: #fff;
+        background: var(--surface);
       }
 
       .task-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px;
-        background: #fff;
+        background: var(--surface);
         margin-bottom: 12px;
       }
 
@@ -265,7 +316,7 @@
         align-items: center;
         gap: 6px;
         padding: 4px 8px;
-        background: #f1f5f9;
+        background: var(--surface-muted);
         border-radius: 10px;
         font-size: 0.85rem;
       }
@@ -292,10 +343,10 @@
       }
 
       .task-column {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 10px;
-        background: #fff;
+        background: var(--surface);
       }
 
       .tag {
@@ -304,7 +355,7 @@
         align-items: center;
         padding: 4px 8px;
         border-radius: 8px;
-        background: #f8fafc;
+        background: var(--surface-muted);
         font-size: 0.85rem;
       }
 
@@ -340,7 +391,7 @@
       }
 
       .comment-item {
-        background: #f8fafc;
+        background: var(--surface-muted);
         border-radius: 8px;
         padding: 6px 8px;
       }
@@ -352,10 +403,10 @@
       }
 
       .image-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
         overflow: hidden;
-        background: #fff;
+        background: var(--surface);
         display: flex;
         flex-direction: column;
       }
@@ -364,7 +415,7 @@
         width: 100%;
         aspect-ratio: 1 / 1;
         object-fit: cover;
-        background: #f8fafc;
+        background: var(--surface-muted);
       }
 
       .image-meta {
@@ -381,13 +432,33 @@
 
       .file-table th,
       .file-table td {
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--border);
         padding: 8px;
         text-align: left;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 14px;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        font-weight: 600;
+        z-index: 1200;
+      }
+
+      .theme-toggle:hover {
+        border-color: var(--accent);
       }
     </style>
   </head>
   <body>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
     <div class="toolbar">
       <a href="/projects.html">← К списку проектов</a>
       <a href="/groups.html">Группы</a>
@@ -903,8 +974,7 @@
           const li = document.createElement("li");
           li.textContent = item.label;
           if (item.disabled) {
-            li.style.color = "#cbd5e1";
-            li.style.cursor = "not-allowed";
+            li.classList.add("disabled");
           } else {
             li.addEventListener("click", () => {
               item.action();

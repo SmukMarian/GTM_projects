@@ -3,20 +3,61 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const stored = localStorage.getItem(key);
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const initial = stored || (prefersDark ? "dark" : "light");
+        document.documentElement.dataset.theme = initial;
+        document.documentElement.style.colorScheme = initial === "dark" ? "dark" : "light";
+      })();
+    </script>
     <title>Haier Project Tracker — Заглушка</title>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
         font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         line-height: 1.5;
+        --bg: #f6f7fb;
+        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.12), transparent 32%),
+          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.1), transparent 30%);
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.2), transparent 32%),
+          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.16), transparent 30%);
+        --surface: #161b22;
+        --surface-muted: #1e2633;
+        --text: #e6edf3;
+        --muted: #9ba7b5;
+        --border: #2d333b;
+        --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
       }
 
       body {
         max-width: 960px;
         margin: 0 auto;
         padding: 48px 24px 64px;
-        background: radial-gradient(circle at 20% 20%, rgba(0, 146, 255, 0.08), transparent 30%),
-          radial-gradient(circle at 80% 0%, rgba(0, 146, 255, 0.08), transparent 25%);
+        background-color: var(--bg);
+        background-image: var(--bg-gradient);
+        color: var(--text);
       }
 
       h1 {
@@ -27,8 +68,8 @@
       .pill {
         display: inline-block;
         padding: 6px 12px;
-        background: rgba(0, 146, 255, 0.12);
-        color: #0060a8;
+        background: var(--accent-soft);
+        color: var(--accent);
         border-radius: 999px;
         font-weight: 600;
         text-transform: uppercase;
@@ -37,11 +78,12 @@
       }
 
       .card {
-        background: rgba(255, 255, 255, 0.9);
-        color: #0f172a;
+        background: var(--surface);
+        color: var(--text);
         border-radius: 16px;
         padding: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
         margin-top: 20px;
       }
 
@@ -61,7 +103,7 @@
       }
 
       code {
-        background: rgba(0, 0, 0, 0.06);
+        background: var(--surface-muted);
         padding: 2px 6px;
         border-radius: 6px;
         font-size: 0.9rem;
@@ -70,16 +112,16 @@
       footer {
         margin-top: 32px;
         font-size: 0.9rem;
-        color: #475569;
+        color: var(--muted);
       }
 
       .context-menu {
         position: fixed;
-        background: #fff;
-        color: #0f172a;
-        border: 1px solid #e2e8f0;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
         border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: var(--shadow);
         min-width: 220px;
         z-index: 1000;
         padding: 8px 0;
@@ -97,7 +139,7 @@
 
       .context-menu li a,
       .context-menu li button {
-        color: #0f172a;
+        color: var(--text);
         text-decoration: none;
         background: transparent;
         border: none;
@@ -109,11 +151,30 @@
       }
 
       .context-menu li:hover {
-        background: #e2f0ff;
+        background: var(--accent-soft);
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 14px;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        font-weight: 600;
+      }
+
+      .theme-toggle:hover {
+        border-color: var(--accent);
       }
     </style>
   </head>
   <body>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
     <span class="pill">Дашборд</span>
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
       <h1 style="margin: 0">Haier Project Tracker</h1>
@@ -183,6 +244,7 @@
       <ul id="contextMenuList"></ul>
     </div>
 
+    <script src="/theme.js" defer></script>
     <script>
       const statusList = document.getElementById("statusSummary");
       const groupGrid = document.getElementById("groupGrid");
