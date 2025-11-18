@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <title>Haier Project Tracker — Дашборд</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+        --warning: #fbbf24;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+        --warning: #facc15;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 36px 20px 88px;
+      }
+
+      header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+        letter-spacing: -0.01em;
+      }
+
+      p.lead {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: 0 1px 0 var(--divider);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.78rem;
+      }
+
+      .card {
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card h2 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+      }
+
+      .card p {
+        margin-top: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+      }
+
+      .kpi {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .kpi strong {
+        font-size: 1.3rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .progress {
+        margin-top: 6px;
+        height: 8px;
+        background: var(--surface);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 100%);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .layout-two {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 18px;
+      }
+
+      @media (max-width: 960px) {
+        .layout-two {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.95rem;
+        letter-spacing: 0.01em;
+      }
+
+      tr:hover td {
+        background: var(--surface-muted);
+      }
+
+      tr.overdue {
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      tr:hover {
+        background: var(--surface-muted);
+      }
+
+      .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .list li {
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-muted);
+      }
+
+      .group-card {
+        border: 1px solid var(--border);
+        padding: 14px;
+        border-radius: 14px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .group-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .risk {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .risk-block li {
+        border-left: 4px solid var(--danger);
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .actions a,
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+
+      button,
+      .ghost {
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        border: none;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .ghost {
+        background: var(--surface-muted);
+      }
+
+      label.field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      select,
+      input[type="text"],
+      input[type="date"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .context-menu {
+        position: fixed;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        min-width: 220px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 16px;
+      }
+
+      .context-menu li a,
+      .context-menu li button {
+        color: var(--text);
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        padding: 0;
+      }
+
+      .context-menu li:hover {
+        background: var(--accent-soft);
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="page">
+      <header>
+        <div>
+          <div class="pill">Дашборд</div>
+          <h1>Haier Project Tracker</h1>
+          <p class="lead">Сводка по проектам, рискам и ближайшим дедлайнам</p>
+        </div>
+        <div class="actions">
+          <a href="/groups.html" class="badge" title="Перейти к продуктовым группам">Продуктовые группы →</a>
+          <a href="/projects.html" class="badge" title="Перейти к проектам">Проекты →</a>
+        </div>
+      </header>
+
+      <div class="card" aria-label="Фильтры дашборда">
+        <h2>Фильтры</h2>
+        <div class="grid" style="align-items: end">
+          <label class="field">
+            Продуктовая группа
+            <select id="groupFilter">
+              <option value="">Все</option>
+            </select>
+          </label>
+          <label class="field">
+            Бренд
+            <input id="brandFilter" type="text" placeholder="Например, Haier" />
+          </label>
+          <label class="field">
+            Статус проекта
+            <select id="statusFilter">
+              <option value="">Все</option>
+              <option value="active">Активный</option>
+              <option value="closed">Закрыт</option>
+              <option value="archived">Архивирован</option>
+            </select>
+          </label>
+          <label class="field" style="flex-direction: row; gap: 12px; align-items: center">
+            <input id="showArchived" type="checkbox" />
+            <span>Показывать архивные проекты и группы</span>
+          </label>
+        </div>
+        <div class="actions" style="margin-top: 12px">
+          <button id="applyFilters" class="primary">Обновить</button>
+          <button id="resetFilters" class="ghost">Сбросить фильтры</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Ключевые показатели</h2>
+        <div class="kpi-grid" id="kpiGrid"></div>
+      </div>
+
+      <div class="layout-two">
+        <div class="card">
+          <h2>Распределение по брендам</h2>
+          <div id="brandList" class="list"></div>
+        </div>
+        <div class="card">
+          <h2>Прогресс по GTM</h2>
+          <div id="gtmProgress" class="list"></div>
+        </div>
+      </div>
+
+      <div class="layout-two">
+        <div class="card risk-block">
+          <h2>Риски</h2>
+          <ul id="riskList" class="list"></ul>
+        </div>
+        <div class="card">
+          <h2>Ближайшие дедлайны</h2>
+          <table id="upcomingTable"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Продуктовые группы</h2>
+        <div id="groupGrid" class="grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Последние изменения</h2>
+        <ul id="recentChanges" class="list"></ul>
+      </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const kpiGrid = document.getElementById("kpiGrid");
+      const statusList = document.getElementById("statusSummary");
+      const groupGrid = document.getElementById("groupGrid");
+      const upcomingTable = document.getElementById("upcomingTable");
+      const recentList = document.getElementById("recentChanges");
+      const groupFilter = document.getElementById("groupFilter");
+      const brandFilter = document.getElementById("brandFilter");
+      const statusFilter = document.getElementById("statusFilter");
+      const showArchived = document.getElementById("showArchived");
+      const applyFilters = document.getElementById("applyFilters");
+      const resetFilters = document.getElementById("resetFilters");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+      const brandList = document.getElementById("brandList");
+      const gtmProgress = document.getElementById("gtmProgress");
+      const riskList = document.getElementById("riskList");
+      const filterStorageKey = "hpt-dashboard-filters";
+
+      async function loadGroupsForFilter() {
+        const res = await fetch("/api/groups?include_archived=true");
+        if (!res.ok) return;
+        const groups = await res.json();
+        groups.forEach((g) => {
+          const option = document.createElement("option");
+          option.value = g.id;
+          option.textContent = g.name;
+          groupFilter.appendChild(option);
+        });
+        restoreFilters();
+      }
+
+      function persistFilters() {
+        const state = {
+          groupId: groupFilter.value,
+          brand: brandFilter.value.trim(),
+          status: statusFilter.value,
+          includeArchived: showArchived.checked,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          groupFilter.value = state.groupId || "";
+          brandFilter.value = state.brand || "";
+          statusFilter.value = state.status || "";
+          showArchived.checked = !!state.includeArchived;
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры", e);
+          localStorage.removeItem(filterStorageKey);
+        }
+      }
+
+      function renderKPIs(kpis) {
+        kpiGrid.innerHTML = "";
+        const items = [
+          {
+            title: "Всего проектов",
+            value: kpis.total_projects,
+            note: `${kpis.active} активных, ${kpis.closed} закрытых, ${kpis.archived} архивных`,
+            percent: kpis.completion_rate,
+            hint: "Доля завершённых проектов",
+          },
+          {
+            title: "Проекты с рисками",
+            value: kpis.overdue_projects,
+            note: `Риск в ${Math.round(kpis.overdue_rate * 100)}% проектов`,
+            percent: kpis.overdue_rate,
+            hint: "Просрочки или ручной флаг риска",
+          },
+          {
+            title: "Продуктовые группы",
+            value: kpis.active_groups,
+            note: `${kpis.risky_groups} с рисками",
+            percent: kpis.risky_groups && kpis.active_groups ? kpis.risky_groups / kpis.active_groups : 0,
+            hint: "Активные и проблемные группы",
+          },
+        ];
+
+        items.forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "kpi";
+          div.innerHTML = `<div class="muted">${item.title}</div><strong>${item.value}</strong><div class="muted">${item.note}</div>`;
+          const progress = document.createElement("div");
+          progress.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${Math.min(item.percent * 100, 100)}%`;
+          progress.title = item.hint;
+          progress.appendChild(span);
+          div.appendChild(progress);
+          kpiGrid.appendChild(div);
+        });
+      }
+
+      function renderBrands(brands) {
+        brandList.innerHTML = "";
+        if (!brands.length) {
+          brandList.innerHTML = "<p class=\"muted\">Нет данных</p>";
+          return;
+        }
+        const max = Math.max(...brands.map((b) => b.projects));
+        brands.forEach((item) => {
+          const li = document.createElement("div");
+          li.className = "kpi";
+          const pct = Math.round((item.projects / max) * 100);
+          li.innerHTML = `<div><strong>${item.brand}</strong></div><div class="muted">${item.projects} проект(ов)</div>`;
+          const bar = document.createElement("div");
+          bar.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${pct}%`;
+          bar.appendChild(span);
+          li.appendChild(bar);
+          brandList.appendChild(li);
+        });
+      }
+
+      function renderGtmProgress(dist) {
+        gtmProgress.innerHTML = "";
+        const rows = [
+          { label: "Стартовые этапы", value: dist.early },
+          { label: "Середина", value: dist.middle },
+          { label: "Финал", value: dist.late },
+          { label: "Без этапов", value: dist.none },
+        ];
+        const max = Math.max(...rows.map((r) => r.value), 1);
+        rows.forEach((row) => {
+          const card = document.createElement("div");
+          card.className = "kpi";
+          const pct = Math.round((row.value / max) * 100);
+          card.innerHTML = `<div><strong>${row.label}</strong></div><div class="muted">${row.value} проект(ов)</div>`;
+          const bar = document.createElement("div");
+          bar.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${pct}%`;
+          bar.appendChild(span);
+          card.appendChild(bar);
+          gtmProgress.appendChild(card);
+        });
+      }
+
+      function renderGroups(groups) {
+        groupGrid.innerHTML = "";
+        if (!groups.length) {
+          groupGrid.innerHTML = "<p class=\"muted\">Нет групп по текущему фильтру</p>";
+          return;
+        }
+        groups.forEach((group) => {
+          const card = document.createElement("div");
+          card.className = "group-card";
+          card.dataset.groupId = group.id;
+          const risk = group.risk ? '<span class="risk">⚠️ Риск</span>' : "";
+          card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong>${group.name}</strong>${risk}</div><div class="muted">Активных проектов: ${group.active_projects}</div><a href="/groups.html?group=${group.id}">Перейти в группу</a>`;
+          card.addEventListener("click", () => {
+            window.location.href = `/groups.html?group=${group.id}`;
+          });
+          card.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "group", group);
+          });
+          groupGrid.appendChild(card);
+        });
+      }
+
+      function renderUpcoming(rows) {
+        const header = `<tr><th>Проект</th><th>Группа</th><th>Тип</th><th>Элемент</th><th>Плановая дата</th><th>Δ дней</th></tr>`;
+        if (!rows.length) {
+          upcomingTable.innerHTML = header + '<tr><td colspan="6" class="muted">Нет ближайших дат</td></tr>';
+          return;
+        }
+        const body = rows
+          .map((row) => {
+            const overdue = row.days_delta < 0;
+            const marker = row.risk || overdue ? "⚠️" : "";
+            return `<tr class="${overdue ? "overdue" : ""}" data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/project.html?id=${row.project_id}">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
+          })
+          .join("");
+        upcomingTable.innerHTML = header + body;
+
+        Array.from(upcomingTable.querySelectorAll("tr[data-project-id]"))
+          .forEach((row) => {
+            row.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              openContextMenu(event, "project", {
+                id: row.dataset.projectId,
+                group_id: row.dataset.groupId,
+                name: row.querySelector("a")?.textContent || "Проект",
+              });
+            });
+          });
+      }
+
+      function renderChanges(items) {
+        recentList.innerHTML = "";
+        if (!items.length) {
+          recentList.innerHTML = "<li class=\"muted\">Нет изменений</li>";
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "group-card";
+          const date = new Date(item.occurred_at).toLocaleString();
+          li.innerHTML = `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><span class="muted">${date}</span></div><div>${item.summary}</div>`;
+          if (item.details) {
+            li.innerHTML += `<div class="muted">${item.details}</div>`;
+          }
+          li.dataset.projectId = item.project_id;
+          li.dataset.groupId = item.group_id;
+          li.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "project", {
+              id: item.project_id,
+              group_id: item.group_id,
+              name: item.project_name,
+            });
+          });
+          recentList.appendChild(li);
+        });
+      }
+
+      function renderRisks(items) {
+        riskList.innerHTML = "";
+        if (!items.length) {
+          riskList.innerHTML = "<li class=\"muted\">Нет рисков</li>";
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><div class="risk">${item.reason}${item.overdue_days ? ` · ${item.overdue_days} дн.` : ""}</div>`;
+          li.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "project", {
+              id: item.project_id,
+              group_id: null,
+              name: item.project_name,
+            });
+          });
+          riskList.appendChild(li);
+        });
+      }
+
+      function openContextMenu(event, type, data) {
+        const actions = [];
+        if (type === "group") {
+          actions.push({ label: "Открыть группу", href: `/groups.html?group=${data.id}` });
+          actions.push({
+            label: "Фильтр по этой группе",
+            action: () => {
+              groupFilter.value = data.id;
+              persistFilters();
+              loadDashboard();
+            },
+          });
+        } else if (type === "project") {
+          actions.push({ label: "Открыть проект", href: `/project.html?id=${data.id}` });
+          if (data.group_id) {
+            actions.push({
+              label: "Фильтр по группе проекта",
+              action: () => {
+                groupFilter.value = data.group_id;
+                persistFilters();
+                loadDashboard();
+              },
+            });
+          }
+        }
+
+        contextMenuList.innerHTML = "";
+        actions.forEach((item) => {
+          const li = document.createElement("li");
+          if (item.href) {
+            const link = document.createElement("a");
+            link.href = item.href;
+            link.target = "_blank";
+            link.textContent = item.label;
+            li.appendChild(link);
+          } else if (item.action) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = item.label;
+            btn.addEventListener("click", () => {
+              hideContextMenu();
+              item.action();
+            });
+            li.appendChild(btn);
+          }
+          contextMenuList.appendChild(li);
+        });
+
+        contextMenu.style.left = `${event.clientX}px`;
+        contextMenu.style.top = `${event.clientY}px`;
+        contextMenu.hidden = false;
+      }
+
+      function hideContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      window.addEventListener("click", hideContextMenu);
+      window.addEventListener("contextmenu", (event) => {
+        if (!contextMenu.contains(event.target)) return;
+        event.preventDefault();
+      });
+
+      async function loadDashboard() {
+        const url = new URL(window.location.origin + "/api/dashboard");
+        if (groupFilter.value) url.searchParams.set("group_id", groupFilter.value);
+        if (brandFilter.value) url.searchParams.set("brand", brandFilter.value);
+        if (statusFilter.value) url.searchParams.set("statuses", statusFilter.value);
+        if (showArchived.checked) url.searchParams.set("include_archived", "true");
+
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          console.error("Не удалось загрузить дашборд", await res.text());
+          return;
+        }
+        const payload = await res.json();
+        renderKPIs(payload.kpis);
+        renderBrands(payload.brands);
+        renderGtmProgress(payload.gtm_distribution);
+        renderGroups(payload.groups);
+        renderRisks(payload.risk_projects);
+        renderUpcoming(payload.upcoming);
+        renderChanges(payload.recent_changes);
+      }
+
+      function resetFiltersState() {
+        groupFilter.value = "";
+        brandFilter.value = "";
+        statusFilter.value = "";
+        showArchived.checked = false;
+      }
+
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadDashboard();
+      });
+
+      resetFilters.addEventListener("click", () => {
+        resetFiltersState();
+        localStorage.removeItem(filterStorageKey);
+        loadDashboard();
+      });
+
+      restoreFilters();
+      loadGroupsForFilter().then(loadDashboard);
+    </script>
+  </body>
+</html>
