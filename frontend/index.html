@@ -17,6 +17,7 @@
         document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Haier Project Tracker — Дашборд</title>
     <style>
       :root {
@@ -66,8 +67,64 @@
       .page {
         max-width: 1240px;
         margin: 0 auto;
-        padding: 36px 20px 88px;
+        padding: 32px 20px 88px;
       }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo span {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        display: inline-grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 900;
+        font-size: 0.95rem;
+      }
+
+      nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover { box-shadow: var(--shadow); }
 
       header {
         display: flex;
@@ -413,6 +470,23 @@
       <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
       <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
       <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
+          <span>HPT</span>
+          <div>
+            Haier Project Tracker
+            <div class="muted" style="font-weight: 600; font-size: 0.9rem">Локальный GTM-трекер</div>
+          </div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/project.html" aria-disabled="true" title="Откройте конкретный проект из списка">Карточка проекта</a>
+        </nav>
+      </div>
     </div>
     <div class="page">
       <header>
