@@ -506,19 +506,46 @@
         padding: 6px 8px;
       }
 
+      .history-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 6px;
+      }
+
+      .history-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
       .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
       }
 
       .image-card {
+        position: relative;
         border: 1px solid var(--border);
         border-radius: 12px;
         overflow: hidden;
         background: var(--surface);
         display: flex;
         flex-direction: column;
+        box-shadow: var(--shadow-soft);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .image-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
       }
 
       .image-thumb {
@@ -526,6 +553,7 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         background: var(--surface-muted);
+        cursor: pointer;
       }
 
       .image-meta {
@@ -533,6 +561,73 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+
+      .image-card .toolbar {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .cover-chip {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: var(--accent);
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        box-shadow: var(--shadow);
+      }
+
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1500;
+        padding: 24px;
+      }
+
+      .lightbox[data-open="true"] {
+        display: flex;
+      }
+
+      .lightbox-content {
+        position: relative;
+        max-width: min(1080px, 90vw);
+        max-height: 90vh;
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .lightbox img {
+        max-width: 100%;
+        max-height: 70vh;
+        border-radius: 12px;
+        object-fit: contain;
+        background: var(--surface-muted);
+      }
+
+      .lightbox .lightbox-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .lightbox .nav-buttons {
+        display: flex;
+        gap: 8px;
       }
 
       .file-table {
@@ -902,7 +997,27 @@
           <button class="ghost" onclick="addHistoryEvent()">Добавить событие</button>
         </div>
       </div>
-      <div id="history"></div>
+      <details id="historyAccordion" class="card" style="background: var(--surface-muted); margin: 0">
+        <summary style="cursor: pointer; display:flex; align-items:center; gap:6px; font-weight:700">История (свернуть/развернуть)</summary>
+        <div id="history" style="margin-top: 8px"></div>
+      </details>
+    </div>
+
+    <div id="lightbox" class="lightbox" data-open="false" aria-label="Просмотр изображения">
+      <div class="lightbox-content">
+        <img id="lightboxImage" alt="" />
+        <div class="lightbox-actions">
+          <div>
+            <div id="lightboxTitle" style="font-weight:700"></div>
+            <div id="lightboxCaption" class="muted"></div>
+          </div>
+          <div class="nav-buttons">
+            <button class="ghost" onclick="prevLightbox()">← Предыдущее</button>
+            <button class="ghost" onclick="nextLightbox()">Следующее →</button>
+            <button onclick="closeLightbox()">Закрыть</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="contextMenu" class="context-menu">
@@ -1035,6 +1150,11 @@
       const projectCommentArea = document.getElementById("projectCommentArea");
       const projectCommentsList = document.getElementById("projectComments");
       const historyContainer = document.getElementById("history");
+      const historyAccordion = document.getElementById("historyAccordion");
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+      const lightboxTitle = document.getElementById("lightboxTitle");
+      const lightboxCaption = document.getElementById("lightboxCaption");
 
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
@@ -1060,6 +1180,8 @@
       let characteristicSections = [];
       let tasks = [];
       let images = [];
+      let lightboxOrder = [];
+      let lightboxIndex = 0;
       let files = [];
       let projectComments = [];
       let historyEvents = [];
@@ -1071,6 +1193,24 @@
       } else {
         loadData();
       }
+
+      if (historyAccordion) {
+        historyAccordion.open = false;
+      }
+
+      lightbox?.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (lightbox?.dataset.open === "true") {
+          if (event.key === "Escape") closeLightbox();
+          if (event.key === "ArrowRight") nextLightbox();
+          if (event.key === "ArrowLeft") prevLightbox();
+        }
+      });
 
       function formatSelection(command, value = null) {
         document.execCommand(command, false, value);
@@ -2146,6 +2286,7 @@
       function renderGallery() {
         galleryContainer.innerHTML = "";
         const sorted = [...images].sort((a, b) => a.order - b.order);
+        lightboxOrder = sorted;
         if (!sorted.length) {
           galleryContainer.innerHTML = "<p class='muted'>Изображений пока нет</p>";
           return;
@@ -2155,17 +2296,17 @@
           const card = document.createElement("div");
           card.className = "image-card";
           card.innerHTML = `
-            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" />
+            ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
+            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" onclick="openImage('${img.id}')" />
             <div class="image-meta">
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap: wrap">
+              <div style="display:flex; flex-direction:column; gap:2px">
                 <strong>${img.filename}</strong>
-                ${img.is_cover ? '<span class="badge">Обложка</span>' : ""}
+                <span class="muted" style="font-size:0.9rem">${img.caption || "Без подписи"}</span>
               </div>
-              <div class="muted">${img.caption || "Без подписи"}</div>
-              <div style="display:flex; gap:8px; flex-wrap: wrap">
-                <button class="ghost" onclick="openImage('${img.id}')">Открыть</button>
+              <div class="toolbar">
+                <button class="ghost" onclick="openImage('${img.id}')">Просмотр</button>
                 <button class="ghost" onclick="editImageCaption('${img.id}')">Подпись</button>
-                <button class="ghost" onclick="setCover('${img.id}')">Сделать обложкой</button>
+                <button class="ghost" onclick="setCover('${img.id}')" ${img.is_cover ? "disabled" : ""}>Сделать обложкой</button>
                 <button class="ghost" onclick="moveImage('${img.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
                 <button class="ghost" onclick="moveImage('${img.id}', 1)" ${index === sorted.length - 1 ? "disabled" : ""}>↓</button>
                 <button onclick="deleteImage('${img.id}')">Удалить</button>
@@ -2276,7 +2417,38 @@
       }
 
       function openImage(imageId) {
-        window.open(`/api/projects/${projectId}/images/${imageId}/download`, "_blank");
+        if (!lightboxOrder.length) {
+          lightboxOrder = [...images].sort((a, b) => a.order - b.order);
+        }
+        const idx = lightboxOrder.findIndex((img) => img.id === imageId);
+        if (idx === -1) return;
+        lightboxIndex = idx;
+        showLightbox();
+      }
+
+      function showLightbox() {
+        const current = lightboxOrder[lightboxIndex];
+        if (!current) return;
+        lightboxImage.src = `/api/projects/${projectId}/images/${current.id}/download`;
+        lightboxTitle.textContent = current.filename;
+        lightboxCaption.textContent = current.caption || "";
+        lightbox.dataset.open = "true";
+      }
+
+      function closeLightbox() {
+        lightbox.dataset.open = "false";
+      }
+
+      function nextLightbox() {
+        if (!lightboxOrder.length) return;
+        lightboxIndex = (lightboxIndex + 1) % lightboxOrder.length;
+        showLightbox();
+      }
+
+      function prevLightbox() {
+        if (!lightboxOrder.length) return;
+        lightboxIndex = (lightboxIndex - 1 + lightboxOrder.length) % lightboxOrder.length;
+        showLightbox();
       }
 
       async function setCover(imageId) {
@@ -2589,29 +2761,35 @@
 
       function renderHistory() {
         historyContainer.innerHTML = "";
+        if (historyAccordion) historyAccordion.open = false;
         if (!historyEvents.length) {
           historyContainer.innerHTML = "<p class='muted'>История пока пустая.</p>";
           return;
         }
 
         const list = document.createElement("ul");
-        list.className = "comment-list";
+        list.className = "history-list";
         historyEvents
           .slice()
           .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at))
           .forEach((event) => {
             const item = document.createElement("li");
-            item.className = "comment-item";
-            item.innerHTML = `
+            item.className = "history-row";
+            const left = document.createElement("div");
+            left.innerHTML = `
               <div class="muted" style="font-size:0.85rem">${new Date(event.occurred_at).toLocaleString("ru-RU")}</div>
               <div><strong>${event.summary}</strong></div>
               ${event.details ? `<div class="muted">${event.details}</div>` : ""}
             `;
+            const actions = document.createElement("div");
+            actions.className = "toolbar";
             const remove = document.createElement("button");
             remove.className = "ghost";
             remove.textContent = "Удалить";
             remove.addEventListener("click", () => deleteHistoryEvent(event.id));
-            item.appendChild(remove);
+            actions.appendChild(remove);
+            item.appendChild(left);
+            item.appendChild(actions);
             list.appendChild(item);
           });
         historyContainer.appendChild(list);
