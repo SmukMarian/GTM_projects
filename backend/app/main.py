@@ -355,7 +355,7 @@ def list_gtm_stages(project_id: UUID, repo: LocalRepository = Depends(get_reposi
 def create_gtm_stage(project_id: UUID, stage: GTMStage, repo: LocalRepository = Depends(get_repository)) -> GTMStage:
     try:
         created = repo.add_gtm_stage(project_id, stage)
-        log_event(repo, project_id, "Добавлен GTM-этап", created.name)
+        log_event(repo, project_id, "Добавлен GTM-этап", created.title)
         return created
     except KeyError:
         raise HTTPException(status_code=404, detail="Проект не найден")
@@ -375,7 +375,7 @@ def update_gtm_stage(project_id: UUID, stage_id: UUID, stage: GTMStage, repo: Lo
                 repo,
                 project_id,
                 "Изменён статус GTM-этапа",
-                f"{existing.name}: {existing.status.value} → {updated.status.value}",
+                f"{existing.title}: {existing.status.value} → {updated.status.value}",
             )
         return updated
     except KeyError as exc:
@@ -390,7 +390,7 @@ def delete_gtm_stage(project_id: UUID, stage_id: UUID, repo: LocalRepository = D
     try:
         repo.delete_gtm_stage(project_id, stage_id)
         if stage:
-            log_event(repo, project_id, "Удалён GTM-этап", stage.name)
+            log_event(repo, project_id, "Удалён GTM-этап", stage.title)
     except KeyError as exc:
         if "Project" in str(exc):
             raise HTTPException(status_code=404, detail="Проект не найден")

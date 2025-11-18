@@ -7,12 +7,15 @@
     <script>
       (() => {
         const key = "hpt-theme";
-        const normalize = (value) => (value === "dark" || value === "light" ? value : null);
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
         const stored = normalize(localStorage.getItem(key));
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initial = stored || (prefersDark ? "dark" : "light");
-        document.documentElement.dataset.theme = initial;
-        document.documentElement.style.colorScheme = initial === "dark" ? "dark" : "light";
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
     <title>Карточка проекта — Haier Project Tracker</title>
@@ -438,28 +441,49 @@
         text-align: left;
       }
 
-      .theme-toggle {
+      .theme-toggle-group {
         position: fixed;
         top: 16px;
         right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
         background: var(--surface);
-        color: var(--text);
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 8px 14px;
-        cursor: pointer;
         box-shadow: var(--shadow);
-        font-weight: 600;
         z-index: 1200;
       }
 
-      .theme-toggle:hover {
-        border-color: var(--accent);
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
       }
     </style>
   </head>
   <body>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Переключить тему"></button>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
     <div class="toolbar">
       <a href="/projects.html">← К списку проектов</a>
       <a href="/groups.html">Группы</a>

@@ -6,12 +6,15 @@
     <script>
       (() => {
         const key = "hpt-theme";
-        const normalize = (value) => (value === "dark" || value === "light" ? value : null);
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
         const stored = normalize(localStorage.getItem(key));
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initial = stored || (prefersDark ? "dark" : "light");
-        document.documentElement.dataset.theme = initial;
-        document.documentElement.style.colorScheme = initial === "dark" ? "dark" : "light";
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
     <title>Haier Project Tracker — Заглушка</title>
@@ -155,27 +158,49 @@
         background: var(--accent-soft);
       }
 
-      .theme-toggle {
+      .theme-toggle-group {
         position: fixed;
         top: 16px;
         right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
         background: var(--surface);
-        color: var(--text);
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 8px 14px;
-        cursor: pointer;
         box-shadow: var(--shadow);
-        font-weight: 600;
+        z-index: 1000;
       }
 
-      .theme-toggle:hover {
-        border-color: var(--accent);
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
       }
     </style>
   </head>
   <body>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Переключить тему"></button>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
     <span class="pill">Дашборд</span>
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
       <h1 style="margin: 0">Haier Project Tracker</h1>
@@ -214,7 +239,10 @@
           <span>Показывать архивные проекты и группы</span>
         </label>
       </div>
-      <button id="applyFilters" style="margin-top: 12px">Обновить</button>
+      <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
+        <button id="applyFilters">Обновить</button>
+        <button id="resetFilters" class="ghost">Сбросить фильтры</button>
+      </div>
     </div>
 
     <div class="grid">
@@ -256,8 +284,10 @@
       const statusFilter = document.getElementById("statusFilter");
       const showArchived = document.getElementById("showArchived");
       const applyFilters = document.getElementById("applyFilters");
+      const resetFilters = document.getElementById("resetFilters");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const filterStorageKey = "hpt-dashboard-filters";
 
       async function loadGroupsForFilter() {
         const res = await fetch("/api/groups?include_archived=true");
@@ -269,6 +299,32 @@
           option.textContent = g.name;
           groupFilter.appendChild(option);
         });
+        restoreFilters();
+      }
+
+      function persistFilters() {
+        const state = {
+          groupId: groupFilter.value,
+          brand: brandFilter.value.trim(),
+          status: statusFilter.value,
+          includeArchived: showArchived.checked,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          groupFilter.value = state.groupId || "";
+          brandFilter.value = state.brand || "";
+          statusFilter.value = state.status || "";
+          showArchived.checked = !!state.includeArchived;
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры", e);
+          localStorage.removeItem(filterStorageKey);
+        }
       }
 
       function renderStatus(summary) {
@@ -435,8 +491,25 @@
         renderChanges(payload.recent_changes);
       }
 
-      applyFilters.addEventListener("click", loadDashboard);
+      function resetFiltersState() {
+        groupFilter.value = "";
+        brandFilter.value = "";
+        statusFilter.value = "";
+        showArchived.checked = false;
+      }
 
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadDashboard();
+      });
+
+      resetFilters.addEventListener("click", () => {
+        resetFiltersState();
+        localStorage.removeItem(filterStorageKey);
+        loadDashboard();
+      });
+
+      restoreFilters();
       loadGroupsForFilter().then(loadDashboard);
     </script>
   </body>

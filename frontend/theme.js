@@ -2,34 +2,54 @@
   const STORAGE_KEY = "hpt-theme";
   const mediaQuery = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
-  const refreshButtons = (isDark) => {
-    document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
-      btn.textContent = isDark ? "\ud83c\udf1e Светлая тема" : "\ud83c\udf19 Тёмная тема";
-      btn.setAttribute("aria-pressed", String(isDark));
-      btn.title = isDark ? "Переключить на светлую тему" : "Переключить на тёмную тему";
+  const normalize = (value) =>
+    value === "dark" || value === "light" || value === "system" ? value : null;
+
+  const getEffectiveTheme = (mode) => {
+    if (mode === "dark") return "dark";
+    if (mode === "light") return "light";
+    return mediaQuery && mediaQuery.matches ? "dark" : "light";
+  };
+
+  const refreshButtons = (mode, effective) => {
+    document.querySelectorAll("[data-theme-select]").forEach((btn) => {
+      const target = btn.dataset.themeSelect;
+      const isActive = target === mode;
+      btn.dataset.active = isActive ? "true" : "false";
+      btn.setAttribute("aria-pressed", String(isActive));
+      if (target === "system") {
+        btn.title = "Следовать системным настройкам";
+      } else {
+        btn.title = target === "dark" ? "Переключить на тёмную тему" : "Переключить на светлую тему";
+      }
     });
+
+    document
+      .querySelectorAll("[data-theme-state]")
+      .forEach((label) => (label.textContent = mode === "system" ? `Системная (${effective === "dark" ? "тёмная" : "светлая"})` : mode === "dark" ? "Тёмная" : "Светлая"));
   };
 
   const applyTheme = (theme, { persist = true } = {}) => {
-    const normalized = theme === "dark" ? "dark" : "light";
-    document.documentElement.dataset.theme = normalized;
-    document.documentElement.style.colorScheme = normalized === "dark" ? "dark" : "light";
+    const normalized = normalize(theme) || "system";
+    const effective = getEffectiveTheme(normalized);
+    document.documentElement.dataset.theme = effective;
+    document.documentElement.dataset.themeMode = normalized;
+    document.documentElement.style.colorScheme = effective === "dark" ? "dark" : "light";
     if (persist) {
       localStorage.setItem(STORAGE_KEY, normalized);
     }
-    refreshButtons(normalized === "dark");
+    refreshButtons(normalized, effective);
   };
 
-  const stored = localStorage.getItem(STORAGE_KEY);
-  const prefersDark = mediaQuery && mediaQuery.matches;
-  const initial = stored || (prefersDark ? "dark" : "light");
+  const stored = normalize(localStorage.getItem(STORAGE_KEY));
+  const initial = stored || "system";
   applyTheme(initial, { persist: Boolean(stored) });
 
   if (mediaQuery) {
     mediaQuery.addEventListener("change", (event) => {
-      const userChoice = localStorage.getItem(STORAGE_KEY);
-      if (!userChoice) {
-        applyTheme(event.matches ? "dark" : "light", { persist: false });
+      const userChoice = normalize(localStorage.getItem(STORAGE_KEY));
+      if (!userChoice || userChoice === "system") {
+        applyTheme("system", { persist: Boolean(userChoice) });
       }
     });
   }
@@ -38,16 +58,27 @@
     set(theme) {
       applyTheme(theme);
     },
+    system() {
+      applyTheme("system");
+    },
     toggle() {
-      applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+      const currentMode = document.documentElement.dataset.themeMode || "system";
+      const next = currentMode === "dark" ? "light" : currentMode === "light" ? "system" : "dark";
+      applyTheme(next);
     },
     refresh() {
-      refreshButtons(document.documentElement.dataset.theme === "dark");
+      const mode = document.documentElement.dataset.themeMode || "system";
+      const effective = getEffectiveTheme(mode);
+      refreshButtons(mode, effective);
     },
   };
 
   window.addEventListener("DOMContentLoaded", () => {
-    refreshButtons(document.documentElement.dataset.theme === "dark");
+    const mode = document.documentElement.dataset.themeMode || "system";
+    refreshButtons(mode, getEffectiveTheme(mode));
+    document.querySelectorAll("[data-theme-select]").forEach((btn) =>
+      btn.addEventListener("click", () => window.hptTheme.set(btn.dataset.themeSelect || "system"))
+    );
     document.querySelectorAll("[data-theme-toggle]").forEach((btn) =>
       btn.addEventListener("click", () => window.hptTheme.toggle())
     );

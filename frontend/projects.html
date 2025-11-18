@@ -6,12 +6,15 @@
     <script>
       (() => {
         const key = "hpt-theme";
-        const normalize = (value) => (value === "dark" || value === "light" ? value : null);
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
         const stored = normalize(localStorage.getItem(key));
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initial = stored || (prefersDark ? "dark" : "light");
-        document.documentElement.dataset.theme = initial;
-        document.documentElement.style.colorScheme = initial === "dark" ? "dark" : "light";
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
     <title>Проекты — Haier Project Tracker</title>
@@ -276,28 +279,49 @@
         overflow-x: auto;
       }
 
-      .theme-toggle {
+      .theme-toggle-group {
         position: fixed;
         top: 16px;
         right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
         background: var(--surface);
-        color: var(--text);
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 8px 14px;
-        cursor: pointer;
         box-shadow: var(--shadow);
-        font-weight: 600;
         z-index: 1200;
       }
 
-      .theme-toggle:hover {
-        border-color: var(--accent);
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
       }
     </style>
   </head>
   <body>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Переключить тему"></button>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
     <div class="flex space-between" style="align-items: baseline">
       <div>
         <p class="pill">Проекты</p>
@@ -465,6 +489,7 @@
       const detailContent = document.getElementById("detailContent");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const filterStorageKey = "hpt-projects-filters";
 
       const dialog = document.getElementById("projectDialog");
       const dialogTitle = document.getElementById("dialogTitle");
@@ -501,6 +526,43 @@
         plannedTo.value = "";
         showArchived.checked = false;
         statusCheckboxes.forEach((cb) => (cb.checked = false));
+      }
+
+      function persistFilters() {
+        const state = {
+          brand: brandFilter.value.trim(),
+          groupId: groupFilter.value,
+          stageId: stageFilter.value,
+          plannedFrom: plannedFrom.value,
+          plannedTo: plannedTo.value,
+          includeArchived: showArchived.checked,
+          statuses: Array.from(statusCheckboxes)
+            .filter((cb) => cb.checked)
+            .map((cb) => cb.value),
+          viewMode,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          brandFilter.value = state.brand || "";
+          groupFilter.value = state.groupId || "";
+          stageFilter.value = state.stageId || "";
+          plannedFrom.value = state.plannedFrom || "";
+          plannedTo.value = state.plannedTo || "";
+          showArchived.checked = !!state.includeArchived;
+          statusCheckboxes.forEach((cb) => {
+            cb.checked = Array.isArray(state.statuses) ? state.statuses.includes(cb.value) : false;
+          });
+          applyViewMode(state.viewMode === "table" ? "table" : "cards");
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры проектов", e);
+          localStorage.removeItem(filterStorageKey);
+        }
       }
 
       function formatDate(val) {
@@ -751,8 +813,8 @@
         await loadProjects();
       }
 
-      function toggleView() {
-        viewMode = viewMode === "cards" ? "table" : "cards";
+      function applyViewMode(mode) {
+        viewMode = mode;
         if (viewMode === "cards") {
           cardView.style.display = "grid";
           tableView.style.display = "none";
@@ -762,6 +824,11 @@
           tableView.style.display = "block";
           toggleViewBtn.textContent = "Показать плиткой";
         }
+      }
+
+      function toggleView() {
+        applyViewMode(viewMode === "cards" ? "table" : "cards");
+        persistFilters();
       }
 
       function buildStatusParams(params) {
@@ -802,6 +869,7 @@
         groupFilter.innerHTML = '<option value="">Все группы</option>' +
           groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
         groupSelect.innerHTML = groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
+        restoreFilters();
       }
 
       function closeContextMenu() {
@@ -893,9 +961,14 @@
         window.location.href = `/api/export/projects?${params.toString()}`;
       }
 
-      applyFilters.addEventListener("click", loadProjects);
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadProjects();
+      });
       resetFilters.addEventListener("click", () => {
         resetFiltersState();
+        applyViewMode("cards");
+        localStorage.removeItem(filterStorageKey);
         loadProjects();
       });
       toggleViewBtn.addEventListener("click", toggleView);
@@ -907,6 +980,8 @@
       cancelDialogBtn.addEventListener("click", () => dialog.close());
       initContextMenuClosing();
 
+      applyViewMode(viewMode);
+      restoreFilters();
       loadGroups().then(loadProjects);
     </script>
   </body>
