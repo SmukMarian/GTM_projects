@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Haier Project Tracker — Заглушка</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+      }
+
+      body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 24px 64px;
+        background: radial-gradient(circle at 20% 20%, rgba(0, 146, 255, 0.08), transparent 30%),
+          radial-gradient(circle at 80% 0%, rgba(0, 146, 255, 0.08), transparent 25%);
+      }
+
+      h1 {
+        margin-bottom: 0.25rem;
+        font-size: 2rem;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(0, 146, 255, 0.12);
+        color: #0060a8;
+        border-radius: 999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        color: #0f172a;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-top: 20px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .grid .card {
+        margin-top: 0;
+      }
+
+      ul {
+        padding-left: 18px;
+      }
+
+      code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+
+      footer {
+        margin-top: 32px;
+        font-size: 0.9rem;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <span class="pill">В разработке</span>
+    <h1>Haier Project Tracker</h1>
+    <p>
+      Локальное веб-приложение для ведения продуктовых групп, проектов и GTM-этапов.
+      Текущая страница — временная заглушка до подключения полноценного фронтенда.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Статус</h2>
+        <ul>
+          <li>Базовая структура проекта создана (backend + frontend каталоги).</li>
+          <li>Запуск сервера: <code>uvicorn backend.app.main:app --reload</code>.</li>
+          <li>Фронтенд обслуживается как статический каталог.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Следующие шаги</h2>
+        <ul>
+          <li>Спроектировать модель данных и хранилище.</li>
+          <li>Реализовать экраны и навигацию согласно ТЗ.</li>
+          <li>Добавить импорт/экспорт через Excel и резервное копирование.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Ссылки</h2>
+        <ul>
+          <li>ТЗ: <code>Haier_Project_Tracker_TZ.md</code></li>
+          <li>План: <code>project-plan.md</code></li>
+          <li>Чек-лист задач: <code>dev_tasks.md</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>Интерфейс должен быть на русском языке; характеристики RU/EN показываются рядом.</footer>
+  </body>
+</html>
