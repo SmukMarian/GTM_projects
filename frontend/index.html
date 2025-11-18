@@ -72,6 +72,45 @@
         font-size: 0.9rem;
         color: #475569;
       }
+
+      .context-menu {
+        position: fixed;
+        background: #fff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        min-width: 220px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 16px;
+      }
+
+      .context-menu li a,
+      .context-menu li button {
+        color: #0f172a;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        padding: 0;
+      }
+
+      .context-menu li:hover {
+        background: #e2f0ff;
+      }
     </style>
   </head>
   <body>
@@ -136,6 +175,10 @@
     <footer>Интерфейс на русском языке; характеристики RU/EN показываются рядом. Главная страница — отправная точка для перехода
       в группы и проекты.</footer>
 
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
     <script>
       const statusList = document.getElementById("statusSummary");
       const groupGrid = document.getElementById("groupGrid");
@@ -146,6 +189,8 @@
       const statusFilter = document.getElementById("statusFilter");
       const showArchived = document.getElementById("showArchived");
       const applyFilters = document.getElementById("applyFilters");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
 
       async function loadGroupsForFilter() {
         const res = await fetch("/api/groups?include_archived=true");
@@ -173,31 +218,48 @@
         });
       }
 
-      function renderGroups(groups) {
-        groupGrid.innerHTML = "";
-        groups.forEach((group) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          const risk = group.risk ? " ⚠️" : "";
-          card.innerHTML = `<strong><a href="/api/groups/${group.id}" target="_blank">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
-          groupGrid.appendChild(card);
-        });
-      }
+        function renderGroups(groups) {
+          groupGrid.innerHTML = "";
+          groups.forEach((group) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.groupId = group.id;
+            const risk = group.risk ? " ⚠️" : "";
+            card.innerHTML = `<strong><a href="/api/groups/${group.id}" target="_blank">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
+            card.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              openContextMenu(event, "group", group);
+            });
+            groupGrid.appendChild(card);
+          });
+        }
 
       function renderUpcoming(rows) {
         if (!rows.length) {
           upcomingTable.innerHTML = "<tr><td>Нет ближайших дат</td></tr>";
           return;
         }
-        const header = `<tr><th align="left">Проект</th><th align="left">Группа</th><th align="left">Тип</th><th align="left">Элемент</th><th align="left">Плановая дата</th><th align="left">Δ дней</th></tr>`;
-        const body = rows
-          .map((row) => {
-            const marker = row.risk || row.days_delta < 0 ? "⚠️" : "";
-            return `<tr><td><a href="/api/projects/${row.project_id}" target="_blank">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
-          })
-          .join("");
-        upcomingTable.innerHTML = header + body;
-      }
+          const header = `<tr><th align="left">Проект</th><th align="left">Группа</th><th align="left">Тип</th><th align="left">Элемент</th><th align="left">Плановая дата</th><th align="left">Δ дней</th></tr>`;
+          const body = rows
+            .map((row) => {
+              const marker = row.risk || row.days_delta < 0 ? "⚠️" : "";
+              return `<tr data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/api/projects/${row.project_id}" target="_blank">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
+            })
+            .join("");
+          upcomingTable.innerHTML = header + body;
+
+          Array.from(upcomingTable.querySelectorAll("tr[data-project-id]"))
+            .forEach((row) => {
+              row.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                openContextMenu(event, "project", {
+                  id: row.dataset.projectId,
+                  group_id: row.dataset.groupId,
+                  name: row.querySelector("a")?.textContent || "Проект",
+                });
+              });
+            });
+        }
 
       function renderChanges(items) {
         recentList.innerHTML = "";
@@ -212,9 +274,80 @@
           if (item.details) {
             li.innerHTML += `<div>${item.details}</div>`;
           }
+          li.dataset.projectId = item.project_id;
+          li.dataset.groupId = item.group_id;
+          li.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "project", {
+              id: item.project_id,
+              group_id: item.group_id,
+              name: item.project_name,
+            });
+          });
           recentList.appendChild(li);
         });
       }
+
+      function openContextMenu(event, type, data) {
+        const actions = [];
+        if (type === "group") {
+          actions.push({ label: "Открыть группу", href: `/api/groups/${data.id}` });
+          actions.push({
+            label: "Показать только эту группу",
+            action: () => {
+              groupFilter.value = data.id;
+              loadDashboard();
+            },
+          });
+        } else if (type === "project") {
+          actions.push({ label: "Открыть проект", href: `/api/projects/${data.id}` });
+          if (data.group_id) {
+            actions.push({
+              label: "Фильтр по группе проекта",
+              action: () => {
+                groupFilter.value = data.group_id;
+                loadDashboard();
+              },
+            });
+          }
+        }
+
+        contextMenuList.innerHTML = "";
+        actions.forEach((item) => {
+          const li = document.createElement("li");
+          if (item.href) {
+            const link = document.createElement("a");
+            link.href = item.href;
+            link.target = "_blank";
+            link.textContent = item.label;
+            li.appendChild(link);
+          } else if (item.action) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = item.label;
+            btn.addEventListener("click", () => {
+              hideContextMenu();
+              item.action();
+            });
+            li.appendChild(btn);
+          }
+          contextMenuList.appendChild(li);
+        });
+
+        contextMenu.style.left = `${event.clientX}px`;
+        contextMenu.style.top = `${event.clientY}px`;
+        contextMenu.hidden = false;
+      }
+
+      function hideContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      window.addEventListener("click", hideContextMenu);
+      window.addEventListener("contextmenu", (event) => {
+        if (!contextMenu.contains(event.target)) return;
+        event.preventDefault();
+      });
 
       async function loadDashboard() {
         const url = new URL(window.location.origin + "/api/dashboard");
