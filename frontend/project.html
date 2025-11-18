@@ -295,6 +295,40 @@
         font-weight: 700;
       }
 
+      .inline-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: var(--surface-muted);
+        color: var(--text-primary);
+        min-height: 36px;
+        resize: vertical;
+      }
+
+      .inline-input:focus {
+        outline: 2px solid var(--accent);
+        background: var(--surface);
+      }
+
+      .inline-checkbox {
+        width: 20px;
+        height: 20px;
+      }
+
+      .inline-status {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      tr.saving td {
+        background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+      }
+
+      tr.save-error td {
+        background: color-mix(in srgb, #ef4444 18%, transparent);
+      }
+
       .characteristics-grid {
         display: grid;
         gap: 12px;
@@ -2621,17 +2655,17 @@
           const wrapper = document.createElement("div");
           wrapper.className = "section-card";
           wrapper.innerHTML = `
-            <div class="stage-header" style="margin-bottom:8px">
+            <div class=\"stage-header\" style=\"margin-bottom:8px\">
               <div>
-                <h3 style="margin:0">${section.title}</h3>
-                <div class="muted">Порядок: ${section.order}</div>
+                <h3 style=\"margin:0\">${section.title}</h3>
+                <div class=\"muted\">Порядок: ${section.order}</div>
               </div>
-              <div class="toolbar" style="margin:0">
-                <button class="ghost" onclick="promptSection('${section.id}')">Редактировать</button>
-                <button class="ghost" onclick="promptField('${section.id}')">+ Поле</button>
-                <button class="ghost" onclick="moveSection('${section.id}', -1)" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
-                <button class="ghost" onclick="moveSection('${section.id}', 1)" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
-                <button onclick="deleteSection('${section.id}')">Удалить</button>
+              <div class=\"toolbar\" style=\"margin:0\">
+                <button class=\"ghost\" onclick=\"promptSection('${section.id}')\">Редактировать</button>
+                <button class=\"ghost\" onclick=\"promptField('${section.id}')\">+ Поле</button>
+                <button class=\"ghost\" onclick=\"moveSection('${section.id}', -1)\" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
+                <button class=\"ghost\" onclick=\"moveSection('${section.id}', 1)\" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
+                <button onclick=\"deleteSection('${section.id}')\">Удалить</button>
               </div>
             </div>
           `;
@@ -2660,25 +2694,65 @@
           } else {
             fields.forEach((field, fIndex) => {
               const row = document.createElement("tr");
-              row.innerHTML = `
-                <td>${field.label_ru}</td>
-                <td>${field.label_en}</td>
-                <td>${field.value_ru ?? ""}</td>
-                <td>${field.value_en ?? ""}</td>
-                <td>${field.field_type}</td>
-                <td>
-                  <button class="ghost" onclick="promptField('${section.id}', '${field.id}')">Редактировать</button>
-                  <button class="ghost" onclick="moveField('${section.id}', '${field.id}', -1)" ${fIndex === 0 ? "disabled" : ""}>↑</button>
-                  <button class="ghost" onclick="moveField('${section.id}', '${field.id}', 1)" ${fIndex === fields.length - 1 ? "disabled" : ""}>↓</button>
-                  <button onclick="deleteField('${section.id}', '${field.id}')">Удалить</button>
-                </td>
-              `;
+              row.dataset.sectionId = section.id;
+              row.dataset.fieldId = field.id;
+
+              const labelRu = document.createElement("td");
+              labelRu.textContent = field.label_ru;
+              const labelEn = document.createElement("td");
+              labelEn.textContent = field.label_en;
+
+              const valueRu = document.createElement("td");
+              valueRu.appendChild(buildCharacteristicValueControl(section.id, field, "value_ru"));
+              const valueEn = document.createElement("td");
+              valueEn.appendChild(buildCharacteristicValueControl(section.id, field, "value_en"));
+
+              const typeCell = document.createElement("td");
+              typeCell.textContent = field.field_type;
+
+              const actions = document.createElement("td");
+              const actionsBar = document.createElement("div");
+              actionsBar.className = "toolbar";
+              actionsBar.style.margin = "0";
+              const editBtn = document.createElement("button");
+              editBtn.className = "ghost";
+              editBtn.textContent = "Редактировать";
+              editBtn.onclick = () => promptField(section.id, field.id);
+              const upBtn = document.createElement("button");
+              upBtn.className = "ghost";
+              upBtn.textContent = "↑";
+              upBtn.disabled = fIndex === 0;
+              upBtn.onclick = () => moveField(section.id, field.id, -1);
+              const downBtn = document.createElement("button");
+              downBtn.className = "ghost";
+              downBtn.textContent = "↓";
+              downBtn.disabled = fIndex === fields.length - 1;
+              downBtn.onclick = () => moveField(section.id, field.id, 1);
+              const delBtn = document.createElement("button");
+              delBtn.textContent = "Удалить";
+              delBtn.onclick = () => deleteField(section.id, field.id);
+              actionsBar.appendChild(editBtn);
+              actionsBar.appendChild(upBtn);
+              actionsBar.appendChild(downBtn);
+              actionsBar.appendChild(delBtn);
+              const status = document.createElement("div");
+              status.className = "inline-status";
+              actions.appendChild(actionsBar);
+              actions.appendChild(status);
+
+              row.appendChild(labelRu);
+              row.appendChild(labelEn);
+              row.appendChild(valueRu);
+              row.appendChild(valueEn);
+              row.appendChild(typeCell);
+              row.appendChild(actions);
+
               row.addEventListener("contextmenu", (event) => {
                 event.preventDefault();
                 const actions = [
                   { label: "Редактировать", action: () => promptField(section.id, field.id) },
                   { label: "Вверх", disabled: fIndex === 0, action: () => moveField(section.id, field.id, -1) },
-                  { label: "Вниз", disabled: fIndex === fields.length - 1, action: () => moveField(section.id, field.id, 1) },
+                  { label: "Вниз", disabled: fields.length - 1 === fIndex, action: () => moveField(section.id, field.id, 1) },
                   { label: "Удалить", action: () => deleteField(section.id, field.id) },
                 ];
                 openContextMenu(event, actions);
@@ -2703,6 +2777,86 @@
           wrapper.appendChild(table);
           characteristicContainer.appendChild(wrapper);
         });
+      }
+
+      const characteristicSaveTimers = new Map();
+
+      function buildCharacteristicValueControl(sectionId, field, key) {
+        if (field.field_type === "checkbox") {
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "inline-checkbox";
+          checkbox.checked = Boolean(field[key]);
+          checkbox.addEventListener("change", () => handleCharacteristicValueChange(sectionId, field.id, key, checkbox));
+          return checkbox;
+        }
+
+        const area = document.createElement("textarea");
+        area.className = "inline-input";
+        area.value = field[key] ?? "";
+        area.rows = Math.min(4, Math.max(1, area.value.split("\n").length));
+        const trigger = () => handleCharacteristicValueChange(sectionId, field.id, key, area);
+        area.addEventListener("change", trigger);
+        area.addEventListener("blur", trigger);
+        return area;
+      }
+
+      function handleCharacteristicValueChange(sectionId, fieldId, key, inputEl) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const field = section.fields.find((f) => f.id === fieldId);
+        if (!field) return;
+        const isCheckbox = inputEl.type === "checkbox";
+        const raw = isCheckbox ? inputEl.checked : inputEl.value;
+        field[key] = isCheckbox ? raw : raw;
+        queueCharacteristicSave(sectionId, fieldId);
+      }
+
+      function setCharacteristicRowState(sectionId, fieldId, text, state = null) {
+        const row = characteristicContainer.querySelector(
+          `tr[data-section-id="${sectionId}"][data-field-id="${fieldId}"]`
+        );
+        if (!row) return;
+        row.classList.remove("saving", "save-error");
+        if (state === "saving") row.classList.add("saving");
+        if (state === "error") row.classList.add("save-error");
+        const status = row.querySelector(".inline-status");
+        if (status) status.textContent = text || "";
+      }
+
+      async function persistCharacteristicField(sectionId, fieldId) {
+        const key = `${sectionId}:${fieldId}`;
+        characteristicSaveTimers.delete(key);
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const field = section.fields.find((f) => f.id === fieldId);
+        if (!field) return;
+        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
+        const payload = { ...field };
+        if (payload.value_ru === "") payload.value_ru = null;
+        if (payload.value_en === "") payload.value_en = null;
+        const res = await fetch(
+          `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+        if (!res.ok) {
+          setCharacteristicRowState(sectionId, fieldId, "Ошибка сохранения", "error");
+          return;
+        }
+        setCharacteristicRowState(sectionId, fieldId, "Сохранено");
+        setTimeout(() => setCharacteristicRowState(sectionId, fieldId, ""), 1800);
+      }
+
+      function queueCharacteristicSave(sectionId, fieldId) {
+        const key = `${sectionId}:${fieldId}`;
+        if (characteristicSaveTimers.has(key)) clearTimeout(characteristicSaveTimers.get(key));
+        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
+        const timer = setTimeout(() => persistCharacteristicField(sectionId, fieldId), 500);
+        characteristicSaveTimers.set(key, timer);
       }
 
       async function promptSection(sectionId = null) {
