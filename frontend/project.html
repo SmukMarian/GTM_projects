@@ -483,6 +483,111 @@
         transform: translateY(-2px);
         background-color: var(--surface-muted);
       }
+
+      .project-hero {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .project-hero-left {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .project-hero-right {
+        background: var(--surface-muted);
+        border: 1px dashed var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 100%;
+      }
+
+      .cover-frame {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08));
+        border: 1px solid var(--border);
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .cover-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cover-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--muted-text);
+        text-align: center;
+        padding: 12px;
+      }
+
+      .cover-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+      }
+
+      .meta-tile {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .meta-tile span {
+        color: var(--muted-text);
+        font-size: 12px;
+      }
+
+      .progress-shell {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong, #2dd4bf));
+        transition: width 0.3s ease;
+      }
     </style>
   </head>
   <body>
@@ -498,15 +603,68 @@
     </div>
 
     <div id="project-card" class="card">
-      <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap">
-        <div>
-          <p class="pill">Карточка проекта</p>
-          <h1 id="project-name">Проект</h1>
+      <div class="project-hero">
+        <div class="project-hero-left">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap">
+            <div>
+              <p class="pill">Карточка проекта</p>
+              <h1 id="project-name">Проект</h1>
+            </div>
+            <div id="project-badges" style="display: flex; gap: 8px; flex-wrap: wrap"></div>
+          </div>
           <div id="project-meta" class="muted"></div>
+          <div class="meta-grid">
+            <div class="meta-tile">
+              <span>Группа</span>
+              <strong id="project-group">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Бренд</span>
+              <strong id="project-brand">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Рынок</span>
+              <strong id="project-market">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Плановая дата запуска</span>
+              <strong id="project-planned">—</strong>
+            </div>
+            <div class="meta-tile">
+              <span>Фактическая дата запуска</span>
+              <strong id="project-actual">—</strong>
+            </div>
+          </div>
+          <div class="progress-shell">
+            <div style="display:flex; justify-content: space-between; align-items:center; gap: 8px; flex-wrap: wrap">
+              <div style="display:flex; flex-direction: column; gap: 4px">
+                <span class="muted">Прогресс по GTM-этапам</span>
+                <strong id="gtm-progress-label">Нет этапов</strong>
+              </div>
+              <div id="gtm-progress-badge" class="badge">0%</div>
+            </div>
+            <div class="progress-bar" aria-label="Прогресс по GTM">
+              <div id="gtm-progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <p id="project-desc" class="muted"></p>
         </div>
-        <div id="project-badges" style="display: flex; gap: 8px; flex-wrap: wrap"></div>
+        <div class="project-hero-right">
+          <div class="cover-frame" id="cover-frame">
+            <div id="cover-placeholder" class="cover-placeholder">
+              <div style="font-size: 28px">🖼️</div>
+              <div>Добавьте обложку проекта</div>
+            </div>
+            <img id="cover-image" alt="Обложка проекта" style="display: none" />
+          </div>
+          <div class="cover-actions">
+            <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
+            <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
+            <button class="ghost" onclick="scrollToGallery()">Галерея</button>
+          </div>
+          <input type="file" id="coverUpload" accept="image/*" style="display: none" />
+        </div>
       </div>
-      <p id="project-desc" class="muted"></p>
     </div>
 
     <div class="card">
@@ -770,8 +928,22 @@
 
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const coverImage = document.getElementById("cover-image");
+      const coverPlaceholder = document.getElementById("cover-placeholder");
+      const coverUploadInput = document.getElementById("coverUpload");
+      const clearCoverButton = document.getElementById("clear-cover");
+      const gallerySection = document.getElementById("gallery");
+      const projectGroupEl = document.getElementById("project-group");
+      const projectBrandEl = document.getElementById("project-brand");
+      const projectMarketEl = document.getElementById("project-market");
+      const projectPlannedEl = document.getElementById("project-planned");
+      const projectActualEl = document.getElementById("project-actual");
+      const gtmProgressLabel = document.getElementById("gtm-progress-label");
+      const gtmProgressFill = document.getElementById("gtm-progress-fill");
+      const gtmProgressBadge = document.getElementById("gtm-progress-badge");
 
       let project = null;
+      let groupInfo = null;
       let gtmTemplates = [];
       let gtmStages = [];
       let characteristicTemplates = [];
@@ -828,7 +1000,14 @@
           return;
         }
         project = await res.json();
+        await loadGroupInfo();
         renderProject();
+      }
+
+      async function loadGroupInfo() {
+        if (!project?.group_id) return;
+        const res = await fetch(`/api/groups/${project.group_id}`);
+        groupInfo = res.ok ? await res.json() : null;
       }
 
       async function loadTemplates() {
@@ -842,6 +1021,7 @@
         gtmStages = res.ok ? await res.json() : [];
         renderStages();
         renderTaskFilters();
+        renderGtmProgress();
       }
 
       async function loadCharacteristicTemplates() {
@@ -860,10 +1040,17 @@
         document.getElementById("project-name").textContent = project.name;
         document.getElementById("project-desc").textContent = project.short_description || "Описание отсутствует";
         const metaParts = [];
+        if (groupInfo?.name) metaParts.push(`Группа: ${groupInfo.name}`);
         if (project.brand) metaParts.push(`Бренд: ${project.brand}`);
         if (project.market) metaParts.push(`Рынок: ${project.market}`);
-        if (project.planned_launch) metaParts.push(`Плановая дата запуска: ${project.planned_launch}`);
-        document.getElementById("project-meta").textContent = metaParts.join(" · ");
+        if (project.planned_launch) metaParts.push(`Плановая дата: ${project.planned_launch}`);
+        if (project.actual_launch) metaParts.push(`Факт: ${project.actual_launch}`);
+        document.getElementById("project-meta").textContent = metaParts.join(" · ") || "Данные проекта";
+        projectGroupEl.textContent = groupInfo?.name || "—";
+        projectBrandEl.textContent = project.brand || "—";
+        projectMarketEl.textContent = project.market || "—";
+        projectPlannedEl.textContent = project.planned_launch || "—";
+        projectActualEl.textContent = project.actual_launch || "—";
 
         const badges = [];
         if (project.status === "archived") {
@@ -878,6 +1065,8 @@
           badges.push(`<span class="badge">Приоритет: ${titles[project.priority] || project.priority}</span>`);
         }
         document.getElementById("project-badges").innerHTML = badges.join("");
+        renderGtmProgress();
+        renderCoverPanel();
       }
 
       function renderTemplates() {
@@ -986,6 +1175,21 @@
 
           stagesContainer.appendChild(card);
         });
+      }
+
+      function renderGtmProgress() {
+        const total = gtmStages.length;
+        const done = gtmStages.filter((stage) => stage.status === "done").length;
+        const percent = total ? Math.round((done / total) * 100) : 0;
+        if (!total) {
+          gtmProgressLabel.textContent = "Этапы не заданы";
+          gtmProgressFill.style.width = "0%";
+          gtmProgressBadge.textContent = "0%";
+          return;
+        }
+        gtmProgressLabel.textContent = `Завершено ${done} из ${total}`;
+        gtmProgressFill.style.width = `${percent}%`;
+        gtmProgressBadge.textContent = `${percent}%`;
       }
 
       function openStageContextMenu(event, stage, index) {
@@ -1765,6 +1969,7 @@
         if (res.ok) {
           images = await res.json();
           renderGallery();
+          renderCoverPanel();
         }
       }
 
@@ -1813,6 +2018,27 @@
         });
       }
 
+      function renderCoverPanel() {
+        const cover = getCoverImage();
+        if (cover) {
+          coverImage.src = `/api/projects/${projectId}/images/${cover.id}/download`;
+          coverImage.style.display = "block";
+          coverPlaceholder.style.display = "none";
+          clearCoverButton.disabled = !cover.is_cover;
+        } else {
+          coverImage.removeAttribute("src");
+          coverImage.style.display = "none";
+          coverPlaceholder.style.display = "flex";
+          clearCoverButton.disabled = true;
+        }
+      }
+
+      function getCoverImage() {
+        const explicit = images.find((img) => img.is_cover);
+        if (explicit) return explicit;
+        return images.length ? images[0] : null;
+      }
+
       function triggerImageUpload() {
         imageUploadInput.click();
       }
@@ -1834,6 +2060,50 @@
         imageUploadInput.value = "";
         await loadImages();
       });
+
+      function triggerCoverUpload() {
+        coverUploadInput.click();
+      }
+
+      coverUploadInput.addEventListener("change", async (event) => {
+        const selected = event.target.files?.[0];
+        if (!selected) return;
+        const formData = new FormData();
+        formData.append("file", selected);
+        formData.append("is_cover", "true");
+        const res = await fetch(`/api/projects/${projectId}/images/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          alert("Не удалось загрузить обложку");
+        }
+        coverUploadInput.value = "";
+        await loadImages();
+      });
+
+      async function clearCover() {
+        const cover = getCoverImage();
+        if (!cover || !cover.is_cover) {
+          renderCoverPanel();
+          return;
+        }
+        const payload = { ...cover, is_cover: false };
+        const res = await fetch(`/api/projects/${projectId}/images/${cover.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось снять обложку");
+          return;
+        }
+        await loadImages();
+      }
+
+      function scrollToGallery() {
+        gallerySection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
       function openImage(imageId) {
         window.open(`/api/projects/${projectId}/images/${imageId}/download`, "_blank");
