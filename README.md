@@ -41,3 +41,10 @@
 - `PUT /api/projects/{project_id}/gtm-stages/{stage_id}` — обновление GTM-этапа проекта.
 - `DELETE /api/projects/{project_id}/gtm-stages/{stage_id}` — удаление GTM-этапа проекта.
 - `POST /api/projects/{project_id}/gtm-stages/apply-template?template_id=` — заменить этапы проекта этапами шаблона.
+- `GET /api/projects/{project_id}/tasks` — список задач проекта с фильтрами `status`, `only_active`, `gtm_stage_id`.
+- `POST /api/projects/{project_id}/tasks` — создание задачи.
+- `PUT /api/projects/{project_id}/tasks/{task_id}` — обновление задачи (включая смену статуса или даты).
+- `DELETE /api/projects/{project_id}/tasks/{task_id}` — удаление задачи.
+- `POST /api/projects/{project_id}/tasks/{task_id}/subtasks` — добавление подзадачи.
+- `PUT /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — обновление подзадачи (например, отметка выполнено).
+- `DELETE /api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}` — удаление подзадачи.

@@ -13,7 +13,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
-from .models import GTMStage, GTMTemplate, ProductGroup, Project, ProjectStatus
+from .models import (
+    GTMStage,
+    GTMTemplate,
+    ProductGroup,
+    Project,
+    ProjectStatus,
+    Subtask,
+    Task,
+    TaskStatus,
+)
 from .storage import LocalRepository
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -214,6 +223,95 @@ def apply_gtm_template(project_id: UUID, template_id: UUID, repo: LocalRepositor
         if "Project" in message:
             raise HTTPException(status_code=404, detail="Проект не найден")
         raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+
+
+@app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
+def list_tasks(
+    project_id: UUID,
+    status: list[TaskStatus] | None = Query(default=None),
+    only_active: bool = False,
+    gtm_stage_id: UUID | None = None,
+    repo: LocalRepository = Depends(get_repository),
+) -> list[Task]:
+    """Вернуть задачи проекта с базовыми фильтрами."""
+
+    statuses = set(status) if status else None
+    try:
+        return repo.list_tasks(project_id, statuses=statuses, only_active=only_active, gtm_stage_id=gtm_stage_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post("/api/projects/{project_id}/tasks", response_model=Task, status_code=201)
+def create_task(project_id: UUID, task: Task, repo: LocalRepository = Depends(get_repository)) -> Task:
+    try:
+        return repo.add_task(project_id, task)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.put("/api/projects/{project_id}/tasks/{task_id}", response_model=Task)
+def update_task(project_id: UUID, task_id: UUID, task: Task, repo: LocalRepository = Depends(get_repository)) -> Task:
+    aligned = task.model_copy(update={"id": task_id})
+    try:
+        return repo.update_task(project_id, task_id, aligned)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
+
+@app.delete("/api/projects/{project_id}/tasks/{task_id}", status_code=204)
+def delete_task(project_id: UUID, task_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_task(project_id, task_id)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
+
+@app.post("/api/projects/{project_id}/tasks/{task_id}/subtasks", response_model=Subtask, status_code=201)
+def create_subtask(project_id: UUID, task_id: UUID, subtask: Subtask, repo: LocalRepository = Depends(get_repository)) -> Subtask:
+    try:
+        return repo.add_subtask(project_id, task_id, subtask)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
+
+@app.put("/api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}", response_model=Subtask)
+def update_subtask(
+    project_id: UUID,
+    task_id: UUID,
+    subtask_id: UUID,
+    subtask: Subtask,
+    repo: LocalRepository = Depends(get_repository),
+) -> Subtask:
+    aligned = subtask.model_copy(update={"id": subtask_id})
+    try:
+        return repo.update_subtask(project_id, task_id, subtask_id, aligned)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "Task" in message:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        raise HTTPException(status_code=404, detail="Подзадача не найдена")
+
+
+@app.delete("/api/projects/{project_id}/tasks/{task_id}/subtasks/{subtask_id}", status_code=204)
+def delete_subtask(project_id: UUID, task_id: UUID, subtask_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_subtask(project_id, task_id, subtask_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "Task" in message:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        raise HTTPException(status_code=404, detail="Подзадача не найдена")
 
 
 if FRONTEND_DIR.exists():

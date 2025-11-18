@@ -18,10 +18,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from .models import (
     CharacteristicTemplate,
     GTMTemplate,
+    GTMStage,
     ProductGroup,
     Project,
     ProjectStatus,
-    GTMStage,
+    Subtask,
+    Task,
+    TaskStatus,
 )
 
 
@@ -139,6 +142,12 @@ class LocalRepository:
                 return
         raise KeyError(f"Project {project_id} not found")
 
+    def _get_project_with_index(self, project_id: UUID) -> tuple[int, Project]:
+        for idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                return idx, project
+        raise KeyError(f"Project {project_id} not found")
+
     # --- GTM templates ---
     def list_gtm_templates(self) -> list[GTMTemplate]:
         return list(self.store.gtm_templates)
@@ -227,3 +236,93 @@ class LocalRepository:
                 self.save()
                 return new_stages
         raise KeyError(f"Project {project_id} not found")
+
+    # --- Tasks ---
+    def list_tasks(
+        self,
+        project_id: UUID,
+        *,
+        statuses: set[TaskStatus] | None = None,
+        only_active: bool = False,
+        gtm_stage_id: UUID | None = None,
+    ) -> list[Task]:
+        _, project = self._get_project_with_index(project_id)
+        tasks: Iterable[Task] = project.tasks
+        if statuses:
+            tasks = [t for t in tasks if t.status in statuses]
+        if only_active:
+            tasks = [t for t in tasks if t.status != TaskStatus.DONE]
+        if gtm_stage_id:
+            tasks = [t for t in tasks if t.gtm_stage_id == gtm_stage_id]
+        return list(tasks)
+
+    def add_task(self, project_id: UUID, task: Task) -> Task:
+        p_idx, project = self._get_project_with_index(project_id)
+        project.tasks.append(task)
+        self.store.projects[p_idx] = project
+        self.save()
+        return task
+
+    def update_task(self, project_id: UUID, task_id: UUID, updated: Task) -> Task:
+        p_idx, project = self._get_project_with_index(project_id)
+        for t_idx, task in enumerate(project.tasks):
+            if task.id == task_id:
+                project.tasks[t_idx] = updated
+                self.store.projects[p_idx] = project
+                self.save()
+                return updated
+        raise KeyError(f"Task {task_id} not found in project {project_id}")
+
+    def delete_task(self, project_id: UUID, task_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for t_idx, task in enumerate(project.tasks):
+            if task.id == task_id:
+                project.tasks.pop(t_idx)
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"Task {task_id} not found in project {project_id}")
+
+    # --- Subtasks ---
+    def add_subtask(self, project_id: UUID, task_id: UUID, subtask: Subtask) -> Subtask:
+        p_idx, project = self._get_project_with_index(project_id)
+        for t_idx, task in enumerate(project.tasks):
+            if task.id == task_id:
+                if subtask.order == 0 and task.subtasks:
+                    subtask = subtask.model_copy(update={"order": len(task.subtasks)})
+                task.subtasks.append(subtask)
+                project.tasks[t_idx] = task
+                self.store.projects[p_idx] = project
+                self.save()
+                return subtask
+        raise KeyError(f"Task {task_id} not found in project {project_id}")
+
+    def update_subtask(self, project_id: UUID, task_id: UUID, subtask_id: UUID, updated: Subtask) -> Subtask:
+        p_idx, project = self._get_project_with_index(project_id)
+        for t_idx, task in enumerate(project.tasks):
+            if task.id != task_id:
+                continue
+            for s_idx, subtask in enumerate(task.subtasks):
+                if subtask.id == subtask_id:
+                    task.subtasks[s_idx] = updated
+                    project.tasks[t_idx] = task
+                    self.store.projects[p_idx] = project
+                    self.save()
+                    return updated
+            raise KeyError(f"Subtask {subtask_id} not found in task {task_id}")
+        raise KeyError(f"Task {task_id} not found in project {project_id}")
+
+    def delete_subtask(self, project_id: UUID, task_id: UUID, subtask_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        for t_idx, task in enumerate(project.tasks):
+            if task.id != task_id:
+                continue
+            for s_idx, subtask in enumerate(task.subtasks):
+                if subtask.id == subtask_id:
+                    task.subtasks.pop(s_idx)
+                    project.tasks[t_idx] = task
+                    self.store.projects[p_idx] = project
+                    self.save()
+                    return
+            raise KeyError(f"Subtask {subtask_id} not found in task {task_id}")
+        raise KeyError(f"Task {task_id} not found in project {project_id}")
