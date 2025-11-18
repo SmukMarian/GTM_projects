@@ -364,8 +364,52 @@ class LocalRepository:
 
         for p_idx, project in enumerate(self.store.projects):
             if project.id == project_id:
-                new_stages = [stage.model_copy(update={"id": uuid4()}) for stage in template.stages]
+                stage_id_map: dict[UUID, UUID] = {}
+
+                def clone_stage(stage: GTMStage) -> GTMStage:
+                    cloned_id = uuid4()
+                    stage_id_map[stage.id] = cloned_id
+                    cloned_checklist = [
+                        item.model_copy(update={"id": uuid4(), "done": False})
+                        for item in sorted(stage.checklist, key=lambda c: c.order)
+                    ]
+                    return stage.model_copy(
+                        update={
+                            "id": cloned_id,
+                            "planned_start": None,
+                            "planned_end": None,
+                            "actual_end": None,
+                            "status": StageStatus.NOT_STARTED,
+                            "risk_flag": False,
+                            "checklist": cloned_checklist,
+                        }
+                    )
+
+                new_stages = [clone_stage(stage) for stage in sorted(template.stages, key=lambda s: s.order)]
+
+                def clone_task(task: Task) -> Task:
+                    if task.gtm_stage_id not in stage_id_map:
+                        raise KeyError(f"Stage {task.gtm_stage_id} from template not found in cloned stages")
+
+                    cloned_subtasks = [
+                        sub.model_copy(update={"id": uuid4(), "done": False})
+                        for sub in sorted(task.subtasks, key=lambda s: s.order)
+                    ]
+                    return task.model_copy(
+                        update={
+                            "id": uuid4(),
+                            "gtm_stage_id": stage_id_map[task.gtm_stage_id],
+                            "status": TaskStatus.TODO,
+                            "due_date": None,
+                            "subtasks": cloned_subtasks,
+                            "comments": [],
+                        }
+                    )
+
+                new_tasks = [clone_task(task) for task in template.tasks]
+
                 project.gtm_stages = new_stages
+                project.tasks = new_tasks
                 self.store.projects[p_idx] = project
                 self.save()
                 return new_stages
@@ -386,13 +430,17 @@ class LocalRepository:
             if project.id != project_id:
                 continue
 
+            stage_id_map: dict[UUID, UUID] = {}
+
             def clone_stage(stage: GTMStage) -> GTMStage:
+                cloned_id = uuid4()
+                stage_id_map[stage.id] = cloned_id
                 cloned_checklist = [
                     item.model_copy(update={"id": uuid4(), "done": False}) for item in sorted(stage.checklist, key=lambda c: c.order)
                 ]
                 return stage.model_copy(
                     update={
-                        "id": uuid4(),
+                        "id": cloned_id,
                         "planned_start": None,
                         "planned_end": None,
                         "actual_end": None,
@@ -403,7 +451,27 @@ class LocalRepository:
                 )
 
             cloned_stages = [clone_stage(stage) for stage in sorted(project.gtm_stages, key=lambda s: s.order)]
-            template = GTMTemplate(name=name, description=description, stages=cloned_stages)
+
+            def clone_task(task: Task) -> Task:
+                if task.gtm_stage_id not in stage_id_map:
+                    return None  # skip tasks без этапа
+                cloned_subtasks = [
+                    sub.model_copy(update={"id": uuid4(), "done": False})
+                    for sub in sorted(task.subtasks, key=lambda s: s.order)
+                ]
+                return task.model_copy(
+                    update={
+                        "id": uuid4(),
+                        "gtm_stage_id": stage_id_map[task.gtm_stage_id],
+                        "status": TaskStatus.TODO,
+                        "due_date": None,
+                        "subtasks": cloned_subtasks,
+                        "comments": [],
+                    }
+                )
+
+            cloned_tasks = [t for t in (clone_task(task) for task in project.tasks) if t is not None]
+            template = GTMTemplate(name=name, description=description, stages=cloned_stages, tasks=cloned_tasks)
             self.store.gtm_templates.append(template)
             self.save()
             return template
@@ -431,6 +499,10 @@ class LocalRepository:
 
     def add_task(self, project_id: UUID, task: Task) -> Task:
         p_idx, project = self._get_project_with_index(project_id)
+        if task.gtm_stage_id is None:
+            raise ValueError("gtm_stage_required")
+        if not any(stage.id == task.gtm_stage_id for stage in project.gtm_stages):
+            raise ValueError("gtm_stage_missing")
         project.tasks.append(task)
         self.store.projects[p_idx] = project
         self.save()
@@ -438,6 +510,10 @@ class LocalRepository:
 
     def update_task(self, project_id: UUID, task_id: UUID, updated: Task) -> Task:
         p_idx, project = self._get_project_with_index(project_id)
+        if updated.gtm_stage_id is None:
+            raise ValueError("gtm_stage_required")
+        if not any(stage.id == updated.gtm_stage_id for stage in project.gtm_stages):
+            raise ValueError("gtm_stage_missing")
         for t_idx, task in enumerate(project.tasks):
             if task.id == task_id:
                 project.tasks[t_idx] = updated

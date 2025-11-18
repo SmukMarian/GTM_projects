@@ -735,6 +735,9 @@ def create_task(project_id: UUID, task: Task, repo: LocalRepository = Depends(ge
         return created
     except KeyError:
         raise HTTPException(status_code=404, detail="Проект не найден")
+    except ValueError as exc:
+        reason = "Укажите GTM-этап для задачи" if "gtm_stage_required" in str(exc) else "Указанный GTM-этап не найден"
+        raise HTTPException(status_code=400, detail=reason)
 
 
 @app.put("/api/projects/{project_id}/tasks/{task_id}", response_model=Task)
@@ -763,6 +766,9 @@ def update_task(project_id: UUID, task_id: UUID, task: Task, repo: LocalReposito
         if "Project" in str(exc):
             raise HTTPException(status_code=404, detail="Проект не найден")
         raise HTTPException(status_code=404, detail="Задача не найдена")
+    except ValueError as exc:
+        reason = "Укажите GTM-этап для задачи" if "gtm_stage_required" in str(exc) else "Указанный GTM-этап не найден"
+        raise HTTPException(status_code=400, detail=reason)
 
 
 @app.delete("/api/projects/{project_id}/tasks/{task_id}", status_code=204)

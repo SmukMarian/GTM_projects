@@ -116,6 +116,7 @@ class GTMTemplate(BaseModel):
     name: str
     description: str | None = None
     stages: list[GTMStage] = Field(default_factory=list)
+    tasks: list["Task"] = Field(default_factory=list)
 
 
 class TemplateFromProjectRequest(BaseModel):

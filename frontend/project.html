@@ -813,9 +813,10 @@
 
       .project-hero {
         display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 16px;
+        grid-template-columns: minmax(0, 2fr) minmax(300px, 360px);
+        gap: 20px;
         align-items: stretch;
+        align-self: stretch;
       }
 
       .project-hero-left {
@@ -833,6 +834,8 @@
         flex-direction: column;
         gap: 10px;
         min-height: 100%;
+        max-width: 360px;
+        justify-self: end;
       }
 
       .cover-frame {
@@ -846,6 +849,8 @@
         align-items: center;
         justify-content: center;
         box-shadow: var(--shadow-soft);
+        width: 100%;
+        min-height: 280px;
       }
 
       .cover-frame img {
@@ -1021,6 +1026,9 @@
             </div>
           </div>
           <p id="project-desc" class="muted"></p>
+          <div class="toolbar" style="gap: 8px; flex-wrap: wrap; margin-top: 4px">
+            <button class="ghost" id="open-characteristics">Характеристики →</button>
+          </div>
         </div>
         <div class="project-hero-right">
           <div class="cover-frame" id="cover-frame">
@@ -1109,19 +1117,10 @@
 
     <div class="card">
       <div class="stage-header" style="margin-bottom: 8px">
-        <h2>Характеристики (RU / EN)</h2>
-        <div class="toolbar" style="margin: 0">
-          <button class="primary" onclick="promptSection()">Добавить секцию</button>
-          <select id="characteristicTemplateSelect"></select>
-          <button onclick="applyCharacteristicTemplate()">Применить шаблон</button>
-          <button onclick="saveCharacteristicTemplate()">Сохранить как шаблон</button>
-          <button onclick="copyCharacteristicStructure()">Копировать структуру</button>
-          <button onclick="triggerCharacteristicImport()">Импорт Excel</button>
-          <button onclick="exportCharacteristics()">Экспорт Excel</button>
-          <input type="file" id="characteristicImport" accept=".xlsx" style="display: none" />
-        </div>
+        <h2>Характеристики</h2>
       </div>
-      <div id="characteristics"></div>
+      <p class="muted" style="margin-bottom: 12px">Подробные характеристики теперь доступны на отдельной странице.</p>
+      <button class="primary" type="button" onclick="window.location.href = `/characteristics.html?id=${projectId}`;">Открыть характеристики</button>
     </div>
 
     <div class="card">
@@ -1344,9 +1343,7 @@
           <div class="grid-two">
             <label>
               GTM-этап
-              <select id="taskGtmStage">
-                <option value="">Не задан</option>
-              </select>
+              <select id="taskGtmStage" required></select>
             </label>
             <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
               <input type="checkbox" id="taskImportant" /> Отметить как важную
@@ -1428,6 +1425,7 @@
       const basicShort = document.getElementById("basicShort");
       const basicFull = document.getElementById("basicFull");
       const copyIdSecondary = document.getElementById("copy-id-secondary");
+      const openCharacteristicsBtn = document.getElementById("open-characteristics");
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
@@ -1454,6 +1452,9 @@
       basicsForm?.addEventListener("submit", saveBasics);
       copyIdBtn?.addEventListener("click", copyProjectId);
       copyIdSecondary?.addEventListener("click", copyProjectId);
+      openCharacteristicsBtn?.addEventListener("click", () => {
+        window.location.href = `/characteristics.html?id=${projectId}`;
+      });
 
       if (!projectId) {
         stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
@@ -1537,8 +1538,6 @@
           loadProject(),
           loadTemplates(),
           loadStages(),
-          loadCharacteristicTemplates(),
-          loadCharacteristics(),
         ]);
         await Promise.all([loadTasks(), loadImages(), loadFiles(), loadProjectComments(), loadHistory()]);
       }
@@ -2080,6 +2079,7 @@
         if (res.ok) {
           gtmStages = await res.json();
           renderStages();
+          await loadTasks();
         } else {
           alert("Не удалось применить шаблон");
         }
@@ -2160,12 +2160,16 @@
         taskGtmFilter.appendChild(all);
 
         taskGtmStageSelect.innerHTML = "";
-        const none = document.createElement("option");
-        none.value = "";
-        none.textContent = "Не задан";
-        taskGtmStageSelect.appendChild(none);
-
         const sorted = [...gtmStages].sort((a, b) => a.order - b.order);
+        if (!sorted.length) {
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "Нет этапов";
+          taskGtmStageSelect.appendChild(placeholder);
+          taskGtmStageSelect.disabled = true;
+        } else {
+          taskGtmStageSelect.disabled = false;
+        }
         sorted.forEach((stage) => {
           const option = document.createElement("option");
           option.value = stage.id;
@@ -2503,7 +2507,14 @@
         document.getElementById("taskStatus").value = task?.status || "todo";
         document.getElementById("taskDueDate").value = task?.due_date || "";
         document.getElementById("taskImportant").checked = task?.important || false;
-        taskGtmStageSelect.value = task?.gtm_stage_id || "";
+        if (task?.gtm_stage_id) {
+          taskGtmStageSelect.value = task.gtm_stage_id;
+        } else if (gtmStages.length) {
+          const sorted = [...gtmStages].sort((a, b) => a.order - b.order);
+          taskGtmStageSelect.value = sorted[0].id;
+        } else {
+          taskGtmStageSelect.value = "";
+        }
       }
 
       function closeTaskModal() {
@@ -2522,6 +2533,11 @@
           subtasks: [],
           comments: [],
         };
+
+        if (!payload.gtm_stage_id) {
+          alert("Выберите GTM-этап для задачи");
+          return;
+        }
         const taskId = document.getElementById("taskId").value;
         let res;
         if (taskId) {
@@ -3646,28 +3662,31 @@
       }
 
       function triggerCharacteristicImport() {
+        if (!characteristicImport) return;
         characteristicImport.click();
       }
 
-      characteristicImport.addEventListener("change", async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(`/api/projects/${projectId}/characteristics/import`, {
-          method: "POST",
-          body: formData,
+      if (characteristicImport) {
+        characteristicImport.addEventListener("change", async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch(`/api/projects/${projectId}/characteristics/import`, {
+            method: "POST",
+            body: formData,
+          });
+          if (res.ok) {
+            characteristicSections = await res.json();
+            renderCharacteristics();
+            alert("Характеристики импортированы");
+          } else {
+            const detail = await res.json();
+            alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+          }
+          event.target.value = "";
         });
-        if (res.ok) {
-          characteristicSections = await res.json();
-          renderCharacteristics();
-          alert("Характеристики импортированы");
-        } else {
-          const detail = await res.json();
-          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
-        }
-        event.target.value = "";
-      });
+      }
 
       async function exportCharacteristics() {
         const res = await fetch(`/api/projects/${projectId}/characteristics/export`);

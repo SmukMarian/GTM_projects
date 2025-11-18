@@ -140,7 +140,13 @@ def run_smoke() -> Path:
     task = _assert_ok(
         client.post(
             f"/api/projects/{project_id}/tasks",
-            json={"title": "Test task", "status": "todo", "description": "", "order": 1},
+            json={
+                "title": "Test task",
+                "status": "todo",
+                "description": "",
+                "order": 1,
+                "gtm_stage_id": str(stage_id),
+            },
         ),
         "create task",
     )
