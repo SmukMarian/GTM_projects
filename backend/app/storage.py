@@ -16,6 +16,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from .models import (
+    CharacteristicField,
+    CharacteristicSection,
     CharacteristicTemplate,
     GTMTemplate,
     GTMStage,
@@ -148,6 +150,14 @@ class LocalRepository:
                 return idx, project
         raise KeyError(f"Project {project_id} not found")
 
+    def _get_characteristic_section_with_index(
+        self, project: Project, section_id: UUID
+    ) -> tuple[int, CharacteristicSection]:
+        for idx, section in enumerate(project.characteristics):
+            if section.id == section_id:
+                return idx, section
+        raise KeyError(f"Characteristic section {section_id} not found")
+
     # --- GTM templates ---
     def list_gtm_templates(self) -> list[GTMTemplate]:
         return list(self.store.gtm_templates)
@@ -178,6 +188,39 @@ class LocalRepository:
                 self.save()
                 return
         raise KeyError(f"GTM template {template_id} not found")
+
+    # --- Characteristic templates ---
+    def list_characteristic_templates(self) -> list[CharacteristicTemplate]:
+        return list(self.store.characteristic_templates)
+
+    def get_characteristic_template(self, template_id: UUID) -> CharacteristicTemplate | None:
+        for template in self.store.characteristic_templates:
+            if template.id == template_id:
+                return template
+        return None
+
+    def add_characteristic_template(self, template: CharacteristicTemplate) -> CharacteristicTemplate:
+        self.store.characteristic_templates.append(template)
+        self.save()
+        return template
+
+    def update_characteristic_template(
+        self, template_id: UUID, updated: CharacteristicTemplate
+    ) -> CharacteristicTemplate:
+        for idx, template in enumerate(self.store.characteristic_templates):
+            if template.id == template_id:
+                self.store.characteristic_templates[idx] = updated
+                self.save()
+                return updated
+        raise KeyError(f"Characteristic template {template_id} not found")
+
+    def delete_characteristic_template(self, template_id: UUID) -> None:
+        for idx, template in enumerate(self.store.characteristic_templates):
+            if template.id == template_id:
+                self.store.characteristic_templates.pop(idx)
+                self.save()
+                return
+        raise KeyError(f"Characteristic template {template_id} not found")
 
     # --- GTM stages inside projects ---
     def list_gtm_stages(self, project_id: UUID) -> list[GTMStage]:
@@ -326,3 +369,112 @@ class LocalRepository:
                     return
             raise KeyError(f"Subtask {subtask_id} not found in task {task_id}")
         raise KeyError(f"Task {task_id} not found in project {project_id}")
+
+    # --- Characteristics inside projects ---
+    def list_characteristic_sections(self, project_id: UUID) -> list[CharacteristicSection]:
+        _, project = self._get_project_with_index(project_id)
+        return list(project.characteristics)
+
+    def add_characteristic_section(self, project_id: UUID, section: CharacteristicSection) -> CharacteristicSection:
+        p_idx, project = self._get_project_with_index(project_id)
+        if section.order == 0 and project.characteristics:
+            section = section.model_copy(update={"order": len(project.characteristics)})
+        project.characteristics.append(section)
+        self.store.projects[p_idx] = project
+        self.save()
+        return section
+
+    def update_characteristic_section(
+        self, project_id: UUID, section_id: UUID, updated: CharacteristicSection
+    ) -> CharacteristicSection:
+        p_idx, project = self._get_project_with_index(project_id)
+        s_idx, _ = self._get_characteristic_section_with_index(project, section_id)
+        project.characteristics[s_idx] = updated
+        self.store.projects[p_idx] = project
+        self.save()
+        return updated
+
+    def delete_characteristic_section(self, project_id: UUID, section_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        s_idx, _ = self._get_characteristic_section_with_index(project, section_id)
+        project.characteristics.pop(s_idx)
+        self.store.projects[p_idx] = project
+        self.save()
+
+    def add_characteristic_field(
+        self, project_id: UUID, section_id: UUID, field: CharacteristicField
+    ) -> CharacteristicField:
+        p_idx, project = self._get_project_with_index(project_id)
+        s_idx, section = self._get_characteristic_section_with_index(project, section_id)
+        if field.order == 0 and section.fields:
+            field = field.model_copy(update={"order": len(section.fields)})
+        section.fields.append(field)
+        project.characteristics[s_idx] = section
+        self.store.projects[p_idx] = project
+        self.save()
+        return field
+
+    def update_characteristic_field(
+        self, project_id: UUID, section_id: UUID, field_id: UUID, updated: CharacteristicField
+    ) -> CharacteristicField:
+        p_idx, project = self._get_project_with_index(project_id)
+        s_idx, section = self._get_characteristic_section_with_index(project, section_id)
+        for f_idx, field in enumerate(section.fields):
+            if field.id == field_id:
+                section.fields[f_idx] = updated
+                project.characteristics[s_idx] = section
+                self.store.projects[p_idx] = project
+                self.save()
+                return updated
+        raise KeyError(f"Field {field_id} not found in section {section_id}")
+
+    def delete_characteristic_field(self, project_id: UUID, section_id: UUID, field_id: UUID) -> None:
+        p_idx, project = self._get_project_with_index(project_id)
+        s_idx, section = self._get_characteristic_section_with_index(project, section_id)
+        for f_idx, field in enumerate(section.fields):
+            if field.id == field_id:
+                section.fields.pop(f_idx)
+                project.characteristics[s_idx] = section
+                self.store.projects[p_idx] = project
+                self.save()
+                return
+        raise KeyError(f"Field {field_id} not found in section {section_id}")
+
+    def apply_characteristic_template(
+        self, project_id: UUID, template_id: UUID
+    ) -> list[CharacteristicSection]:
+        template = self.get_characteristic_template(template_id)
+        if template is None:
+            raise KeyError(f"Characteristic template {template_id} not found")
+
+        p_idx, project = self._get_project_with_index(project_id)
+        new_sections: list[CharacteristicSection] = []
+        for section in template.sections:
+            new_fields = [
+                field.model_copy(update={"id": uuid4(), "value_ru": None, "value_en": None})
+                for field in section.fields
+            ]
+            new_sections.append(section.model_copy(update={"id": uuid4(), "fields": new_fields}))
+        project.characteristics = new_sections
+        self.store.projects[p_idx] = project
+        self.save()
+        return new_sections
+
+    def copy_characteristics_structure(
+        self, project_id: UUID, source_project_id: UUID
+    ) -> list[CharacteristicSection]:
+        _, source_project = self._get_project_with_index(source_project_id)
+        p_idx, target_project = self._get_project_with_index(project_id)
+
+        new_sections: list[CharacteristicSection] = []
+        for section in source_project.characteristics:
+            new_fields = [
+                field.model_copy(update={"id": uuid4(), "value_ru": None, "value_en": None})
+                for field in section.fields
+            ]
+            new_sections.append(section.model_copy(update={"id": uuid4(), "fields": new_fields}))
+
+        target_project.characteristics = new_sections
+        self.store.projects[p_idx] = target_project
+        self.save()
+        return new_sections

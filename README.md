@@ -36,11 +36,24 @@
 - `POST /api/gtm-templates` — создание шаблона GTM.
 - `PUT /api/gtm-templates/{template_id}` — обновление шаблона GTM.
 - `DELETE /api/gtm-templates/{template_id}` — удаление шаблона GTM.
+- `GET /api/characteristic-templates` — список шаблонов характеристик.
+- `POST /api/characteristic-templates` — создание шаблона характеристик.
+- `PUT /api/characteristic-templates/{template_id}` — обновление шаблона характеристик.
+- `DELETE /api/characteristic-templates/{template_id}` — удаление шаблона характеристик.
 - `GET /api/projects/{project_id}/gtm-stages` — список GTM-этапов проекта.
 - `POST /api/projects/{project_id}/gtm-stages` — добавление GTM-этапа в проект.
 - `PUT /api/projects/{project_id}/gtm-stages/{stage_id}` — обновление GTM-этапа проекта.
 - `DELETE /api/projects/{project_id}/gtm-stages/{stage_id}` — удаление GTM-этапа проекта.
 - `POST /api/projects/{project_id}/gtm-stages/apply-template?template_id=` — заменить этапы проекта этапами шаблона.
+- `GET /api/projects/{project_id}/characteristics/sections` — список секций характеристик проекта.
+- `POST /api/projects/{project_id}/characteristics/sections` — добавление секции характеристик.
+- `PUT /api/projects/{project_id}/characteristics/sections/{section_id}` — обновление секции характеристик.
+- `DELETE /api/projects/{project_id}/characteristics/sections/{section_id}` — удаление секции характеристик.
+- `POST /api/projects/{project_id}/characteristics/sections/{section_id}/fields` — добавление поля в секцию.
+- `PUT /api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}` — обновление поля характеристики.
+- `DELETE /api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}` — удаление поля характеристики.
+- `POST /api/projects/{project_id}/characteristics/apply-template?template_id=` — заменить структуру характеристик проектом из шаблона (значения обнуляются).
+- `POST /api/projects/{project_id}/characteristics/copy-structure?source_project_id=` — скопировать структуру секций/полей из другого проекта без значений.
 - `GET /api/projects/{project_id}/tasks` — список задач проекта с фильтрами `status`, `only_active`, `gtm_stage_id`.
 - `POST /api/projects/{project_id}/tasks` — создание задачи.
 - `PUT /api/projects/{project_id}/tasks/{task_id}` — обновление задачи (включая смену статуса или даты).

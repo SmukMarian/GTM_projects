@@ -14,6 +14,9 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .models import (
+    CharacteristicField,
+    CharacteristicSection,
+    CharacteristicTemplate,
     GTMStage,
     GTMTemplate,
     ProductGroup,
@@ -173,6 +176,46 @@ def delete_gtm_template(template_id: UUID, repo: LocalRepository = Depends(get_r
         raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
 
 
+@app.get("/api/characteristic-templates", response_model=list[CharacteristicTemplate])
+def list_characteristic_templates(repo: LocalRepository = Depends(get_repository)) -> list[CharacteristicTemplate]:
+    """Вернуть список шаблонов характеристик."""
+
+    return repo.list_characteristic_templates()
+
+
+@app.get("/api/characteristic-templates/{template_id}", response_model=CharacteristicTemplate)
+def get_characteristic_template(template_id: UUID, repo: LocalRepository = Depends(get_repository)) -> CharacteristicTemplate:
+    template = repo.get_characteristic_template(template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Шаблон характеристик не найден")
+    return template
+
+
+@app.post("/api/characteristic-templates", response_model=CharacteristicTemplate, status_code=201)
+def create_characteristic_template(
+    template: CharacteristicTemplate, repo: LocalRepository = Depends(get_repository)
+) -> CharacteristicTemplate:
+    return repo.add_characteristic_template(template)
+
+
+@app.put("/api/characteristic-templates/{template_id}", response_model=CharacteristicTemplate)
+def update_characteristic_template(
+    template_id: UUID, template: CharacteristicTemplate, repo: LocalRepository = Depends(get_repository)
+) -> CharacteristicTemplate:
+    if repo.get_characteristic_template(template_id) is None:
+        raise HTTPException(status_code=404, detail="Шаблон характеристик не найден")
+    aligned = template.model_copy(update={"id": template_id})
+    return repo.update_characteristic_template(template_id, aligned)
+
+
+@app.delete("/api/characteristic-templates/{template_id}", status_code=204)
+def delete_characteristic_template(template_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_characteristic_template(template_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Шаблон характеристик не найден")
+
+
 @app.get("/api/projects/{project_id}/gtm-stages", response_model=list[GTMStage])
 def list_gtm_stages(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[GTMStage]:
     try:
@@ -223,6 +266,157 @@ def apply_gtm_template(project_id: UUID, template_id: UUID, repo: LocalRepositor
         if "Project" in message:
             raise HTTPException(status_code=404, detail="Проект не найден")
         raise HTTPException(status_code=404, detail="Шаблон GTM не найден")
+
+
+@app.get(
+    "/api/projects/{project_id}/characteristics/sections",
+    response_model=list[CharacteristicSection],
+)
+def list_characteristic_sections(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> list[CharacteristicSection]:
+    try:
+        return repo.list_characteristic_sections(project_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.post(
+    "/api/projects/{project_id}/characteristics/sections",
+    response_model=CharacteristicSection,
+    status_code=201,
+)
+def create_characteristic_section(
+    project_id: UUID, section: CharacteristicSection, repo: LocalRepository = Depends(get_repository)
+) -> CharacteristicSection:
+    try:
+        return repo.add_characteristic_section(project_id, section)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.put(
+    "/api/projects/{project_id}/characteristics/sections/{section_id}",
+    response_model=CharacteristicSection,
+)
+def update_characteristic_section(
+    project_id: UUID,
+    section_id: UUID,
+    section: CharacteristicSection,
+    repo: LocalRepository = Depends(get_repository),
+) -> CharacteristicSection:
+    aligned = section.model_copy(update={"id": section_id})
+    try:
+        return repo.update_characteristic_section(project_id, section_id, aligned)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Секция характеристик не найдена")
+
+
+@app.delete(
+    "/api/projects/{project_id}/characteristics/sections/{section_id}",
+    status_code=204,
+)
+def delete_characteristic_section(project_id: UUID, section_id: UUID, repo: LocalRepository = Depends(get_repository)) -> None:
+    try:
+        repo.delete_characteristic_section(project_id, section_id)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Секция характеристик не найдена")
+
+
+@app.post(
+    "/api/projects/{project_id}/characteristics/sections/{section_id}/fields",
+    response_model=CharacteristicField,
+    status_code=201,
+)
+def create_characteristic_field(
+    project_id: UUID,
+    section_id: UUID,
+    field: CharacteristicField,
+    repo: LocalRepository = Depends(get_repository),
+) -> CharacteristicField:
+    try:
+        return repo.add_characteristic_field(project_id, section_id, field)
+    except KeyError as exc:
+        if "Project" in str(exc):
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Секция характеристик не найдена")
+
+
+@app.put(
+    "/api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}",
+    response_model=CharacteristicField,
+)
+def update_characteristic_field(
+    project_id: UUID,
+    section_id: UUID,
+    field_id: UUID,
+    field: CharacteristicField,
+    repo: LocalRepository = Depends(get_repository),
+) -> CharacteristicField:
+    aligned = field.model_copy(update={"id": field_id})
+    try:
+        return repo.update_characteristic_field(project_id, section_id, field_id, aligned)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "section" in message.lower():
+            raise HTTPException(status_code=404, detail="Секция характеристик не найдена")
+        raise HTTPException(status_code=404, detail="Поле характеристики не найдено")
+
+
+@app.delete(
+    "/api/projects/{project_id}/characteristics/sections/{section_id}/fields/{field_id}",
+    status_code=204,
+)
+def delete_characteristic_field(
+    project_id: UUID, section_id: UUID, field_id: UUID, repo: LocalRepository = Depends(get_repository)
+) -> None:
+    try:
+        repo.delete_characteristic_field(project_id, section_id, field_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        if "section" in message.lower():
+            raise HTTPException(status_code=404, detail="Секция характеристик не найдена")
+        raise HTTPException(status_code=404, detail="Поле характеристики не найдено")
+
+
+@app.post(
+    "/api/projects/{project_id}/characteristics/apply-template",
+    response_model=list[CharacteristicSection],
+    status_code=201,
+)
+def apply_characteristic_template(
+    project_id: UUID, template_id: UUID, repo: LocalRepository = Depends(get_repository)
+) -> list[CharacteristicSection]:
+    try:
+        return repo.apply_characteristic_template(project_id, template_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message:
+            raise HTTPException(status_code=404, detail="Проект не найден")
+        raise HTTPException(status_code=404, detail="Шаблон характеристик не найден")
+
+
+@app.post(
+    "/api/projects/{project_id}/characteristics/copy-structure",
+    response_model=list[CharacteristicSection],
+    status_code=201,
+)
+def copy_characteristics_structure(
+    project_id: UUID, source_project_id: UUID, repo: LocalRepository = Depends(get_repository)
+) -> list[CharacteristicSection]:
+    try:
+        return repo.copy_characteristics_structure(project_id, source_project_id)
+    except KeyError as exc:
+        message = str(exc)
+        if "Project" in message and str(project_id) in message:
+            raise HTTPException(status_code=404, detail="Целевой проект не найден")
+        raise HTTPException(status_code=404, detail="Проект-источник не найден")
 
 
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
