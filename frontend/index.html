@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Haier Project Tracker — Заглушка</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+      }
+
+      body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 24px 64px;
+        background: radial-gradient(circle at 20% 20%, rgba(0, 146, 255, 0.08), transparent 30%),
+          radial-gradient(circle at 80% 0%, rgba(0, 146, 255, 0.08), transparent 25%);
+      }
+
+      h1 {
+        margin-bottom: 0.25rem;
+        font-size: 2rem;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(0, 146, 255, 0.12);
+        color: #0060a8;
+        border-radius: 999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        color: #0f172a;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-top: 20px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .grid .card {
+        margin-top: 0;
+      }
+
+      ul {
+        padding-left: 18px;
+      }
+
+      code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+
+      footer {
+        margin-top: 32px;
+        font-size: 0.9rem;
+        color: #475569;
+      }
+
+      .context-menu {
+        position: fixed;
+        background: #fff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        min-width: 220px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 16px;
+      }
+
+      .context-menu li a,
+      .context-menu li button {
+        color: #0f172a;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        padding: 0;
+      }
+
+      .context-menu li:hover {
+        background: #e2f0ff;
+      }
+    </style>
+  </head>
+  <body>
+    <span class="pill">Дашборд</span>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+      <h1 style="margin: 0">Haier Project Tracker</h1>
+      <a href="/groups.html" style="font-weight: 600">Перейти к продуктовым группам →</a>
+    </div>
+    <p>
+      Главная страница показывает статусы проектов, сводку по продуктовым группам, ближайшие важные даты и последние изменения.
+      Все данные обновляются напрямую из локального JSON-хранилища через API FastAPI.
+    </p>
+
+    <div class="card">
+      <h2>Фильтры</h2>
+      <div class="grid" style="align-items: end">
+        <label class="card">
+          <span>Продуктовая группа</span>
+          <select id="groupFilter">
+            <option value="">Все</option>
+          </select>
+        </label>
+        <label class="card">
+          <span>Бренд</span>
+          <input id="brandFilter" type="text" placeholder="Например, Haier" />
+        </label>
+        <label class="card">
+          <span>Статус проекта</span>
+          <select id="statusFilter">
+            <option value="">Все</option>
+            <option value="active">Активный</option>
+            <option value="closed">Закрыт</option>
+            <option value="archived">Архивирован</option>
+          </select>
+        </label>
+        <label class="card" style="gap: 8px; display: flex; align-items: center">
+          <input id="showArchived" type="checkbox" />
+          <span>Показывать архивные проекты и группы</span>
+        </label>
+      </div>
+      <button id="applyFilters" style="margin-top: 12px">Обновить</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Сводка по статусам</h2>
+        <ul id="statusSummary"></ul>
+      </div>
+      <div class="card">
+        <h2>Ближайшие важные даты</h2>
+        <table id="upcomingTable" style="width: 100%; border-collapse: collapse"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Продуктовые группы</h2>
+      <div id="groupGrid" class="grid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Последние изменения</h2>
+      <ul id="recentChanges" style="max-height: 320px; overflow: auto"></ul>
+    </div>
+
+    <footer>Интерфейс на русском языке; характеристики RU/EN показываются рядом. Главная страница — отправная точка для перехода
+      в группы и проекты.</footer>
+
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    <script>
+      const statusList = document.getElementById("statusSummary");
+      const groupGrid = document.getElementById("groupGrid");
+      const upcomingTable = document.getElementById("upcomingTable");
+      const recentList = document.getElementById("recentChanges");
+      const groupFilter = document.getElementById("groupFilter");
+      const brandFilter = document.getElementById("brandFilter");
+      const statusFilter = document.getElementById("statusFilter");
+      const showArchived = document.getElementById("showArchived");
+      const applyFilters = document.getElementById("applyFilters");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+
+      async function loadGroupsForFilter() {
+        const res = await fetch("/api/groups?include_archived=true");
+        if (!res.ok) return;
+        const groups = await res.json();
+        groups.forEach((g) => {
+          const option = document.createElement("option");
+          option.value = g.id;
+          option.textContent = g.name;
+          groupFilter.appendChild(option);
+        });
+      }
+
+      function renderStatus(summary) {
+        statusList.innerHTML = "";
+        const entries = [
+          { label: "Активные", value: summary.active },
+          { label: "Закрытые", value: summary.closed },
+          { label: "Архивированные", value: summary.archived },
+        ];
+        entries.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = `${item.label}: ${item.value}`;
+          statusList.appendChild(li);
+        });
+      }
+
+        function renderGroups(groups) {
+          groupGrid.innerHTML = "";
+          groups.forEach((group) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.groupId = group.id;
+            const risk = group.risk ? " ⚠️" : "";
+            card.innerHTML = `<strong><a href="/api/groups/${group.id}" target="_blank">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
+            card.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              openContextMenu(event, "group", group);
+            });
+            groupGrid.appendChild(card);
+          });
+        }
+
+      function renderUpcoming(rows) {
+        if (!rows.length) {
+          upcomingTable.innerHTML = "<tr><td>Нет ближайших дат</td></tr>";
+          return;
+        }
+          const header = `<tr><th align="left">Проект</th><th align="left">Группа</th><th align="left">Тип</th><th align="left">Элемент</th><th align="left">Плановая дата</th><th align="left">Δ дней</th></tr>`;
+          const body = rows
+            .map((row) => {
+              const marker = row.risk || row.days_delta < 0 ? "⚠️" : "";
+              return `<tr data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/api/projects/${row.project_id}" target="_blank">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
+            })
+            .join("");
+          upcomingTable.innerHTML = header + body;
+
+          Array.from(upcomingTable.querySelectorAll("tr[data-project-id]"))
+            .forEach((row) => {
+              row.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                openContextMenu(event, "project", {
+                  id: row.dataset.projectId,
+                  group_id: row.dataset.groupId,
+                  name: row.querySelector("a")?.textContent || "Проект",
+                });
+              });
+            });
+        }
+
+      function renderChanges(items) {
+        recentList.innerHTML = "";
+        if (!items.length) {
+          recentList.innerHTML = "<li>Нет изменений</li>";
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          const date = new Date(item.occurred_at).toLocaleString();
+          li.innerHTML = `<strong><a href="/api/projects/${item.project_id}" target="_blank">${item.project_name}</a></strong> (${item.group_name}) — ${item.summary}<br /><small>${date}</small>`;
+          if (item.details) {
+            li.innerHTML += `<div>${item.details}</div>`;
+          }
+          li.dataset.projectId = item.project_id;
+          li.dataset.groupId = item.group_id;
+          li.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "project", {
+              id: item.project_id,
+              group_id: item.group_id,
+              name: item.project_name,
+            });
+          });
+          recentList.appendChild(li);
+        });
+      }
+
+      function openContextMenu(event, type, data) {
+        const actions = [];
+        if (type === "group") {
+          actions.push({ label: "Открыть группу", href: `/api/groups/${data.id}` });
+          actions.push({
+            label: "Показать только эту группу",
+            action: () => {
+              groupFilter.value = data.id;
+              loadDashboard();
+            },
+          });
+        } else if (type === "project") {
+          actions.push({ label: "Открыть проект", href: `/api/projects/${data.id}` });
+          if (data.group_id) {
+            actions.push({
+              label: "Фильтр по группе проекта",
+              action: () => {
+                groupFilter.value = data.group_id;
+                loadDashboard();
+              },
+            });
+          }
+        }
+
+        contextMenuList.innerHTML = "";
+        actions.forEach((item) => {
+          const li = document.createElement("li");
+          if (item.href) {
+            const link = document.createElement("a");
+            link.href = item.href;
+            link.target = "_blank";
+            link.textContent = item.label;
+            li.appendChild(link);
+          } else if (item.action) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = item.label;
+            btn.addEventListener("click", () => {
+              hideContextMenu();
+              item.action();
+            });
+            li.appendChild(btn);
+          }
+          contextMenuList.appendChild(li);
+        });
+
+        contextMenu.style.left = `${event.clientX}px`;
+        contextMenu.style.top = `${event.clientY}px`;
+        contextMenu.hidden = false;
+      }
+
+      function hideContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      window.addEventListener("click", hideContextMenu);
+      window.addEventListener("contextmenu", (event) => {
+        if (!contextMenu.contains(event.target)) return;
+        event.preventDefault();
+      });
+
+      async function loadDashboard() {
+        const url = new URL(window.location.origin + "/api/dashboard");
+        if (groupFilter.value) url.searchParams.set("group_id", groupFilter.value);
+        if (brandFilter.value) url.searchParams.set("brand", brandFilter.value);
+        if (statusFilter.value) url.searchParams.set("statuses", statusFilter.value);
+        if (showArchived.checked) url.searchParams.set("include_archived", "true");
+
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          console.error("Не удалось загрузить дашборд", await res.text());
+          return;
+        }
+        const payload = await res.json();
+        renderStatus(payload.statuses);
+        renderGroups(payload.groups);
+        renderUpcoming(payload.upcoming);
+        renderChanges(payload.recent_changes);
+      }
+
+      applyFilters.addEventListener("click", loadDashboard);
+
+      loadGroupsForFilter().then(loadDashboard);
+    </script>
+  </body>
+</html>
