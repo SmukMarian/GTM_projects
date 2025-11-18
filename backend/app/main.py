@@ -22,6 +22,7 @@ from .models import (
     CharacteristicSection,
     CharacteristicTemplate,
     Comment,
+    DashboardPayload,
     FileAttachment,
     GTMStage,
     GTMTemplate,
@@ -54,6 +55,25 @@ def health_check() -> dict[str, str]:
     """Простейший health-check эндпоинт."""
 
     return {"status": "ok"}
+
+
+@app.get("/api/dashboard", response_model=DashboardPayload)
+def get_dashboard(
+    include_archived: bool = False,
+    group_id: UUID | None = None,
+    brand: str | None = None,
+    statuses: list[ProjectStatus] | None = Query(None),
+    repo: LocalRepository = Depends(get_repository),
+) -> DashboardPayload:
+    """Собрать агрегированные данные для главного дашборда."""
+
+    status_set = set(statuses) if statuses else None
+    return repo.build_dashboard(
+        include_archived=include_archived,
+        group_id=group_id,
+        brand=brand,
+        statuses=status_set,
+    )
 
 
 @app.get("/api/groups", response_model=list[ProductGroup])

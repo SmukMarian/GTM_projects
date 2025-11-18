@@ -215,3 +215,53 @@ class ProjectExport(BaseModel):
     planned_launch: date | None = None
     current_gtm_stage: str | None = None
 
+
+class StatusSummary(BaseModel):
+    """Счётчики проектов по статусам для дашборда."""
+
+    active: int = 0
+    closed: int = 0
+    archived: int = 0
+
+
+class GroupDashboardCard(BaseModel):
+    """Сводка по продуктовой группе на дашборде."""
+
+    id: UUID
+    name: str
+    active_projects: int
+    risk: bool
+
+
+class UpcomingItem(BaseModel):
+    """Ближайшая важная дата (этап или задача)."""
+
+    project_id: UUID
+    project_name: str
+    group_name: str
+    kind: str
+    title: str
+    planned_date: date
+    days_delta: int
+    risk: bool = False
+
+
+class RecentChange(BaseModel):
+    """Элемент ленты последних изменений."""
+
+    project_id: UUID
+    project_name: str
+    group_name: str
+    occurred_at: datetime
+    summary: str
+    details: str | None = None
+
+
+class DashboardPayload(BaseModel):
+    """Комплексные данные для главного дашборда."""
+
+    statuses: StatusSummary
+    groups: list[GroupDashboardCard]
+    upcoming: list[UpcomingItem]
+    recent_changes: list[RecentChange]
+

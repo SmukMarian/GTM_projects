@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID, uuid4
@@ -22,6 +22,7 @@ from .models import (
     CharacteristicSection,
     CharacteristicTemplate,
     Comment,
+    DashboardPayload,
     FileAttachment,
     GTMTemplate,
     GTMStage,
@@ -30,9 +31,14 @@ from .models import (
     ProductGroup,
     Project,
     ProjectStatus,
+    RecentChange,
+    GroupDashboardCard,
+    StatusSummary,
+    UpcomingItem,
     Subtask,
     Task,
     TaskStatus,
+    StageStatus,
 )
 
 
@@ -639,6 +645,152 @@ class LocalRepository:
                 self.save()
                 return
         raise KeyError(f"History event {event_id} not found in project {project_id}")
+
+    # --- Dashboard aggregations ---
+    def _project_matches_filters(
+        self,
+        project: Project,
+        *,
+        include_archived: bool,
+        group_id: UUID | None,
+        brand: str | None,
+        statuses: set[ProjectStatus] | None,
+    ) -> bool:
+        if not include_archived and project.status == ProjectStatus.ARCHIVED:
+            return False
+        if group_id and project.group_id != group_id:
+            return False
+        if brand and project.brand.lower() != brand.lower():
+            return False
+        if statuses and project.status not in statuses:
+            return False
+        return True
+
+    @staticmethod
+    def _project_has_risk(project: Project, today: date) -> bool:
+        for stage in project.gtm_stages:
+            if stage.risk_flag:
+                return True
+            if stage.planned_end and stage.status not in {StageStatus.DONE, StageStatus.CANCELLED}:
+                if stage.planned_end < today:
+                    return True
+        for task in project.tasks:
+            if task.due_date and task.status != TaskStatus.DONE and task.due_date < today:
+                return True
+        return False
+
+    def build_dashboard(
+        self,
+        *,
+        include_archived: bool = False,
+        group_id: UUID | None = None,
+        brand: str | None = None,
+        statuses: set[ProjectStatus] | None = None,
+        upcoming_limit: int = 10,
+        changes_limit: int = 20,
+    ) -> DashboardPayload:
+        today = date.today()
+        filtered_projects = [
+            project
+            for project in self.store.projects
+            if self._project_matches_filters(
+                project,
+                include_archived=include_archived,
+                group_id=group_id,
+                brand=brand,
+                statuses=statuses,
+            )
+        ]
+
+        status_summary = StatusSummary()
+        for project in filtered_projects:
+            if project.status == ProjectStatus.ACTIVE:
+                status_summary.active += 1
+            elif project.status == ProjectStatus.CLOSED:
+                status_summary.closed += 1
+            elif project.status == ProjectStatus.ARCHIVED:
+                status_summary.archived += 1
+
+        if include_archived:
+            groups = list(self.store.product_groups)
+        else:
+            groups = [g for g in self.store.product_groups if g.status != g.status.ARCHIVED]
+
+        group_cards: list[GroupDashboardCard] = []
+        for group in groups:
+            group_projects = [p for p in filtered_projects if p.group_id == group.id]
+            active_count = len([p for p in group_projects if p.status != ProjectStatus.ARCHIVED])
+            risk = any(self._project_has_risk(p, today) for p in group_projects)
+            group_cards.append(
+                GroupDashboardCard(
+                    id=group.id,
+                    name=group.name,
+                    active_projects=active_count,
+                    risk=risk,
+                )
+            )
+
+        upcoming: list[UpcomingItem] = []
+        for project in filtered_projects:
+            group_name = next((g.name for g in self.store.product_groups if g.id == project.group_id), "")
+            for stage in project.gtm_stages:
+                if stage.planned_end and stage.status not in {StageStatus.DONE, StageStatus.CANCELLED}:
+                    delta = (stage.planned_end - today).days
+                    upcoming.append(
+                        UpcomingItem(
+                            project_id=project.id,
+                            project_name=project.name,
+                            group_name=group_name,
+                            kind="gtm_stage",
+                            title=stage.title,
+                            planned_date=stage.planned_end,
+                            days_delta=delta,
+                            risk=stage.risk_flag or delta < 0,
+                        )
+                    )
+            for task in project.tasks:
+                if task.due_date and task.status != TaskStatus.DONE and task.important:
+                    delta = (task.due_date - today).days
+                    upcoming.append(
+                        UpcomingItem(
+                            project_id=project.id,
+                            project_name=project.name,
+                            group_name=group_name,
+                            kind="task",
+                            title=task.title,
+                            planned_date=task.due_date,
+                            days_delta=delta,
+                            risk=delta < 0,
+                        )
+                    )
+
+        upcoming.sort(key=lambda item: item.days_delta)
+        upcoming = upcoming[:upcoming_limit]
+
+        recent_events: list[RecentChange] = []
+        for project in filtered_projects:
+            group_name = next((g.name for g in self.store.product_groups if g.id == project.group_id), "")
+            for event in project.history:
+                recent_events.append(
+                    RecentChange(
+                        project_id=project.id,
+                        project_name=project.name,
+                        group_name=group_name,
+                        occurred_at=event.occurred_at,
+                        summary=event.summary,
+                        details=event.details,
+                    )
+                )
+
+        recent_events.sort(key=lambda item: item.occurred_at, reverse=True)
+        recent_events = recent_events[:changes_limit]
+
+        return DashboardPayload(
+            statuses=status_summary,
+            groups=group_cards,
+            upcoming=upcoming,
+            recent_changes=recent_events,
+        )
 
     # --- Backups ---
     def list_backups(self, backups_dir: Path) -> list[BackupInfo]:
