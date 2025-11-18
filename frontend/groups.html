@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Продуктовые группы — Haier Project Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px 20px 0;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 20px 78px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 4px 0 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        color: var(--accent);
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 16px 0;
+      }
+
+      button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 9px 14px;
+        border-radius: 12px;
+        color: var(--text);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      @media (max-width: 1220px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 780px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .group-card {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .group-cover {
+        width: 140px;
+        height: 140px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--surface-muted);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .badge.archived {
+        background: rgba(248, 113, 113, 0.15);
+        color: #dc2626;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        color: var(--muted);
+        letter-spacing: 0.01em;
+        font-weight: 600;
+      }
+
+      tr.archived {
+        background: var(--surface-muted);
+        color: var(--muted);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font: inherit;
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .flex {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .space-between {
+        justify-content: space-between;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        font-size: 0.9rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      dialog {
+        border: none;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: var(--shadow);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .dialog-body {
+        padding: 20px;
+        min-width: 520px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .context-menu {
+        position: fixed;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        min-width: 200px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 14px;
+      }
+
+      .context-menu li:hover {
+        background: var(--accent-soft);
+      }
+
+      .context-menu button {
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .detail-panel {
+        margin-top: 16px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1200;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/templates.html">Шаблоны</a>
+        </nav>
+      </div>
+    </div>
+    <div class="page">
+      <div class="flex space-between" style="align-items: baseline">
+        <div>
+          <div class="pill">Продуктовые группы</div>
+          <h1>Управление группами</h1>
+          <p class="muted" style="margin: 0">Создавайте группы, редактируйте статусы, фильтруйте по брендам и пользовательским полям. Все операции выполняются локально.</p>
+        </div>
+        <div class="flex" style="gap: 10px; align-items: center">
+          <a href="/" title="К дашборду">⟵ Дашборд</a>
+          <a href="/projects.html" title="К списку проектов">Проекты →</a>
+          <button id="toggleView" class="ghost">Показать таблицей</button>
+          <button id="newGroup" class="primary">Добавить группу</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin: 16px 0">
+        <h2 style="margin-top: 0">Фильтры</h2>
+        <div class="grid">
+          <label>
+            Статус
+            <select id="statusFilter">
+              <option value="">Все</option>
+              <option value="active">Активна</option>
+              <option value="archived">Архивирована</option>
+            </select>
+          </label>
+          <label>
+            Бренд
+            <input id="brandFilter" type="text" placeholder="Например, Haier" />
+          </label>
+          <label>
+            Пользовательское поле — ключ
+            <input id="extraKeyFilter" type="text" placeholder="Например, регион" />
+          </label>
+          <label>
+            Пользовательское поле — значение
+            <input id="extraValueFilter" type="text" placeholder="Например, EMEA" />
+          </label>
+          <label class="flex" style="margin-top: 22px">
+            <input id="showArchived" type="checkbox" />
+            <span>Показывать архивные</span>
+          </label>
+        </div>
+        <div class="toolbar" style="justify-content: flex-end">
+          <button id="applyFilters">Применить</button>
+          <button id="resetFilters" class="ghost">Сбросить</button>
+        </div>
+      </div>
+
+      <div id="summary" class="muted" style="margin-bottom: 12px"></div>
+
+      <div id="cardView" class="grid"></div>
+
+    <div id="tableView" class="card" style="display: none">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Бренды</th>
+            <th>Описание</th>
+            <th>Пользовательские поля</th>
+          </tr>
+        </thead>
+        <tbody id="groupRows"></tbody>
+      </table>
+    </div>
+
+    <div id="details" class="card" style="display: none">
+      <h3 style="margin-top: 0">Карточка группы</h3>
+      <div class="detail-panel" id="detailContent"></div>
+    </div>
+
+    <dialog id="groupDialog">
+      <div class="dialog-body">
+        <div class="flex space-between" style="align-items: start">
+          <div>
+            <h3 id="dialogTitle" style="margin: 0"></h3>
+            <p class="muted" style="margin: 4px 0 0">Заполните основные поля и при необходимости добавьте пользовательские.</p>
+          </div>
+          <button id="closeDialog" class="ghost">✕</button>
+        </div>
+        <form id="groupForm" class="detail-panel">
+          <label>Название <input name="name" required /></label>
+          <label>Описание <textarea name="description" rows="3"></textarea></label>
+          <label>
+            Статус
+            <select name="status">
+              <option value="active">Активна</option>
+              <option value="archived">Архивирована</option>
+            </select>
+          </label>
+          <label>Бренды (через запятую) <input name="brands" placeholder="Haier, Casarte" /></label>
+          <div>
+            <div class="flex space-between" style="margin-bottom: 6px">
+              <span>Пользовательские поля</span>
+              <button id="addExtraField" class="ghost" type="button">+ Добавить поле</button>
+            </div>
+            <div id="extraFields"></div>
+          </div>
+          <div class="flex" style="justify-content: flex-end; margin-top: 8px">
+            <button type="button" id="cancelDialog" class="ghost">Отмена</button>
+            <button type="submit" class="primary">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const statusFilter = document.getElementById("statusFilter");
+      const brandFilter = document.getElementById("brandFilter");
+      const extraKeyFilter = document.getElementById("extraKeyFilter");
+      const extraValueFilter = document.getElementById("extraValueFilter");
+      const showArchived = document.getElementById("showArchived");
+      const applyFilters = document.getElementById("applyFilters");
+      const resetFilters = document.getElementById("resetFilters");
+      const toggleViewBtn = document.getElementById("toggleView");
+      const newGroupBtn = document.getElementById("newGroup");
+      const summary = document.getElementById("summary");
+      const cardView = document.getElementById("cardView");
+      const tableView = document.getElementById("tableView");
+      const groupRows = document.getElementById("groupRows");
+      const detailBlock = document.getElementById("details");
+      const detailContent = document.getElementById("detailContent");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+      const filterStorageKey = "hpt-groups-filters";
+
+      const dialog = document.getElementById("groupDialog");
+      const dialogTitle = document.getElementById("dialogTitle");
+      const groupForm = document.getElementById("groupForm");
+      const closeDialogBtn = document.getElementById("closeDialog");
+      const cancelDialogBtn = document.getElementById("cancelDialog");
+      const extraFields = document.getElementById("extraFields");
+      const addExtraFieldBtn = document.getElementById("addExtraField");
+
+      let viewMode = "cards";
+      let groups = [];
+      let projects = [];
+      let selectedGroupId = null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialGroupId = urlParams.get("group");
+      let editingGroupId = null;
+      const coverPlaceholder =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%2310a37f'/><stop offset='1' stop-color='%2319b88f'/></linearGradient></defs><rect width='200' height='200' rx='20' fill='%23101827'/><rect x='16' y='16' width='168' height='168' rx='18' fill='%230d1521' stroke='url(%23g)' stroke-width='4'/><text x='100' y='110' fill='%2319b88f' font-family='Inter,Segoe UI,Arial' font-size='44' font-weight='800' text-anchor='middle'>HPT</text></svg>`
+        );
+
+      function hideContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      function showContextMenu(x, y, actions) {
+        contextMenuList.innerHTML = "";
+        actions.forEach((action) => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.textContent = action.label;
+          btn.addEventListener("click", () => {
+            hideContextMenu();
+            action.onClick();
+          });
+          li.appendChild(btn);
+          contextMenuList.appendChild(li);
+        });
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.hidden = false;
+      }
+
+      document.addEventListener("click", hideContextMenu);
+      document.addEventListener("contextmenu", (e) => {
+        if (!contextMenu.contains(e.target)) return;
+        e.preventDefault();
+      });
+
+      function renderSummary() {
+        const active = groups.filter((g) => g.status === "active").length;
+        const archived = groups.filter((g) => g.status === "archived").length;
+        summary.textContent = `Найдено групп: ${groups.length}. Активных: ${active}. Архивных: ${archived}.`;
+      }
+
+      function renderBrands(list) {
+        if (!list || list.length === 0) return "—";
+        return list.map((b) => `<span class="chip">${b}</span>`).join(" ");
+      }
+
+      function renderExtra(extra) {
+        const entries = Object.entries(extra || {});
+        if (entries.length === 0) return "—";
+        return entries
+          .map(([k, v]) => `<span class="chip"><strong>${k}:</strong> ${v ?? ""}</span>`)
+          .join(" ");
+      }
+
+      function groupProjects(groupId) {
+        return projects.filter((p) => p.group_id === groupId);
+      }
+
+      function projectCoverUrl(project) {
+        const images = project.images || [];
+        const cover = images.find((i) => i.is_cover) || images[0];
+        return cover ? `/api/projects/${project.id}/images/${cover.id}/download` : null;
+      }
+
+      function groupCoverUrl(groupId) {
+        const related = groupProjects(groupId);
+        for (const project of related) {
+          const cover = projectCoverUrl(project);
+          if (cover) return cover;
+        }
+        return null;
+      }
+
+      function projectStageProgress(project) {
+        const stages = project.gtm_stages || [];
+        if (!stages.length) return 0;
+        const done = stages.filter((s) => s.status === "done").length;
+        return Math.round((done / stages.length) * 100);
+      }
+
+      function hasOverdue(project) {
+        const today = new Date();
+        const overdueStage = (project.gtm_stages || []).some(
+          (s) => s.planned_end && ["done", "cancelled"].indexOf(s.status) === -1 && new Date(s.planned_end) < today
+        );
+        const overdueTask = (project.tasks || []).some(
+          (t) => t.due_date && t.status !== "done" && new Date(t.due_date) < today
+        );
+        return overdueStage || overdueTask;
+      }
+
+      function groupStats(groupId) {
+        const related = groupProjects(groupId);
+        const total = related.length;
+        const active = related.filter((p) => p.status === "active").length;
+        const closed = related.filter((p) => p.status === "closed").length;
+        const archived = related.filter((p) => p.status === "archived").length;
+        const overdue = related.filter((p) => hasOverdue(p)).length;
+        const avgProgress = total
+          ? Math.round(related.reduce((acc, p) => acc + projectStageProgress(p), 0) / total)
+          : 0;
+        const completion = total ? Math.round((closed / total) * 100) : 0;
+        return { total, active, closed, archived, overdue, avgProgress, completion };
+      }
+
+      function renderCardView() {
+        cardView.innerHTML = "";
+        groups.forEach((group) => {
+          const card = document.createElement("div");
+          card.className = "card group-card";
+          if (group.status === "archived") {
+            card.style.opacity = 0.9;
+          }
+          const related = groupProjects(group.id);
+          const stats = groupStats(group.id);
+          const cover = groupCoverUrl(group.id);
+          card.innerHTML = `
+            <div>
+              <img class="group-cover" src="${cover || coverPlaceholder}" alt="Обложка группы" />
+              <div class="muted" style="margin-top: 6px; font-size: 0.85rem">${
+                related.length ? `Проектов: ${related.length}` : "Нет проектов"
+              }</div>
+            </div>
+            <div class="flex" style="gap: 10px; flex-direction: column; align-items: flex-start;">
+              <div class="flex space-between" style="width: 100%; align-items: start">
+                <div>
+                  <h3 style="margin: 0">${group.name}</h3>
+                  <p class="muted" style="margin: 2px 0 0">${group.description || "Описание не заполнено"}</p>
+                </div>
+                <span class="badge ${group.status === "archived" ? "archived" : ""}">${
+                  group.status === "archived" ? "Архив" : "Активна"
+                }</span>
+              </div>
+              <div class="flex" style="gap: 6px; flex-wrap: wrap; width: 100%">
+                <span class="chip">Активных: ${stats.active}</span>
+                <span class="chip">Закрытых: ${stats.closed}</span>
+                <span class="chip">Архив: ${stats.archived}</span>
+                <span class="chip">Просрочки: ${stats.overdue}</span>
+              </div>
+              <div class="flex" style="gap: 6px; flex-wrap: wrap; width: 100%">
+                <span class="chip">Бренды:</span> ${renderBrands(group.brands)}
+              </div>
+              <div class="flex" style="gap: 6px; flex-wrap: wrap; width: 100%">
+                <span class="chip">Поля:</span> ${renderExtra(group.extra_fields)}
+              </div>
+              <div style="width: 100%">
+                <div class="progress-bar"><div class="progress-fill" style="width:${stats.avgProgress}%"></div></div>
+                <small class="muted">Средний прогресс GTM: ${stats.avgProgress}% · Завершено проектов: ${stats.completion}%</small>
+              </div>
+              <div class="flex" style="gap: 8px; width: 100%; justify-content: flex-end">
+                <button class="ghost" data-action="details">Быстрый просмотр</button>
+                <button class="ghost" data-action="open-projects">Перейти в группу</button>
+              </div>
+            </div>
+          `;
+          card.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showGroupMenu(e.clientX, e.clientY, group);
+          });
+          card.querySelector("button[data-action='details']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openDetails(group.id);
+          });
+          card.querySelector("button[data-action='open-projects']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.href = `/projects.html?group_id=${group.id}`;
+          });
+          cardView.appendChild(card);
+        });
+      }
+
+      function renderTableView() {
+        groupRows.innerHTML = "";
+        groups.forEach((group) => {
+          const tr = document.createElement("tr");
+          tr.dataset.id = group.id;
+          if (group.status === "archived") tr.classList.add("archived");
+          tr.innerHTML = `
+            <td>${group.name}</td>
+            <td>${group.status === "archived" ? "Архив" : "Активна"}</td>
+            <td>${group.brands.join(", ") || "—"}</td>
+            <td>${group.description || "—"}</td>
+            <td>${renderExtra(group.extra_fields)}</td>
+          `;
+          tr.addEventListener("click", () => openDetails(group.id));
+          tr.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showGroupMenu(e.clientX, e.clientY, group);
+          });
+          groupRows.appendChild(tr);
+        });
+      }
+
+      function showGroupMenu(x, y, group) {
+        showContextMenu(x, y, [
+          { label: "Открыть", onClick: () => openDetails(group.id) },
+          { label: "Редактировать", onClick: () => openEdit(group) },
+          {
+            label: group.status === "archived" ? "Восстановить" : "Архивировать",
+            onClick: () => toggleArchive(group),
+          },
+          { label: "Удалить", onClick: () => deleteGroup(group) },
+        ]);
+      }
+
+      function openDetails(id) {
+        selectedGroupId = id;
+        const group = groups.find((g) => g.id === id);
+        if (!group) return;
+        detailBlock.style.display = "block";
+        detailContent.innerHTML = `
+          <div class="flex space-between">
+            <div>
+              <h4 style="margin: 0">${group.name}</h4>
+              <div class="muted">${group.status === "archived" ? "Архивная" : "Активная"}</div>
+            </div>
+            <div class="flex" style="gap: 8px">
+              <button class="ghost" onclick="openEditById('${group.id}')">Редактировать</button>
+              <button class="ghost" onclick="toggleArchiveById('${group.id}')">${
+                group.status === "archived" ? "Восстановить" : "Архивировать"
+              }</button>
+            </div>
+          </div>
+          <div><strong>Описание:</strong> ${group.description || "—"}</div>
+          <div><strong>Бренды:</strong> ${renderBrands(group.brands)}</div>
+          <div><strong>Пользовательские поля:</strong> ${renderExtra(group.extra_fields)}</div>
+        `;
+      }
+
+      window.openEditById = (id) => {
+        const group = groups.find((g) => g.id === id);
+        if (group) openEdit(group);
+      };
+
+      window.toggleArchiveById = (id) => {
+        const group = groups.find((g) => g.id === id);
+        if (group) toggleArchive(group);
+      };
+
+      function resetExtraFields() {
+        extraFields.innerHTML = "";
+      }
+
+      function addExtraFieldRow(key = "", value = "") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex";
+        wrapper.style.gap = "8px";
+        const keyInput = document.createElement("input");
+        keyInput.placeholder = "Ключ";
+        keyInput.value = key;
+        const valueInput = document.createElement("input");
+        valueInput.placeholder = "Значение";
+        valueInput.value = value;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "ghost";
+        removeBtn.textContent = "✕";
+        removeBtn.addEventListener("click", () => wrapper.remove());
+        wrapper.append(keyInput, valueInput, removeBtn);
+        extraFields.appendChild(wrapper);
+      }
+
+      function openCreate() {
+        editingGroupId = null;
+        dialogTitle.textContent = "Новая продуктовая группа";
+        groupForm.reset();
+        resetExtraFields();
+        dialog.showModal();
+      }
+
+      function openEdit(group) {
+        editingGroupId = group.id;
+        dialogTitle.textContent = "Редактирование группы";
+        groupForm.elements.name.value = group.name;
+        groupForm.elements.description.value = group.description || "";
+        groupForm.elements.status.value = group.status;
+        groupForm.elements.brands.value = group.brands.join(", ");
+        resetExtraFields();
+        Object.entries(group.extra_fields || {}).forEach(([k, v]) => addExtraFieldRow(k, v));
+        dialog.showModal();
+      }
+
+      function collectExtraFields() {
+        const data = {};
+        extraFields.querySelectorAll("div.flex").forEach((row) => {
+          const [keyInput, valueInput] = row.querySelectorAll("input");
+          const key = keyInput.value.trim();
+          if (!key) return;
+          data[key] = valueInput.value;
+        });
+        return data;
+      }
+
+      async function submitForm(event) {
+        event.preventDefault();
+        const formData = new FormData(groupForm);
+        const payload = {
+          name: formData.get("name"),
+          description: formData.get("description") || null,
+          status: formData.get("status"),
+          brands: (formData.get("brands") || "")
+            .split(",")
+            .map((b) => b.trim())
+            .filter(Boolean),
+          extra_fields: collectExtraFields(),
+        };
+
+        if (editingGroupId) {
+          const existing = groups.find((g) => g.id === editingGroupId);
+          const body = { ...existing, ...payload, updated_at: new Date().toISOString() };
+          await saveGroup(`/api/groups/${editingGroupId}`, body, "PUT");
+        } else {
+          await saveGroup("/api/groups", payload, "POST");
+        }
+        dialog.close();
+        await loadGroups();
+      }
+
+      async function saveGroup(url, body, method) {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const detail = await res.text();
+          alert(`Не удалось сохранить группу. ${detail}`);
+        }
+      }
+
+      async function toggleArchive(group) {
+        const updated = {
+          ...group,
+          status: group.status === "archived" ? "active" : "archived",
+          updated_at: new Date().toISOString(),
+        };
+        await saveGroup(`/api/groups/${group.id}`, updated, "PUT");
+        await loadGroups();
+      }
+
+      async function deleteGroup(group) {
+        if (!confirm(`Удалить группу «${group.name}»? Действие необратимо.`)) return;
+        const res = await fetch(`/api/groups/${group.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const detail = await res.text();
+          alert(detail || "Не удалось удалить группу.");
+          return;
+        }
+        if (selectedGroupId === group.id) {
+          detailBlock.style.display = "none";
+        }
+        await loadGroups();
+      }
+
+      function applyViewMode(mode) {
+        viewMode = mode;
+        if (viewMode === "cards") {
+          cardView.style.display = "grid";
+          tableView.style.display = "none";
+          toggleViewBtn.textContent = "Показать таблицей";
+        } else {
+          cardView.style.display = "none";
+          tableView.style.display = "block";
+          toggleViewBtn.textContent = "Показать плиткой";
+        }
+      }
+
+      function toggleView() {
+        applyViewMode(viewMode === "cards" ? "table" : "cards");
+        persistFilters();
+      }
+
+      function resetFiltersState() {
+        statusFilter.value = "";
+        brandFilter.value = "";
+        extraKeyFilter.value = "";
+        extraValueFilter.value = "";
+        showArchived.checked = false;
+      }
+
+      function persistFilters() {
+        const state = {
+          status: statusFilter.value,
+          brand: brandFilter.value.trim(),
+          extraKey: extraKeyFilter.value.trim(),
+          extraValue: extraValueFilter.value.trim(),
+          includeArchived: showArchived.checked,
+          viewMode,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          statusFilter.value = state.status || "";
+          brandFilter.value = state.brand || "";
+          extraKeyFilter.value = state.extraKey || "";
+          extraValueFilter.value = state.extraValue || "";
+          showArchived.checked = !!state.includeArchived;
+          applyViewMode(state.viewMode === "table" ? "table" : "cards");
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры групп", e);
+          localStorage.removeItem(filterStorageKey);
+        }
+      }
+
+      async function loadProjectsForStats() {
+        const res = await fetch("/api/projects?include_archived=true");
+        if (!res.ok) {
+          console.warn("Не удалось загрузить проекты для статистики");
+          return;
+        }
+        projects = await res.json();
+      }
+
+      async function loadGroups() {
+        await loadProjectsForStats();
+        const params = new URLSearchParams();
+        params.set("include_archived", showArchived.checked);
+        if (statusFilter.value) params.append("status", statusFilter.value);
+        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
+        if (extraKeyFilter.value) params.set("extra_key", extraKeyFilter.value.trim());
+        if (extraValueFilter.value) params.set("extra_value", extraValueFilter.value.trim());
+        const res = await fetch(`/api/groups?${params.toString()}`);
+        if (!res.ok) {
+          alert("Не удалось загрузить группы");
+          return;
+        }
+        groups = await res.json();
+        renderSummary();
+        renderCardView();
+        renderTableView();
+        if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
+          selectedGroupId = initialGroupId;
+        }
+        if (selectedGroupId) openDetails(selectedGroupId);
+      }
+
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadGroups();
+      });
+      resetFilters.addEventListener("click", () => {
+        resetFiltersState();
+        applyViewMode("cards");
+        localStorage.removeItem(filterStorageKey);
+        loadGroups();
+      });
+      toggleViewBtn.addEventListener("click", toggleView);
+      newGroupBtn.addEventListener("click", openCreate);
+      groupForm.addEventListener("submit", submitForm);
+      addExtraFieldBtn.addEventListener("click", () => addExtraFieldRow());
+      closeDialogBtn.addEventListener("click", () => dialog.close());
+      cancelDialogBtn.addEventListener("click", () => dialog.close());
+
+      applyViewMode(viewMode);
+      restoreFilters();
+      loadGroups();
+    </script>
+  </body>
+</html>

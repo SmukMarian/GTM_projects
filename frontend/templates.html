@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Шаблоны — Haier Project Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
+      .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 32px 20px 88px;
+      }
+
+      .pill {
+        display: inline-flex;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+        margin-bottom: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .template-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .template-card h3 {
+        margin: 0;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+      }
+
+      button.danger {
+        background: var(--danger);
+        color: #fff;
+        border: none;
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/templates.html">Шаблоны</a>
+        </nav>
+      </div>
+    </div>
+    <div class="page">
+      <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+        <div>
+          <span class="pill">Шаблоны</span>
+          <h1 style="margin: 6px 0 4px">Управление шаблонами</h1>
+          <p class="muted" style="margin: 0">GTM и характеристики для повторного использования.</p>
+        </div>
+        <div class="actions">
+          <button class="primary" id="newGtm">+ Шаблон GTM</button>
+          <button class="primary" id="newChar">+ Шаблон характеристик</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top: 0">Шаблоны GTM-этапов</h2>
+        <div class="grid" id="gtmGrid"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top: 0">Шаблоны характеристик</h2>
+        <div class="grid" id="charGrid"></div>
+      </div>
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const gtmGrid = document.getElementById("gtmGrid");
+      const charGrid = document.getElementById("charGrid");
+      const newGtmBtn = document.getElementById("newGtm");
+      const newCharBtn = document.getElementById("newChar");
+
+      function renderGtm(templates) {
+        gtmGrid.innerHTML = "";
+        if (!templates.length) {
+          gtmGrid.innerHTML = '<p class="muted">Шаблоны GTM не добавлены</p>';
+          return;
+        }
+        templates.forEach((tpl) => {
+          const stages = tpl.stages || [];
+          const tasks = stages.reduce((sum, stage) => sum + (stage.tasks?.length || 0), 0);
+          const div = document.createElement("div");
+          div.className = "template-card";
+          div.innerHTML = `
+            <h3>${tpl.name}</h3>
+            <div class="muted">Этапов: ${stages.length} · Задач: ${tasks}</div>
+            <div class="actions">
+              <button class="ghost" data-action="rename">Переименовать</button>
+              <button class="danger" data-action="delete">Удалить</button>
+            </div>
+          `;
+          div.querySelector('[data-action="rename"]').addEventListener("click", async () => {
+            const nextName = prompt("Новое имя шаблона", tpl.name);
+            if (!nextName) return;
+            await fetch(`/api/gtm-templates/${tpl.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...tpl, name: nextName }),
+            });
+            loadTemplates();
+          });
+          div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+            if (!confirm("Удалить шаблон GTM?")) return;
+            await fetch(`/api/gtm-templates/${tpl.id}`, { method: "DELETE" });
+            loadTemplates();
+          });
+          gtmGrid.appendChild(div);
+        });
+      }
+
+      function renderChars(templates) {
+        charGrid.innerHTML = "";
+        if (!templates.length) {
+          charGrid.innerHTML = '<p class="muted">Шаблоны характеристик не добавлены</p>';
+          return;
+        }
+        templates.forEach((tpl) => {
+          const sections = tpl.sections || [];
+          const fields = sections.reduce((sum, s) => sum + (s.fields?.length || 0), 0);
+          const div = document.createElement("div");
+          div.className = "template-card";
+          div.innerHTML = `
+            <h3>${tpl.name}</h3>
+            <div class="muted">Секций: ${sections.length} · Полей: ${fields}</div>
+            <div class="actions">
+              <button class="ghost" data-action="rename">Переименовать</button>
+              <button class="danger" data-action="delete">Удалить</button>
+            </div>
+          `;
+          div.querySelector('[data-action="rename"]').addEventListener("click", async () => {
+            const nextName = prompt("Новое имя шаблона", tpl.name);
+            if (!nextName) return;
+            await fetch(`/api/characteristic-templates/${tpl.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...tpl, name: nextName }),
+            });
+            loadTemplates();
+          });
+          div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+            if (!confirm("Удалить шаблон характеристик?")) return;
+            await fetch(`/api/characteristic-templates/${tpl.id}`, { method: "DELETE" });
+            loadTemplates();
+          });
+          charGrid.appendChild(div);
+        });
+      }
+
+      async function loadTemplates() {
+        const [gtmRes, charRes] = await Promise.all([
+          fetch("/api/gtm-templates"),
+          fetch("/api/characteristic-templates"),
+        ]);
+        renderGtm(gtmRes.ok ? await gtmRes.json() : []);
+        renderChars(charRes.ok ? await charRes.json() : []);
+      }
+
+      async function createGtm() {
+        await fetch("/api/gtm-templates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Новый шаблон", description: null, stages: [] }),
+        });
+        loadTemplates();
+      }
+
+      async function createChar() {
+        await fetch("/api/characteristic-templates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Новый шаблон", description: null, sections: [] }),
+        });
+        loadTemplates();
+      }
+
+      newGtmBtn.addEventListener("click", createGtm);
+      newCharBtn.addEventListener("click", createChar);
+      loadTemplates();
+    </script>
+  </body>
+</html>
