@@ -248,6 +248,56 @@
         padding: 12px;
       }
 
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 18px;
+        z-index: 1100;
+      }
+
+      .overlay.active {
+        display: flex;
+      }
+
+      .overlay-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.38);
+        backdrop-filter: blur(4px);
+      }
+
+      .overlay-card {
+        position: relative;
+        width: min(960px, 100%);
+        max-height: 90vh;
+        overflow: auto;
+        background: var(--surface);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: 0 26px 60px rgba(0, 0, 0, 0.3);
+        padding: 22px 22px 18px;
+        z-index: 1;
+      }
+
+      .overlay-card h3 {
+        margin-top: 0;
+      }
+
+      .overlay-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .card-image {
         width: 120px;
         height: 120px;
@@ -306,6 +356,12 @@
         color: var(--muted);
         letter-spacing: 0.01em;
         font-weight: 600;
+      }
+
+      .table-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       tr.archived {
@@ -555,15 +611,20 @@
             <th>GTM-этап</th>
             <th>Плановая дата</th>
             <th>Приоритет</th>
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody id="projectRows"></tbody>
       </table>
     </div>
 
-    <div id="details" class="card" style="display: none">
-      <h3 style="margin-top: 0">Карточка проекта</h3>
-      <div class="detail-panel" id="detailContent"></div>
+    <div id="detailsOverlay" class="overlay" hidden>
+      <div class="overlay-backdrop" aria-hidden="true"></div>
+      <div class="overlay-card">
+        <button class="ghost overlay-close" id="closeDetails" aria-label="Закрыть быстрый просмотр">✕</button>
+        <h3 style="margin: 0 0 10px">Быстрый просмотр проекта</h3>
+        <div class="detail-panel" id="detailContent"></div>
+      </div>
     </div>
 
     <dialog id="projectDialog">
@@ -655,8 +716,9 @@
       const cardView = document.getElementById("cardView");
       const tableView = document.getElementById("tableView");
       const projectRows = document.getElementById("projectRows");
-      const detailBlock = document.getElementById("details");
+      const detailOverlay = document.getElementById("detailsOverlay");
       const detailContent = document.getElementById("detailContent");
+      const closeDetailsBtn = document.getElementById("closeDetails");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
       const filterStorageKey = "hpt-projects-filters";
@@ -695,6 +757,23 @@
       const urlParams = new URLSearchParams(window.location.search);
       const initialGroupId = urlParams.get("group_id");
       let stageOptions = [];
+
+      closeDetailsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeDetails();
+      });
+
+      detailOverlay.addEventListener("click", (e) => {
+        if (e.target.classList.contains("overlay-backdrop")) {
+          closeDetails();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeDetails();
+        }
+      });
 
       function resetFiltersState() {
         brandFilter.value = "";
@@ -877,8 +956,22 @@
             <td>${currentStageName(project)}</td>
             <td>${formatDate(project.planned_launch)}</td>
             <td>${project.priority ? priorityLabels[project.priority] : "—"}</td>
+            <td>
+              <div class="table-actions">
+                <button data-action="open">Открыть</button>
+                <button data-action="preview">Быстрый просмотр</button>
+              </div>
+            </td>
           `;
           tr.addEventListener("click", () => openDetails(project.id));
+          tr.querySelector("button[data-action='open']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.href = `/project.html?id=${project.id}`;
+          });
+          tr.querySelector("button[data-action='preview']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openDetails(project.id);
+          });
           tr.addEventListener("contextmenu", (e) => openContextMenu(e, project));
           projectRows.appendChild(tr);
         });
@@ -903,7 +996,7 @@
         selectedProjectId = id;
         const project = projects.find((p) => p.id === id);
         if (!project) return;
-        detailBlock.style.display = "block";
+        detailOverlay.classList.add("active");
         const customFieldsBlock = Object.entries(project.custom_fields || {})
           .map(([k, v]) => `<span class="chip">${k}: ${v ?? "—"}</span>`)
           .join(" ");
@@ -964,6 +1057,10 @@
             <button class="ghost" onclick="deleteProject('${project.id}')">🗑 Удалить</button>
           </div>
         `;
+      }
+
+      function closeDetails() {
+        detailOverlay.classList.remove("active");
       }
 
       function addCustomFieldRow(key = "", value = "") {
@@ -1206,10 +1303,10 @@
           alert("Не удалось удалить проект");
           return;
         }
-        selectedProjectId = null;
-        detailBlock.style.display = "none";
-        await loadProjects();
-      }
+          selectedProjectId = null;
+          closeDetails();
+          await loadProjects();
+        }
 
       function initContextMenuClosing() {
         document.addEventListener("click", (e) => {

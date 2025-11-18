@@ -270,6 +270,12 @@
         font-weight: 600;
       }
 
+      .table-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
       tr.archived {
         background: var(--surface-muted);
         color: var(--muted);
@@ -499,6 +505,7 @@
             <th>Бренды</th>
             <th>Описание</th>
             <th>Пользовательские поля</th>
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody id="groupRows"></tbody>
@@ -769,8 +776,22 @@
             <td>${group.brands.join(", ") || "—"}</td>
             <td>${group.description || "—"}</td>
             <td>${renderExtra(group.extra_fields)}</td>
+            <td>
+              <div class="table-actions">
+                <button data-action="open">Открыть группу</button>
+                <button data-action="projects">Проекты</button>
+              </div>
+            </td>
           `;
           tr.addEventListener("click", () => openDetails(group.id));
+          tr.querySelector("button[data-action='open']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openDetails(group.id);
+          });
+          tr.querySelector("button[data-action='projects']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.href = `/projects.html?group_id=${group.id}`;
+          });
           tr.addEventListener("contextmenu", (e) => {
             e.preventDefault();
             showGroupMenu(e.clientX, e.clientY, group);
