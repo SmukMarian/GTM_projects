@@ -143,6 +143,10 @@ class LocalRepository:
         include_archived: bool = True,
         group_id: UUID | None = None,
         statuses: set[ProjectStatus] | None = None,
+        brand: str | None = None,
+        current_stage_id: UUID | None = None,
+        planned_from: date | None = None,
+        planned_to: date | None = None,
     ) -> list[Project]:
         projects: Iterable[Project] = self.store.projects
         if not include_archived:
@@ -151,6 +155,22 @@ class LocalRepository:
             projects = [p for p in projects if p.group_id == group_id]
         if statuses:
             projects = [p for p in projects if p.status in statuses]
+        if brand:
+            projects = [p for p in projects if p.brand.lower() == brand.lower()]
+        if current_stage_id:
+            projects = [p for p in projects if p.current_gtm_stage_id == current_stage_id]
+        if planned_from:
+            projects = [
+                p
+                for p in projects
+                if p.planned_launch is not None and p.planned_launch >= planned_from
+            ]
+        if planned_to:
+            projects = [
+                p
+                for p in projects
+                if p.planned_launch is not None and p.planned_launch <= planned_to
+            ]
         return list(projects)
 
     def get_project(self, project_id: UUID) -> Project | None:

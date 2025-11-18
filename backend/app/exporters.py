@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import date
 from io import BytesIO
 from typing import Iterable
+from uuid import UUID
 
 from openpyxl import Workbook
 
@@ -25,6 +27,10 @@ def export_projects_to_excel(
     groups: Iterable[ProductGroup],
     statuses: set[ProjectStatus] | None = None,
     include_archived: bool = True,
+    brand: str | None = None,
+    current_stage_id: UUID | None = None,
+    planned_from: date | None = None,
+    planned_to: date | None = None,
 ) -> bytes:
     """Сформировать Excel-файл со списком проектов."""
 
@@ -33,6 +39,22 @@ def export_projects_to_excel(
         projects_list = [p for p in projects_list if p.status in statuses]
     if not include_archived:
         projects_list = [p for p in projects_list if p.status != ProjectStatus.ARCHIVED]
+    if brand:
+        projects_list = [p for p in projects_list if p.brand.lower() == brand.lower()]
+    if current_stage_id:
+        projects_list = [p for p in projects_list if p.current_gtm_stage_id == current_stage_id]
+    if planned_from:
+        projects_list = [
+            p
+            for p in projects_list
+            if p.planned_launch is not None and p.planned_launch >= planned_from
+        ]
+    if planned_to:
+        projects_list = [
+            p
+            for p in projects_list
+            if p.planned_launch is not None and p.planned_launch <= planned_to
+        ]
 
     group_name_by_id = {group.id: group.name for group in groups}
 

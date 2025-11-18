@@ -5,6 +5,7 @@
 и раздача статических файлов из каталога ``frontend``.
 """
 
+from datetime import date
 from io import BytesIO
 from pathlib import Path
 from uuid import UUID
@@ -139,18 +140,34 @@ def list_projects(
     include_archived: bool = True,
     group_id: UUID | None = None,
     status: list[ProjectStatus] | None = Query(default=None),
+    brand: str | None = None,
+    current_stage_id: UUID | None = None,
+    planned_from: date | None = None,
+    planned_to: date | None = None,
     repo: LocalRepository = Depends(get_repository),
 ) -> list[Project]:
     """Вернуть список проектов с фильтрами по статусу и группе."""
 
     statuses = set(status) if status else None
-    return repo.list_projects(include_archived=include_archived, group_id=group_id, statuses=statuses)
+    return repo.list_projects(
+        include_archived=include_archived,
+        group_id=group_id,
+        statuses=statuses,
+        brand=brand,
+        current_stage_id=current_stage_id,
+        planned_from=planned_from,
+        planned_to=planned_to,
+    )
 
 
 @app.get("/api/export/projects", response_class=StreamingResponse)
 def export_projects(
     include_archived: bool = True,
     status: list[ProjectStatus] | None = Query(default=None),
+    brand: str | None = None,
+    current_stage_id: UUID | None = None,
+    planned_from: date | None = None,
+    planned_to: date | None = None,
     repo: LocalRepository = Depends(get_repository),
 ) -> StreamingResponse:
     """Экспортировать список проектов в Excel со статусами и основными полями."""
@@ -161,6 +178,10 @@ def export_projects(
         groups=repo.list_groups(include_archived=True),
         statuses=statuses,
         include_archived=include_archived,
+        brand=brand,
+        current_stage_id=current_stage_id,
+        planned_from=planned_from,
+        planned_to=planned_to,
     )
 
     headers = {"Content-Disposition": "attachment; filename=projects.xlsx"}
