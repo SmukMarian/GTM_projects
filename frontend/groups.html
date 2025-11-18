@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Продуктовые группы — Haier Project Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+      }
+
+      body {
+        margin: 0 auto;
+        max-width: 1220px;
+        padding: 36px 22px 78px;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 4px 0 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        color: var(--accent);
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 16px 0;
+      }
+
+      button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 9px 14px;
+        border-radius: 12px;
+        color: var(--text);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .group-card {
+        display: grid;
+        gap: 8px;
+        grid-template-rows: auto auto 1fr auto;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .badge.archived {
+        background: rgba(248, 113, 113, 0.15);
+        color: #dc2626;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        color: var(--muted);
+        letter-spacing: 0.01em;
+        font-weight: 600;
+      }
+
+      tr.archived {
+        background: var(--surface-muted);
+        color: var(--muted);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font: inherit;
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .flex {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .space-between {
+        justify-content: space-between;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        font-size: 0.9rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      dialog {
+        border: none;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: var(--shadow);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .dialog-body {
+        padding: 20px;
+        min-width: 520px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .context-menu {
+        position: fixed;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        min-width: 200px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 14px;
+      }
+
+      .context-menu li:hover {
+        background: var(--accent-soft);
+      }
+
+      .context-menu button {
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .detail-panel {
+        margin-top: 16px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1200;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="flex space-between">
+      <div>
+        <div class="pill">Продуктовые группы</div>
+        <h1>Управление группами</h1>
+        <p class="muted">Создавайте группы, редактируйте статусы, фильтруйте по брендам и пользовательским полям. Все операции выполняются локально.</p>
+      </div>
+      <div class="flex" style="gap: 8px">
+        <a href="/" title="К дашборду">⟵ Дашборд</a>
+        <a href="/projects.html" title="К списку проектов">Проекты →</a>
+        <button id="toggleView" class="ghost">Показать таблицей</button>
+        <button id="newGroup" class="primary">Добавить группу</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin: 16px 0">
+      <h2 style="margin-top: 0">Фильтры</h2>
+      <div class="grid">
+        <label>
+          Статус
+          <select id="statusFilter">
+            <option value="">Все</option>
+            <option value="active">Активна</option>
+            <option value="archived">Архивирована</option>
+          </select>
+        </label>
+        <label>
+          Бренд
+          <input id="brandFilter" type="text" placeholder="Например, Haier" />
+        </label>
+        <label>
+          Пользовательское поле — ключ
+          <input id="extraKeyFilter" type="text" placeholder="Например, регион" />
+        </label>
+        <label>
+          Пользовательское поле — значение
+          <input id="extraValueFilter" type="text" placeholder="Например, EMEA" />
+        </label>
+        <label class="flex" style="margin-top: 22px">
+          <input id="showArchived" type="checkbox" />
+          <span>Показывать архивные</span>
+        </label>
+      </div>
+      <div class="toolbar" style="justify-content: flex-end">
+        <button id="applyFilters">Применить</button>
+        <button id="resetFilters" class="ghost">Сбросить</button>
+      </div>
+    </div>
+
+    <div id="summary" class="muted" style="margin-bottom: 12px"></div>
+
+    <div id="cardView" class="grid"></div>
+
+    <div id="tableView" class="card" style="display: none">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Бренды</th>
+            <th>Описание</th>
+            <th>Пользовательские поля</th>
+          </tr>
+        </thead>
+        <tbody id="groupRows"></tbody>
+      </table>
+    </div>
+
+    <div id="details" class="card" style="display: none">
+      <h3 style="margin-top: 0">Карточка группы</h3>
+      <div class="detail-panel" id="detailContent"></div>
+    </div>
+
+    <dialog id="groupDialog">
+      <div class="dialog-body">
+        <div class="flex space-between" style="align-items: start">
+          <div>
+            <h3 id="dialogTitle" style="margin: 0"></h3>
+            <p class="muted" style="margin: 4px 0 0">Заполните основные поля и при необходимости добавьте пользовательские.</p>
+          </div>
+          <button id="closeDialog" class="ghost">✕</button>
+        </div>
+        <form id="groupForm" class="detail-panel">
+          <label>Название <input name="name" required /></label>
+          <label>Описание <textarea name="description" rows="3"></textarea></label>
+          <label>
+            Статус
+            <select name="status">
+              <option value="active">Активна</option>
+              <option value="archived">Архивирована</option>
+            </select>
+          </label>
+          <label>Бренды (через запятую) <input name="brands" placeholder="Haier, Casarte" /></label>
+          <div>
+            <div class="flex space-between" style="margin-bottom: 6px">
+              <span>Пользовательские поля</span>
+              <button id="addExtraField" class="ghost" type="button">+ Добавить поле</button>
+            </div>
+            <div id="extraFields"></div>
+          </div>
+          <div class="flex" style="justify-content: flex-end; margin-top: 8px">
+            <button type="button" id="cancelDialog" class="ghost">Отмена</button>
+            <button type="submit" class="primary">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const statusFilter = document.getElementById("statusFilter");
+      const brandFilter = document.getElementById("brandFilter");
+      const extraKeyFilter = document.getElementById("extraKeyFilter");
+      const extraValueFilter = document.getElementById("extraValueFilter");
+      const showArchived = document.getElementById("showArchived");
+      const applyFilters = document.getElementById("applyFilters");
+      const resetFilters = document.getElementById("resetFilters");
+      const toggleViewBtn = document.getElementById("toggleView");
+      const newGroupBtn = document.getElementById("newGroup");
+      const summary = document.getElementById("summary");
+      const cardView = document.getElementById("cardView");
+      const tableView = document.getElementById("tableView");
+      const groupRows = document.getElementById("groupRows");
+      const detailBlock = document.getElementById("details");
+      const detailContent = document.getElementById("detailContent");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+      const filterStorageKey = "hpt-groups-filters";
+
+      const dialog = document.getElementById("groupDialog");
+      const dialogTitle = document.getElementById("dialogTitle");
+      const groupForm = document.getElementById("groupForm");
+      const closeDialogBtn = document.getElementById("closeDialog");
+      const cancelDialogBtn = document.getElementById("cancelDialog");
+      const extraFields = document.getElementById("extraFields");
+      const addExtraFieldBtn = document.getElementById("addExtraField");
+
+      let viewMode = "cards";
+      let groups = [];
+      let selectedGroupId = null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialGroupId = urlParams.get("group");
+      let editingGroupId = null;
+
+      function hideContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      function showContextMenu(x, y, actions) {
+        contextMenuList.innerHTML = "";
+        actions.forEach((action) => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.textContent = action.label;
+          btn.addEventListener("click", () => {
+            hideContextMenu();
+            action.onClick();
+          });
+          li.appendChild(btn);
+          contextMenuList.appendChild(li);
+        });
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.hidden = false;
+      }
+
+      document.addEventListener("click", hideContextMenu);
+      document.addEventListener("contextmenu", (e) => {
+        if (!contextMenu.contains(e.target)) return;
+        e.preventDefault();
+      });
+
+      function renderSummary() {
+        const active = groups.filter((g) => g.status === "active").length;
+        const archived = groups.filter((g) => g.status === "archived").length;
+        summary.textContent = `Найдено групп: ${groups.length}. Активных: ${active}. Архивных: ${archived}.`;
+      }
+
+      function renderBrands(list) {
+        if (!list || list.length === 0) return "—";
+        return list.map((b) => `<span class="chip">${b}</span>`).join(" ");
+      }
+
+      function renderExtra(extra) {
+        const entries = Object.entries(extra || {});
+        if (entries.length === 0) return "—";
+        return entries
+          .map(([k, v]) => `<span class="chip"><strong>${k}:</strong> ${v ?? ""}</span>`)
+          .join(" ");
+      }
+
+      function renderCardView() {
+        cardView.innerHTML = "";
+        groups.forEach((group) => {
+          const card = document.createElement("div");
+          card.className = "card group-card";
+          if (group.status === "archived") {
+            card.style.opacity = 0.9;
+          }
+          const title = document.createElement("div");
+          title.className = "flex space-between";
+          title.innerHTML = `<strong>${group.name}</strong> <span class="badge ${group.status === "archived" ? "archived" : ""}">${
+            group.status === "archived" ? "Архив" : "Активна"
+          }</span>`;
+          const desc = document.createElement("p");
+          desc.className = "muted";
+          desc.textContent = group.description || "Описание не заполнено";
+          const brands = document.createElement("div");
+          brands.innerHTML = `<strong>Бренды:</strong> ${renderBrands(group.brands)}`;
+          const extras = document.createElement("div");
+          extras.innerHTML = `<strong>Пользовательские поля:</strong> ${renderExtra(group.extra_fields)}`;
+          card.append(title, desc, brands, extras);
+          card.addEventListener("click", () => openDetails(group.id));
+          card.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showGroupMenu(e.clientX, e.clientY, group);
+          });
+          cardView.appendChild(card);
+        });
+      }
+
+      function renderTableView() {
+        groupRows.innerHTML = "";
+        groups.forEach((group) => {
+          const tr = document.createElement("tr");
+          tr.dataset.id = group.id;
+          if (group.status === "archived") tr.classList.add("archived");
+          tr.innerHTML = `
+            <td>${group.name}</td>
+            <td>${group.status === "archived" ? "Архив" : "Активна"}</td>
+            <td>${group.brands.join(", ") || "—"}</td>
+            <td>${group.description || "—"}</td>
+            <td>${renderExtra(group.extra_fields)}</td>
+          `;
+          tr.addEventListener("click", () => openDetails(group.id));
+          tr.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showGroupMenu(e.clientX, e.clientY, group);
+          });
+          groupRows.appendChild(tr);
+        });
+      }
+
+      function showGroupMenu(x, y, group) {
+        showContextMenu(x, y, [
+          { label: "Открыть", onClick: () => openDetails(group.id) },
+          { label: "Редактировать", onClick: () => openEdit(group) },
+          {
+            label: group.status === "archived" ? "Восстановить" : "Архивировать",
+            onClick: () => toggleArchive(group),
+          },
+          { label: "Удалить", onClick: () => deleteGroup(group) },
+        ]);
+      }
+
+      function openDetails(id) {
+        selectedGroupId = id;
+        const group = groups.find((g) => g.id === id);
+        if (!group) return;
+        detailBlock.style.display = "block";
+        detailContent.innerHTML = `
+          <div class="flex space-between">
+            <div>
+              <h4 style="margin: 0">${group.name}</h4>
+              <div class="muted">${group.status === "archived" ? "Архивная" : "Активная"}</div>
+            </div>
+            <div class="flex" style="gap: 8px">
+              <button class="ghost" onclick="openEditById('${group.id}')">Редактировать</button>
+              <button class="ghost" onclick="toggleArchiveById('${group.id}')">${
+                group.status === "archived" ? "Восстановить" : "Архивировать"
+              }</button>
+            </div>
+          </div>
+          <div><strong>Описание:</strong> ${group.description || "—"}</div>
+          <div><strong>Бренды:</strong> ${renderBrands(group.brands)}</div>
+          <div><strong>Пользовательские поля:</strong> ${renderExtra(group.extra_fields)}</div>
+        `;
+      }
+
+      window.openEditById = (id) => {
+        const group = groups.find((g) => g.id === id);
+        if (group) openEdit(group);
+      };
+
+      window.toggleArchiveById = (id) => {
+        const group = groups.find((g) => g.id === id);
+        if (group) toggleArchive(group);
+      };
+
+      function resetExtraFields() {
+        extraFields.innerHTML = "";
+      }
+
+      function addExtraFieldRow(key = "", value = "") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex";
+        wrapper.style.gap = "8px";
+        const keyInput = document.createElement("input");
+        keyInput.placeholder = "Ключ";
+        keyInput.value = key;
+        const valueInput = document.createElement("input");
+        valueInput.placeholder = "Значение";
+        valueInput.value = value;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "ghost";
+        removeBtn.textContent = "✕";
+        removeBtn.addEventListener("click", () => wrapper.remove());
+        wrapper.append(keyInput, valueInput, removeBtn);
+        extraFields.appendChild(wrapper);
+      }
+
+      function openCreate() {
+        editingGroupId = null;
+        dialogTitle.textContent = "Новая продуктовая группа";
+        groupForm.reset();
+        resetExtraFields();
+        dialog.showModal();
+      }
+
+      function openEdit(group) {
+        editingGroupId = group.id;
+        dialogTitle.textContent = "Редактирование группы";
+        groupForm.elements.name.value = group.name;
+        groupForm.elements.description.value = group.description || "";
+        groupForm.elements.status.value = group.status;
+        groupForm.elements.brands.value = group.brands.join(", ");
+        resetExtraFields();
+        Object.entries(group.extra_fields || {}).forEach(([k, v]) => addExtraFieldRow(k, v));
+        dialog.showModal();
+      }
+
+      function collectExtraFields() {
+        const data = {};
+        extraFields.querySelectorAll("div.flex").forEach((row) => {
+          const [keyInput, valueInput] = row.querySelectorAll("input");
+          const key = keyInput.value.trim();
+          if (!key) return;
+          data[key] = valueInput.value;
+        });
+        return data;
+      }
+
+      async function submitForm(event) {
+        event.preventDefault();
+        const formData = new FormData(groupForm);
+        const payload = {
+          name: formData.get("name"),
+          description: formData.get("description") || null,
+          status: formData.get("status"),
+          brands: (formData.get("brands") || "")
+            .split(",")
+            .map((b) => b.trim())
+            .filter(Boolean),
+          extra_fields: collectExtraFields(),
+        };
+
+        if (editingGroupId) {
+          const existing = groups.find((g) => g.id === editingGroupId);
+          const body = { ...existing, ...payload, updated_at: new Date().toISOString() };
+          await saveGroup(`/api/groups/${editingGroupId}`, body, "PUT");
+        } else {
+          await saveGroup("/api/groups", payload, "POST");
+        }
+        dialog.close();
+        await loadGroups();
+      }
+
+      async function saveGroup(url, body, method) {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const detail = await res.text();
+          alert(`Не удалось сохранить группу. ${detail}`);
+        }
+      }
+
+      async function toggleArchive(group) {
+        const updated = {
+          ...group,
+          status: group.status === "archived" ? "active" : "archived",
+          updated_at: new Date().toISOString(),
+        };
+        await saveGroup(`/api/groups/${group.id}`, updated, "PUT");
+        await loadGroups();
+      }
+
+      async function deleteGroup(group) {
+        if (!confirm(`Удалить группу «${group.name}»? Действие необратимо.`)) return;
+        const res = await fetch(`/api/groups/${group.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const detail = await res.text();
+          alert(detail || "Не удалось удалить группу.");
+          return;
+        }
+        if (selectedGroupId === group.id) {
+          detailBlock.style.display = "none";
+        }
+        await loadGroups();
+      }
+
+      function applyViewMode(mode) {
+        viewMode = mode;
+        if (viewMode === "cards") {
+          cardView.style.display = "grid";
+          tableView.style.display = "none";
+          toggleViewBtn.textContent = "Показать таблицей";
+        } else {
+          cardView.style.display = "none";
+          tableView.style.display = "block";
+          toggleViewBtn.textContent = "Показать плиткой";
+        }
+      }
+
+      function toggleView() {
+        applyViewMode(viewMode === "cards" ? "table" : "cards");
+        persistFilters();
+      }
+
+      function resetFiltersState() {
+        statusFilter.value = "";
+        brandFilter.value = "";
+        extraKeyFilter.value = "";
+        extraValueFilter.value = "";
+        showArchived.checked = false;
+      }
+
+      function persistFilters() {
+        const state = {
+          status: statusFilter.value,
+          brand: brandFilter.value.trim(),
+          extraKey: extraKeyFilter.value.trim(),
+          extraValue: extraValueFilter.value.trim(),
+          includeArchived: showArchived.checked,
+          viewMode,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          statusFilter.value = state.status || "";
+          brandFilter.value = state.brand || "";
+          extraKeyFilter.value = state.extraKey || "";
+          extraValueFilter.value = state.extraValue || "";
+          showArchived.checked = !!state.includeArchived;
+          applyViewMode(state.viewMode === "table" ? "table" : "cards");
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры групп", e);
+          localStorage.removeItem(filterStorageKey);
+        }
+      }
+
+      async function loadGroups() {
+        const params = new URLSearchParams();
+        params.set("include_archived", showArchived.checked);
+        if (statusFilter.value) params.append("status", statusFilter.value);
+        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
+        if (extraKeyFilter.value) params.set("extra_key", extraKeyFilter.value.trim());
+        if (extraValueFilter.value) params.set("extra_value", extraValueFilter.value.trim());
+        const res = await fetch(`/api/groups?${params.toString()}`);
+        if (!res.ok) {
+          alert("Не удалось загрузить группы");
+          return;
+        }
+        groups = await res.json();
+        renderSummary();
+        renderCardView();
+        renderTableView();
+        if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
+          selectedGroupId = initialGroupId;
+        }
+        if (selectedGroupId) openDetails(selectedGroupId);
+      }
+
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadGroups();
+      });
+      resetFilters.addEventListener("click", () => {
+        resetFiltersState();
+        applyViewMode("cards");
+        localStorage.removeItem(filterStorageKey);
+        loadGroups();
+      });
+      toggleViewBtn.addEventListener("click", toggleView);
+      newGroupBtn.addEventListener("click", openCreate);
+      groupForm.addEventListener("submit", submitForm);
+      addExtraFieldBtn.addEventListener("click", () => addExtraFieldRow());
+      closeDialogBtn.addEventListener("click", () => dialog.close());
+      cancelDialogBtn.addEventListener("click", () => dialog.close());
+
+      applyViewMode(viewMode);
+      restoreFilters();
+      loadGroups();
+    </script>
+  </body>
+</html>
