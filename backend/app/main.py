@@ -14,6 +14,8 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .models import (
+    BackupInfo,
+    BackupRestoreRequest,
     CharacteristicField,
     CharacteristicSection,
     CharacteristicTemplate,
@@ -677,6 +679,30 @@ def delete_history_event(project_id: UUID, event_id: UUID, repo: LocalRepository
         repo.delete_history_event(project_id, event_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Событие не найдено или проект не существует")
+
+
+@app.get("/api/backups", response_model=list[BackupInfo])
+def list_backups(repo: LocalRepository = Depends(get_repository)) -> list[BackupInfo]:
+    """Вернуть список доступных резервных копий."""
+
+    return repo.list_backups(settings.backups_dir)
+
+
+@app.post("/api/backups", response_model=BackupInfo, status_code=201)
+def create_backup(repo: LocalRepository = Depends(get_repository)) -> BackupInfo:
+    """Создать резервную копию текущего хранилища."""
+
+    return repo.create_backup(settings.backups_dir)
+
+
+@app.post("/api/backups/restore", response_model=BackupInfo)
+def restore_backup(request: BackupRestoreRequest, repo: LocalRepository = Depends(get_repository)) -> BackupInfo:
+    """Восстановить хранилище из выбранной резервной копии."""
+
+    try:
+        return repo.restore_from_backup(settings.backups_dir, request.file_name)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Резервная копия не найдена")
 
 
 if FRONTEND_DIR.exists():

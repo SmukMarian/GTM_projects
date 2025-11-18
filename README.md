@@ -12,6 +12,12 @@
 - `dev_tasks.md` — чек-лист задач.
 - `data_model.md` — текстовая схема сущностей и связей.
 
+### Хранилище и бэкапы
+
+- Основной файл данных: `data/project_tracker.json` (создаётся автоматически).
+- Резервные копии сохраняются в `data/backups/` и именуются `project_tracker_<UTC-метка>.json`.
+- Файлы можно копировать вручную для дополнительного бэкапа вне приложения.
+
 ## Локальный запуск (черновой)
 
 1. Установить зависимости backend: `pip install -r backend/requirements.txt`.
@@ -78,3 +84,6 @@
 - `GET /api/projects/{project_id}/history` — лента истории проекта.
 - `POST /api/projects/{project_id}/history` — добавить событие в историю.
 - `DELETE /api/projects/{project_id}/history/{event_id}` — удалить событие истории.
+- `GET /api/backups` — список резервных копий.
+- `POST /api/backups` — создать резервную копию текущего хранилища.
+- `POST /api/backups/restore` — восстановить данные из резервной копии по имени файла.

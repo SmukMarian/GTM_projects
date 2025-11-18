@@ -169,6 +169,19 @@ class HistoryEvent(BaseModel):
     details: str | None = None
 
 
+class BackupInfo(BaseModel):
+    """Данные о файле резервной копии."""
+
+    file_name: str
+    created_at: datetime
+
+
+class BackupRestoreRequest(BaseModel):
+    """Запрос на восстановление из резервной копии."""
+
+    file_name: str
+
+
 class Project(Timestamped):
     id: UUID = Field(default_factory=uuid4)
     group_id: UUID

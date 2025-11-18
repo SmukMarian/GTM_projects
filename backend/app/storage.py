@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID, uuid4
@@ -16,6 +17,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from .models import (
+    BackupInfo,
     CharacteristicField,
     CharacteristicSection,
     CharacteristicTemplate,
@@ -637,3 +639,48 @@ class LocalRepository:
                 self.save()
                 return
         raise KeyError(f"History event {event_id} not found in project {project_id}")
+
+    # --- Backups ---
+    def list_backups(self, backups_dir: Path) -> list[BackupInfo]:
+        backups: list[BackupInfo] = []
+        if not backups_dir.exists():
+            return backups
+
+        for entry in backups_dir.glob("*.json"):
+            stat = entry.stat()
+            backups.append(
+                BackupInfo(
+                    file_name=entry.name,
+                    created_at=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
+                )
+            )
+
+        backups.sort(key=lambda item: item.created_at, reverse=True)
+        return backups
+
+    def create_backup(self, backups_dir: Path) -> BackupInfo:
+        backups_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        file_name = f"project_tracker_{timestamp}.json"
+        destination = backups_dir / file_name
+        _write_json(destination, self.store)
+        stat = destination.stat()
+        return BackupInfo(
+            file_name=file_name,
+            created_at=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
+        )
+
+    def restore_from_backup(self, backups_dir: Path, file_name: str) -> BackupInfo:
+        backup_path = backups_dir / file_name
+        if not backup_path.exists():
+            raise FileNotFoundError(f"Резервная копия {file_name} не найдена")
+
+        restored_store = load_store(backup_path)
+        self.store = restored_store
+        self.save()
+
+        stat = backup_path.stat()
+        return BackupInfo(
+            file_name=file_name,
+            created_at=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
+        )
