@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) =>
+          value === "dark" || value === "light" || value === "system" ? value : null;
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Проекты — Haier Project Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px 20px 0;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 20px 78px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover { box-shadow: var(--shadow); }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 4px 0 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        color: var(--accent);
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 16px 0;
+      }
+
+      .filter-panel {
+        margin: 18px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .filter-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .checkbox-row {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-weight: 600;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 9px 14px;
+        border-radius: 12px;
+        color: var(--text);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      @media (max-width: 1280px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 960px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .project-card {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 12px;
+        align-items: stretch;
+        padding: 12px;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 18px;
+        z-index: 1100;
+      }
+
+      .overlay.active {
+        display: flex;
+      }
+
+      .overlay-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.38);
+        backdrop-filter: blur(4px);
+      }
+
+      .overlay-card {
+        position: relative;
+        width: min(960px, 100%);
+        max-height: 90vh;
+        overflow: auto;
+        background: var(--surface);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: 0 26px 60px rgba(0, 0, 0, 0.3);
+        padding: 22px 22px 18px;
+        z-index: 1;
+      }
+
+      .overlay-card h3 {
+        margin-top: 0;
+      }
+
+      .overlay-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--surface-muted);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .badge.archived {
+        background: rgba(248, 113, 113, 0.15);
+        color: #dc2626;
+      }
+
+      .badge.closed {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        color: var(--muted);
+        letter-spacing: 0.01em;
+        font-weight: 600;
+      }
+
+      .table-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      tr.archived {
+        background: var(--surface-muted);
+        color: var(--muted);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font: inherit;
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      .flex {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .space-between {
+        justify-content: space-between;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        font-size: 0.9rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      dialog {
+        border: none;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: var(--shadow);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .dialog-body {
+        padding: 20px;
+        min-width: 580px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .context-menu {
+        position: fixed;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        min-width: 220px;
+        z-index: 1000;
+        padding: 8px 0;
+      }
+
+      .context-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .context-menu li {
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+
+      .context-menu li:hover {
+        background: var(--accent-soft);
+      }
+
+      .detail-panel {
+        display: grid;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1200;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .theme-toggle-group button:hover {
+        transform: translateY(-2px);
+        background-color: var(--surface-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
+      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
+      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
+      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
+    </div>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
+          <img src="/favicon.svg" alt="Haier Project Tracker" />
+          <div>Haier Project Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/templates.html">Шаблоны</a>
+        </nav>
+      </div>
+    </div>
+    <div class="page">
+      <div class="flex space-between" style="align-items: baseline">
+        <div>
+          <p class="pill">Проекты</p>
+          <h1>Управление проектами</h1>
+          <p class="muted" style="margin: 0">Создание, фильтрация, архивирование и управление статусами проектов.</p>
+        </div>
+        <div class="flex" style="gap: 16px">
+          <a href="/" title="К дашборду">⟵ Дашборд</a>
+          <a href="/groups.html" title="К списку групп">Продуктовые группы →</a>
+        </div>
+      </div>
+
+    <div class="card filter-panel">
+      <div class="filters-grid">
+        <label>
+          Фильтр по бренду
+          <input id="brandFilter" placeholder="Haier" />
+        </label>
+        <label>
+          Фильтр по группе
+          <select id="groupFilter"></select>
+        </label>
+        <label>
+          Текущий GTM-этап
+          <select id="stageFilter"></select>
+        </label>
+        <label>
+          Статусы
+          <div class="flex" style="gap: 8px; flex-wrap: wrap">
+            <label style="font-weight: 600"><input type="checkbox" value="active" class="status-filter" /> Активные</label>
+            <label style="font-weight: 600"><input type="checkbox" value="closed" class="status-filter" /> Закрытые</label>
+            <label style="font-weight: 600"><input type="checkbox" value="archived" class="status-filter" /> Архив</label>
+          </div>
+        </label>
+        <label>
+          Плановый запуск c
+          <input type="date" id="plannedFrom" />
+        </label>
+        <label>
+          Плановый запуск по
+          <input type="date" id="plannedTo" />
+        </label>
+      </div>
+      <div class="filter-actions">
+        <label class="checkbox-row">
+          <input type="checkbox" id="showArchived" /> Показывать архив
+        </label>
+        <div class="filter-buttons">
+          <button id="applyFilters" class="primary">Применить фильтры</button>
+          <button id="resetFilters">Сбросить</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar" style="margin-top: 0">
+      <button id="toggleView">Показать таблицей</button>
+      <button id="newProject" class="primary">+ Новый проект</button>
+      <button id="exportProjects">Экспортировать список</button>
+    </div>
+
+    <div id="summary" class="card" style="margin-bottom: 12px"></div>
+
+    <div id="cardView" class="grid"></div>
+
+    <div id="tableView" class="card table-scroll" style="display: none">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Группа</th>
+            <th>Бренд</th>
+            <th>Статус</th>
+            <th>GTM-этап</th>
+            <th>Плановая дата</th>
+            <th>Приоритет</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="projectRows"></tbody>
+      </table>
+    </div>
+
+    <div id="detailsOverlay" class="overlay" hidden>
+      <div class="overlay-backdrop" aria-hidden="true"></div>
+      <div class="overlay-card">
+        <button class="ghost overlay-close" id="closeDetails" aria-label="Закрыть быстрый просмотр">✕</button>
+        <h3 style="margin: 0 0 10px">Быстрый просмотр проекта</h3>
+        <div class="detail-panel" id="detailContent"></div>
+      </div>
+    </div>
+
+    <dialog id="projectDialog">
+      <div class="dialog-body">
+        <div class="flex space-between" style="align-items: start">
+          <div>
+            <h3 id="dialogTitle" style="margin: 0"></h3>
+            <p class="muted" style="margin: 4px 0 0">Заполните основные поля проекта, укажите статус и период запуска.</p>
+          </div>
+          <button id="closeDialog" class="ghost">✕</button>
+        </div>
+        <form id="projectForm" class="detail-panel">
+          <label>Название <input name="name" required /></label>
+          <label>
+            Продуктовая группа
+            <select name="group_id" required id="groupSelect"></select>
+          </label>
+          <div class="row">
+            <label>Бренд <input name="brand" required placeholder="Haier" /></label>
+            <label>Рынок/регион <input name="market" placeholder="EU" /></label>
+          </div>
+          <label>
+            Статус
+            <select name="status">
+              <option value="active">Активный</option>
+              <option value="closed">Закрыт</option>
+              <option value="archived">Архивирован</option>
+            </select>
+          </label>
+          <div class="row">
+            <label>Плановая дата запуска <input type="date" name="planned_launch" /></label>
+            <label>Фактическая дата запуска <input type="date" name="actual_launch" /></label>
+            <label>
+              Приоритет
+              <select name="priority">
+                <option value="">Не задан</option>
+                <option value="low">Низкий</option>
+                <option value="medium">Средний</option>
+                <option value="high">Высокий</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label>MOQ <input type="number" step="0.01" name="moq" /></label>
+            <label>Promo (Price) <input type="number" step="0.01" name="promo_price" /></label>
+            <label>RRP (Price) <input type="number" step="0.01" name="rrp_price" /></label>
+            <label>FOB цена <input type="number" step="0.01" name="fob_price" /></label>
+          </div>
+          <label>
+            Текущий GTM-этап (по id этапа)
+            <input name="current_gtm_stage_id" placeholder="Заполните после создания этапов" />
+          </label>
+          <label>Краткое описание <textarea name="short_description" rows="2"></textarea></label>
+          <label>Расширенное описание <textarea name="full_description" rows="4"></textarea></label>
+          <div>
+            <div class="flex space-between" style="margin-bottom: 6px">
+              <span>Пользовательские поля</span>
+              <button id="addCustomField" class="ghost" type="button">+ Добавить поле</button>
+            </div>
+            <div id="customFields"></div>
+          </div>
+          <div class="flex" style="justify-content: flex-end; margin-top: 8px">
+            <button type="button" id="cancelDialog" class="ghost">Отмена</button>
+            <button type="submit" class="primary">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <div id="contextMenu" class="context-menu" hidden>
+      <ul id="contextMenuList"></ul>
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const brandFilter = document.getElementById("brandFilter");
+      const groupFilter = document.getElementById("groupFilter");
+      const stageFilter = document.getElementById("stageFilter");
+      const statusCheckboxes = document.querySelectorAll(".status-filter");
+      const plannedFrom = document.getElementById("plannedFrom");
+      const plannedTo = document.getElementById("plannedTo");
+      const showArchived = document.getElementById("showArchived");
+      const applyFilters = document.getElementById("applyFilters");
+      const resetFilters = document.getElementById("resetFilters");
+      const toggleViewBtn = document.getElementById("toggleView");
+      const newProjectBtn = document.getElementById("newProject");
+      const exportProjectsBtn = document.getElementById("exportProjects");
+      const summary = document.getElementById("summary");
+      const cardView = document.getElementById("cardView");
+      const tableView = document.getElementById("tableView");
+      const projectRows = document.getElementById("projectRows");
+      const detailOverlay = document.getElementById("detailsOverlay");
+      const detailContent = document.getElementById("detailContent");
+      const closeDetailsBtn = document.getElementById("closeDetails");
+      const contextMenu = document.getElementById("contextMenu");
+      const contextMenuList = document.getElementById("contextMenuList");
+      const filterStorageKey = "hpt-projects-filters";
+
+      const dialog = document.getElementById("projectDialog");
+      const dialogTitle = document.getElementById("dialogTitle");
+      const projectForm = document.getElementById("projectForm");
+      const closeDialogBtn = document.getElementById("closeDialog");
+      const cancelDialogBtn = document.getElementById("cancelDialog");
+      const customFields = document.getElementById("customFields");
+      const addCustomFieldBtn = document.getElementById("addCustomField");
+      const groupSelect = document.getElementById("groupSelect");
+
+      const statusLabels = {
+        active: "Активный",
+        closed: "Закрыт",
+        archived: "Архивирован",
+      };
+
+      const priorityLabels = {
+        low: "Низкий",
+        medium: "Средний",
+        high: "Высокий",
+      };
+
+      const coverPlaceholder =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%2310a37f'/><stop offset='1' stop-color='%2319b88f'/></linearGradient></defs><rect width='200' height='200' rx='20' fill='%23101827'/><rect x='16' y='16' width='168' height='168' rx='18' fill='%230d1521' stroke='url(%23g)' stroke-width='4'/><text x='100' y='110' fill='%2319b88f' font-family='Inter,Segoe UI,Arial' font-size='44' font-weight='800' text-anchor='middle'>HPT</text></svg>`
+        );
+
+      let viewMode = "cards";
+      let projects = [];
+      let groups = [];
+      let selectedProjectId = null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialGroupId = urlParams.get("group_id");
+      let stageOptions = [];
+
+      closeDetailsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeDetails();
+      });
+
+      detailOverlay.addEventListener("click", (e) => {
+        if (e.target.classList.contains("overlay-backdrop")) {
+          closeDetails();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeDetails();
+        }
+      });
+
+      function resetFiltersState() {
+        brandFilter.value = "";
+        groupFilter.value = "";
+        stageFilter.value = "";
+        plannedFrom.value = "";
+        plannedTo.value = "";
+        showArchived.checked = false;
+        statusCheckboxes.forEach((cb) => (cb.checked = false));
+      }
+
+      function persistFilters() {
+        const state = {
+          brand: brandFilter.value.trim(),
+          groupId: groupFilter.value,
+          stageId: stageFilter.value,
+          plannedFrom: plannedFrom.value,
+          plannedTo: plannedTo.value,
+          includeArchived: showArchived.checked,
+          statuses: Array.from(statusCheckboxes)
+            .filter((cb) => cb.checked)
+            .map((cb) => cb.value),
+          viewMode,
+        };
+        localStorage.setItem(filterStorageKey, JSON.stringify(state));
+      }
+
+      function restoreFilters() {
+        const raw = localStorage.getItem(filterStorageKey);
+        if (!raw) return;
+        try {
+          const state = JSON.parse(raw) || {};
+          brandFilter.value = state.brand || "";
+          groupFilter.value = state.groupId || "";
+          stageFilter.value = state.stageId || "";
+          plannedFrom.value = state.plannedFrom || "";
+          plannedTo.value = state.plannedTo || "";
+          showArchived.checked = !!state.includeArchived;
+          statusCheckboxes.forEach((cb) => {
+            cb.checked = Array.isArray(state.statuses) ? state.statuses.includes(cb.value) : false;
+          });
+          applyViewMode(state.viewMode === "table" ? "table" : "cards");
+        } catch (e) {
+          console.warn("Не удалось прочитать сохранённые фильтры проектов", e);
+          localStorage.removeItem(filterStorageKey);
+        }
+      }
+
+      function formatDate(val) {
+        return val ? new Date(val).toLocaleDateString("ru-RU") : "—";
+      }
+
+      function getGroupName(id) {
+        const group = groups.find((g) => g.id === id);
+        return group ? group.name : "";
+      }
+
+      function currentStageName(project) {
+        if (!project.current_gtm_stage_id) return "—";
+        const stage = project.gtm_stages.find((s) => s.id === project.current_gtm_stage_id);
+        return stage ? stage.title || stage.name || "—" : "—";
+      }
+
+      function renderSummary() {
+        const active = projects.filter((p) => p.status === "active").length;
+        const closed = projects.filter((p) => p.status === "closed").length;
+        const archived = projects.filter((p) => p.status === "archived").length;
+        summary.innerHTML = `
+          <div class="flex" style="gap: 12px; align-items: center">
+            <strong>Всего проектов:</strong> ${projects.length}
+            <span class="chip">Активные: ${active}</span>
+            <span class="chip">Закрытые: ${closed}</span>
+            <span class="chip">Архив: ${archived}</span>
+          </div>
+        `;
+      }
+
+      function projectCoverUrl(project) {
+        const images = project.images || [];
+        const cover = images.find((i) => i.is_cover) || images[0];
+        return cover ? `/api/projects/${project.id}/images/${cover.id}/download` : null;
+      }
+
+      function taskProgress(task) {
+        const subtasks = task.subtasks || [];
+        if (subtasks.length) {
+          const done = subtasks.filter((s) => s.done).length;
+          return subtasks.length ? done / subtasks.length : 0;
+        }
+        if (task.status === "done") return 1;
+        if (task.status === "in_progress") return 0.5;
+        return 0;
+      }
+
+      function stageProgress(project, stage) {
+        const relatedTasks = (project.tasks || []).filter((t) => t.gtm_stage_id === stage.id);
+        if (!relatedTasks.length) {
+          if (stage.status === "done") return 1;
+          if (stage.status === "in_progress") return 0.5;
+          return 0;
+        }
+        const sum = relatedTasks.reduce((acc, task) => acc + taskProgress(task), 0);
+        return sum / relatedTasks.length;
+      }
+
+      function projectProgress(project) {
+        const stages = project.gtm_stages || [];
+        if (!stages.length) return { percent: 0, label: "Нет этапов" };
+        const scores = stages.map((stage) => stageProgress(project, stage));
+        const percent = Math.round((scores.reduce((a, b) => a + b, 0) / stages.length) * 100);
+        const completed = Math.round(scores.filter((s) => s >= 0.999).length);
+        return { percent, label: `${completed}/${stages.length} завершено` };
+      }
+
+      function renderCardView() {
+        cardView.innerHTML = "";
+        projects.forEach((project) => {
+          const card = document.createElement("div");
+          card.className = "card project-card";
+          card.dataset.id = project.id;
+          const cover = projectCoverUrl(project);
+          const progress = projectProgress(project);
+          card.innerHTML = `
+            <div>
+              <img class="card-image" src="${cover || coverPlaceholder}" alt="Обложка проекта" />
+            </div>
+            <div class="flex" style="gap: 8px; flex-direction: column; align-items: flex-start;">
+              <div class="flex space-between" style="width: 100%; align-items: start">
+                <div>
+                  <h3 style="margin: 0">${project.name}</h3>
+                  <p class="muted" style="margin: 2px 0 0">${getGroupName(project.group_id)} · ${project.brand}</p>
+                </div>
+                <span class="badge ${project.status === "archived" ? "archived" : project.status === "closed" ? "closed" : ""}">${statusLabels[project.status] || project.status}</span>
+              </div>
+              <div class="flex" style="gap: 8px; flex-wrap: wrap; width: 100%">
+                <span class="chip">Рынок: ${project.market || "—"}</span>
+                <span class="chip">GTM: ${currentStageName(project)}</span>
+                <span class="chip">План: ${formatDate(project.planned_launch)}</span>
+                <span class="chip">Приоритет: ${project.priority ? priorityLabels[project.priority] : "—"}</span>
+              </div>
+              <div style="width: 100%">
+                <div class="progress-bar"><div class="progress-fill" style="width:${progress.percent}%"></div></div>
+                <small class="muted">Прогресс: ${progress.label}</small>
+              </div>
+              <p class="muted" style="margin: 0">${project.short_description || "Без описания"}</p>
+              <div class="flex space-between" style="align-items: center; width: 100%">
+                <small class="muted">Создано: ${formatDate(project.created_at)}</small>
+                <div class="flex" style="gap: 8px">
+                  <button class="ghost" data-action="open-project">Перейти в проект</button>
+                  <button class="ghost" data-action="open">Быстрый просмотр</button>
+                </div>
+              </div>
+            </div>
+          `;
+          card.addEventListener("click", () => (window.location.href = `/project.html?id=${project.id}`));
+          card.addEventListener("contextmenu", (e) => openContextMenu(e, project));
+          card.querySelector("button[data-action='open']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openDetails(project.id);
+          });
+          card.querySelector("button[data-action='open-project']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.href = `/project.html?id=${project.id}`;
+          });
+          cardView.appendChild(card);
+        });
+      }
+
+      function renderTableView() {
+        projectRows.innerHTML = "";
+        projects.forEach((project) => {
+          const tr = document.createElement("tr");
+          tr.dataset.id = project.id;
+          if (project.status === "archived") tr.classList.add("archived");
+          tr.innerHTML = `
+            <td>${project.name}</td>
+            <td>${getGroupName(project.group_id)}</td>
+            <td>${project.brand}</td>
+            <td>${statusLabels[project.status] || project.status}</td>
+            <td>${currentStageName(project)}</td>
+            <td>${formatDate(project.planned_launch)}</td>
+            <td>${project.priority ? priorityLabels[project.priority] : "—"}</td>
+            <td>
+              <div class="table-actions">
+                <button data-action="open">Открыть</button>
+                <button data-action="preview">Быстрый просмотр</button>
+              </div>
+            </td>
+          `;
+          tr.addEventListener("click", () => openDetails(project.id));
+          tr.querySelector("button[data-action='open']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.href = `/project.html?id=${project.id}`;
+          });
+          tr.querySelector("button[data-action='preview']").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openDetails(project.id);
+          });
+          tr.addEventListener("contextmenu", (e) => openContextMenu(e, project));
+          projectRows.appendChild(tr);
+        });
+      }
+
+      function renderStageFilter() {
+        const currentValue = stageFilter.value;
+        stageOptions = [];
+        const stageMap = new Map();
+        projects.forEach((p) => {
+          p.gtm_stages.forEach((s) => {
+            if (!stageMap.has(s.id)) stageMap.set(s.id, s.title || s.name);
+          });
+        });
+        stageOptions = Array.from(stageMap.entries());
+        stageFilter.innerHTML = '<option value="">Все этапы</option>' +
+          stageOptions.map(([id, name]) => `<option value="${id}">${name}</option>`).join("");
+        if (currentValue) stageFilter.value = currentValue;
+      }
+
+      function openDetails(id) {
+        selectedProjectId = id;
+        const project = projects.find((p) => p.id === id);
+        if (!project) return;
+        detailOverlay.classList.add("active");
+        const customFieldsBlock = Object.entries(project.custom_fields || {})
+          .map(([k, v]) => `<span class="chip">${k}: ${v ?? "—"}</span>`)
+          .join(" ");
+        detailContent.innerHTML = `
+          <div class="flex space-between" style="align-items: start">
+            <div>
+              <h2 style="margin: 0">${project.name}</h2>
+              <p class="muted" style="margin: 2px 0 0">${getGroupName(project.group_id)} · ${project.brand}</p>
+            </div>
+            <span class="badge ${project.status === "archived" ? "archived" : project.status === "closed" ? "closed" : ""}">${statusLabels[project.status] || project.status}</span>
+          </div>
+          <div class="row">
+            <div class="card" style="padding: 12px">
+              <strong>GTM-этап</strong>
+              <div>${currentStageName(project)}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>Плановая дата</strong>
+              <div>${formatDate(project.planned_launch)}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>Фактическая дата</strong>
+              <div>${formatDate(project.actual_launch)}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>Приоритет</strong>
+              <div>${project.priority ? priorityLabels[project.priority] : "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>MOQ</strong>
+              <div>${project.moq ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>Promo (Price)</strong>
+              <div>${project.promo_price ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>RRP (Price)</strong>
+              <div>${project.rrp_price ?? "—"}</div>
+            </div>
+            <div class="card" style="padding: 12px">
+              <strong>FOB цена</strong>
+              <div>${project.fob_price ?? "—"}</div>
+            </div>
+          </div>
+          <div class="card" style="padding: 12px">
+            <strong>Краткое описание</strong>
+            <div class="muted">${project.short_description || "—"}</div>
+          </div>
+          <div class="card" style="padding: 12px">
+            <strong>Расширенное описание</strong>
+            <div class="muted">${project.full_description || "—"}</div>
+          </div>
+          ${customFieldsBlock ? `<div class="card" style="padding: 12px"><strong>Пользовательские поля</strong><div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px">${customFieldsBlock}</div></div>` : ""}
+          <div class="flex" style="gap: 10px; margin-top: 8px">
+            <button class="ghost" onclick="openEdit('${project.id}')">✎ Редактировать</button>
+            ${project.status === "archived" ? `<button class="ghost" onclick="restoreProject('${project.id}')">↩ Восстановить</button>` : `<button class="ghost" onclick="archiveProject('${project.id}')">Архивировать</button>`}
+            <button class="ghost" onclick="deleteProject('${project.id}')">🗑 Удалить</button>
+          </div>
+        `;
+      }
+
+      function closeDetails() {
+        detailOverlay.classList.remove("active");
+      }
+
+      function addCustomFieldRow(key = "", value = "") {
+        const row = document.createElement("div");
+        row.className = "flex";
+        row.style.gap = "8px";
+        row.innerHTML = `
+          <input placeholder="Ключ" value="${key}" />
+          <input placeholder="Значение" value="${value}" />
+          <button type="button" class="ghost">✕</button>
+        `;
+        row.querySelector("button").addEventListener("click", () => row.remove());
+        customFields.appendChild(row);
+      }
+
+      function openCreate() {
+        dialogTitle.textContent = "Новый проект";
+        projectForm.dataset.mode = "create";
+        projectForm.dataset.id = "";
+        projectForm.reset();
+        projectForm.group_id.value = groupFilter.value || "";
+        projectForm.status.value = "active";
+        projectForm.moq.value = "";
+        projectForm.promo_price.value = "";
+        projectForm.rrp_price.value = "";
+        projectForm.fob_price.value = "";
+        customFields.innerHTML = "";
+        dialog.showModal();
+      }
+
+      function openEdit(id) {
+        const project = projects.find((p) => p.id === id);
+        if (!project) return;
+        dialogTitle.textContent = "Редактирование проекта";
+        projectForm.dataset.mode = "edit";
+        projectForm.dataset.id = id;
+        projectForm.name.value = project.name;
+        projectForm.group_id.value = project.group_id;
+        projectForm.brand.value = project.brand;
+        projectForm.market.value = project.market || "";
+        projectForm.status.value = project.status;
+        projectForm.planned_launch.value = project.planned_launch || "";
+        projectForm.actual_launch.value = project.actual_launch || "";
+        projectForm.priority.value = project.priority || "";
+        projectForm.current_gtm_stage_id.value = project.current_gtm_stage_id || "";
+        projectForm.short_description.value = project.short_description || "";
+        projectForm.full_description.value = project.full_description || "";
+        projectForm.moq.value = project.moq ?? "";
+        projectForm.promo_price.value = project.promo_price ?? "";
+        projectForm.rrp_price.value = project.rrp_price ?? "";
+        projectForm.fob_price.value = project.fob_price ?? "";
+        customFields.innerHTML = "";
+        Object.entries(project.custom_fields || {}).forEach(([k, v]) => addCustomFieldRow(k, v ?? ""));
+        dialog.showModal();
+      }
+
+      async function submitForm(event) {
+        event.preventDefault();
+        const formData = new FormData(projectForm);
+        const payload = Object.fromEntries(formData.entries());
+        payload.custom_fields = {};
+        Array.from(customFields.children).forEach((row) => {
+          const [keyInput, valueInput] = row.querySelectorAll("input");
+          if (keyInput.value.trim()) {
+            payload.custom_fields[keyInput.value.trim()] = valueInput.value || null;
+          }
+        });
+        payload.planned_launch = payload.planned_launch || null;
+        payload.actual_launch = payload.actual_launch || null;
+        payload.current_gtm_stage_id = payload.current_gtm_stage_id || null;
+        payload.priority = payload.priority || null;
+        payload.moq = payload.moq ? Number(payload.moq) : null;
+        payload.promo_price = payload.promo_price ? Number(payload.promo_price) : null;
+        payload.rrp_price = payload.rrp_price ? Number(payload.rrp_price) : null;
+        payload.fob_price = payload.fob_price ? Number(payload.fob_price) : null;
+
+        const mode = projectForm.dataset.mode;
+        if (mode === "create") {
+          payload.gtm_stages = [];
+          payload.tasks = [];
+          payload.characteristics = [];
+          payload.files = [];
+          payload.images = [];
+          payload.comments = [];
+          payload.history = [];
+          const res = await fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось создать проект");
+            return;
+          }
+          const created = await res.json();
+          window.location.href = `/project.html?id=${created.id}`;
+          return;
+        } else {
+          const existing = projects.find((p) => p.id === projectForm.dataset.id);
+          if (!existing) return;
+          const updated = { ...existing, ...payload };
+          const res = await fetch(`/api/projects/${existing.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updated),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить проект");
+            return;
+          }
+        }
+        dialog.close();
+        await loadProjects();
+      }
+
+      function applyViewMode(mode) {
+        viewMode = mode;
+        if (viewMode === "cards") {
+          cardView.style.display = "grid";
+          tableView.style.display = "none";
+          toggleViewBtn.textContent = "Показать таблицей";
+        } else {
+          cardView.style.display = "none";
+          tableView.style.display = "block";
+          toggleViewBtn.textContent = "Показать плиткой";
+        }
+      }
+
+      function toggleView() {
+        applyViewMode(viewMode === "cards" ? "table" : "cards");
+        persistFilters();
+      }
+
+      function buildStatusParams(params) {
+        statusCheckboxes.forEach((cb) => {
+          if (cb.checked) params.append("status", cb.value);
+        });
+      }
+
+      async function loadProjects() {
+        const params = new URLSearchParams();
+        params.set("include_archived", showArchived.checked);
+        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
+        if (groupFilter.value) params.set("group_id", groupFilter.value);
+        if (stageFilter.value) params.set("current_stage_id", stageFilter.value);
+        if (plannedFrom.value) params.set("planned_from", plannedFrom.value);
+        if (plannedTo.value) params.set("planned_to", plannedTo.value);
+        buildStatusParams(params);
+        const res = await fetch(`/api/projects?${params.toString()}`);
+        if (!res.ok) {
+          alert("Не удалось загрузить проекты");
+          return;
+        }
+        projects = await res.json();
+        renderStageFilter();
+        renderSummary();
+        renderCardView();
+        renderTableView();
+        if (selectedProjectId) openDetails(selectedProjectId);
+      }
+
+      async function loadGroups() {
+        const res = await fetch("/api/groups?include_archived=true");
+        if (!res.ok) {
+          alert("Не удалось загрузить группы");
+          return;
+        }
+        groups = await res.json();
+        groupFilter.innerHTML =
+          '<option value="">Все группы</option>' + groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
+        groupSelect.innerHTML = groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
+        restoreFilters();
+        if (!groupFilter.value && initialGroupId) {
+          groupFilter.value = initialGroupId;
+        }
+      }
+
+      function closeContextMenu() {
+        contextMenu.hidden = true;
+      }
+
+      function openContextMenu(event, project) {
+        event.preventDefault();
+        closeContextMenu();
+        contextMenu.style.top = `${event.clientY}px`;
+        contextMenu.style.left = `${event.clientX}px`;
+        contextMenu.hidden = false;
+        contextMenuList.innerHTML = "";
+        const actions = [
+          { label: "Открыть карточку", fn: () => (window.location.href = `/project.html?id=${project.id}`) },
+          { label: "Быстрый просмотр", fn: () => openDetails(project.id) },
+          { label: "Редактировать", fn: () => openEdit(project.id) },
+          project.status === "archived"
+            ? { label: "Восстановить", fn: () => restoreProject(project.id) }
+            : { label: "Архивировать", fn: () => archiveProject(project.id) },
+          project.status !== "closed"
+            ? { label: "Закрыть проект", fn: () => changeStatus(project.id, "closed") }
+            : { label: "Сделать активным", fn: () => changeStatus(project.id, "active") },
+          { label: "Удалить", fn: () => deleteProject(project.id) },
+        ];
+        actions.forEach((action) => {
+          const li = document.createElement("li");
+          li.textContent = action.label;
+          li.addEventListener("click", () => {
+            action.fn();
+            closeContextMenu();
+          });
+          contextMenuList.appendChild(li);
+        });
+      }
+
+      async function changeStatus(id, status) {
+        const project = projects.find((p) => p.id === id);
+        if (!project) return;
+        const updated = { ...project, status };
+        const res = await fetch(`/api/projects/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить статус проекта");
+          return;
+        }
+        await loadProjects();
+      }
+
+      async function archiveProject(id) {
+        await changeStatus(id, "archived");
+      }
+
+      async function restoreProject(id) {
+        await changeStatus(id, "closed");
+      }
+
+      async function deleteProject(id) {
+        if (!confirm("Удалить проект? Будут удалены связанные этапы, задачи и вложения.")) return;
+        const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить проект");
+          return;
+        }
+          selectedProjectId = null;
+          closeDetails();
+          await loadProjects();
+        }
+
+      function initContextMenuClosing() {
+        document.addEventListener("click", (e) => {
+          if (!contextMenu.contains(e.target)) closeContextMenu();
+        });
+        window.addEventListener("scroll", closeContextMenu);
+      }
+
+      async function exportProjects() {
+        const params = new URLSearchParams();
+        params.set("include_archived", showArchived.checked);
+        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
+        if (groupFilter.value) params.set("group_id", groupFilter.value);
+        if (stageFilter.value) params.set("current_stage_id", stageFilter.value);
+        if (plannedFrom.value) params.set("planned_from", plannedFrom.value);
+        if (plannedTo.value) params.set("planned_to", plannedTo.value);
+        buildStatusParams(params);
+        window.location.href = `/api/export/projects?${params.toString()}`;
+      }
+
+      applyFilters.addEventListener("click", () => {
+        persistFilters();
+        loadProjects();
+      });
+      resetFilters.addEventListener("click", () => {
+        resetFiltersState();
+        applyViewMode("cards");
+        localStorage.removeItem(filterStorageKey);
+        loadProjects();
+      });
+      toggleViewBtn.addEventListener("click", toggleView);
+      newProjectBtn.addEventListener("click", openCreate);
+      exportProjectsBtn.addEventListener("click", exportProjects);
+      projectForm.addEventListener("submit", submitForm);
+      addCustomFieldBtn.addEventListener("click", () => addCustomFieldRow());
+      closeDialogBtn.addEventListener("click", () => dialog.close());
+      cancelDialogBtn.addEventListener("click", () => dialog.close());
+      initContextMenuClosing();
+
+      applyViewMode(viewMode);
+      restoreFilters();
+      loadGroups().then(loadProjects);
+    </script>
+  </body>
+</html>
