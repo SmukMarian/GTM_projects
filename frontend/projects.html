@@ -192,8 +192,26 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 16px;
+      }
+
+      @media (max-width: 1280px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 960px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       .project-card {
@@ -639,6 +657,8 @@
       let projects = [];
       let groups = [];
       let selectedProjectId = null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialGroupId = urlParams.get("group_id");
       let stageOptions = [];
 
       function resetFiltersState() {
@@ -1024,10 +1044,13 @@
           return;
         }
         groups = await res.json();
-        groupFilter.innerHTML = '<option value="">Все группы</option>' +
-          groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
+        groupFilter.innerHTML =
+          '<option value="">Все группы</option>' + groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
         groupSelect.innerHTML = groups.map((g) => `<option value="${g.id}">${g.name}</option>`).join("");
         restoreFilters();
+        if (!groupFilter.value && initialGroupId) {
+          groupFilter.value = initialGroupId;
+        }
       }
 
       function closeContextMenu() {
