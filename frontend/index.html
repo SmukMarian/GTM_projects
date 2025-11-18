@@ -17,64 +17,85 @@
         document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
-    <title>Haier Project Tracker — Заглушка</title>
+    <title>Haier Project Tracker — Дашборд</title>
     <style>
       :root {
         color-scheme: light;
         font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         line-height: 1.5;
-        --bg: #f6f7fb;
-        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.12), transparent 32%),
-          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.1), transparent 30%);
+        --bg: #f4f6fb;
+        --bg-alt: #e9edf5;
         --surface: #ffffff;
-        --surface-muted: #f8fafc;
+        --surface-muted: #f7f9fc;
         --text: #0f172a;
         --muted: #475569;
-        --border: #e2e8f0;
-        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --border: #d7dce5;
+        --shadow: 0 15px 50px rgba(15, 23, 42, 0.08);
         --accent: #10a37f;
         --accent-strong: #19b88f;
         --accent-soft: rgba(16, 163, 127, 0.12);
         --danger: #ef4444;
+        --warning: #fbbf24;
       }
 
       [data-theme="dark"] {
         color-scheme: dark;
         --bg: #0d1117;
-        --bg-gradient: radial-gradient(circle at 20% 20%, rgba(16, 163, 127, 0.2), transparent 32%),
-          radial-gradient(circle at 80% 0%, rgba(16, 163, 127, 0.16), transparent 30%);
-        --surface: #161b22;
-        --surface-muted: #1e2633;
+        --bg-alt: #0f1520;
+        --surface: #0f172a;
+        --surface-muted: #111b2d;
         --text: #e6edf3;
-        --muted: #9ba7b5;
-        --border: #2d333b;
-        --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        --muted: #96a2b5;
+        --border: #1f2937;
+        --shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
         --accent: #10a37f;
         --accent-strong: #19b88f;
         --accent-soft: rgba(16, 163, 127, 0.2);
         --danger: #f87171;
+        --warning: #facc15;
       }
 
       body {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 48px 24px 64px;
-        background-color: var(--bg);
-        background-image: var(--bg-gradient);
+        margin: 0;
+        background: radial-gradient(circle at 15% 20%, rgba(16, 163, 127, 0.12), transparent 30%),
+          radial-gradient(circle at 80% 0%, rgba(79, 70, 229, 0.08), transparent 25%),
+          linear-gradient(120deg, var(--bg) 0%, var(--bg-alt) 100%);
         color: var(--text);
       }
 
+      .page {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 32px 18px 72px;
+      }
+
+      header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+
       h1 {
-        margin-bottom: 0.25rem;
+        margin: 0;
         font-size: 2rem;
+        letter-spacing: -0.01em;
+      }
+
+      p.lead {
+        margin: 4px 0 0;
+        color: var(--muted);
       }
 
       .pill {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         padding: 6px 12px;
-        background: var(--accent-soft);
-        color: var(--accent);
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 999px;
+        box-shadow: var(--shadow);
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -84,39 +105,213 @@
       .card {
         background: var(--surface);
         color: var(--text);
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 18px;
+        padding: 18px 18px 16px;
         box-shadow: var(--shadow);
         border: 1px solid var(--border);
-        margin-top: 20px;
+      }
+
+      .card h2 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+      }
+
+      .card p {
+        margin-top: 0;
       }
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 16px;
-        margin-top: 16px;
       }
 
-      .grid .card {
-        margin-top: 0;
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
       }
 
-      ul {
-        padding-left: 18px;
-      }
-
-      code {
+      .kpi {
         background: var(--surface-muted);
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
       }
 
-      footer {
-        margin-top: 32px;
-        font-size: 0.9rem;
+      .kpi strong {
+        font-size: 1.3rem;
+      }
+
+      .muted {
         color: var(--muted);
+      }
+
+      .progress {
+        margin-top: 6px;
+        height: 8px;
+        background: var(--surface);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 100%);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .layout-two {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 960px) {
+        .layout-two {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+
+      tr.overdue {
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      tr:hover {
+        background: var(--surface-muted);
+      }
+
+      .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .list li {
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-muted);
+      }
+
+      .group-card {
+        border: 1px solid var(--border);
+        padding: 14px;
+        border-radius: 14px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .group-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .risk {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .risk-block li {
+        border-left: 4px solid var(--danger);
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .actions a,
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+
+      button,
+      .ghost {
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        border: none;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .ghost {
+        background: var(--surface-muted);
+      }
+
+      label.field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      select,
+      input[type="text"],
+      input[type="date"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        text-decoration: underline;
       }
 
       .context-menu {
@@ -124,7 +319,7 @@
         background: var(--surface);
         color: var(--text);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
         box-shadow: var(--shadow);
         min-width: 220px;
         z-index: 1000;
@@ -201,73 +396,89 @@
       <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
       <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
     </div>
-    <span class="pill">Дашборд</span>
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
-      <h1 style="margin: 0">Haier Project Tracker</h1>
-      <a href="/groups.html" style="font-weight: 600">Перейти к продуктовым группам →</a>
-      <a href="/projects.html" style="font-weight: 600">Перейти к проектам →</a>
-    </div>
-    <p>
-      Главная страница показывает статусы проектов, сводку по продуктовым группам, ближайшие важные даты и последние изменения.
-      Все данные обновляются напрямую из локального JSON-хранилища через API FastAPI.
-    </p>
+    <div class="page">
+      <header>
+        <div>
+          <div class="pill">Дашборд</div>
+          <h1>Haier Project Tracker</h1>
+          <p class="lead">Сводка по проектам, рискам и ближайшим дедлайнам</p>
+        </div>
+        <div class="actions">
+          <a href="/groups.html" class="badge" title="Перейти к продуктовым группам">Продуктовые группы →</a>
+          <a href="/projects.html" class="badge" title="Перейти к проектам">Проекты →</a>
+        </div>
+      </header>
 
-    <div class="card">
-      <h2>Фильтры</h2>
-      <div class="grid" style="align-items: end">
-        <label class="card">
-          <span>Продуктовая группа</span>
-          <select id="groupFilter">
-            <option value="">Все</option>
-          </select>
-        </label>
-        <label class="card">
-          <span>Бренд</span>
-          <input id="brandFilter" type="text" placeholder="Например, Haier" />
-        </label>
-        <label class="card">
-          <span>Статус проекта</span>
-          <select id="statusFilter">
-            <option value="">Все</option>
-            <option value="active">Активный</option>
-            <option value="closed">Закрыт</option>
-            <option value="archived">Архивирован</option>
-          </select>
-        </label>
-        <label class="card" style="gap: 8px; display: flex; align-items: center">
-          <input id="showArchived" type="checkbox" />
-          <span>Показывать архивные проекты и группы</span>
-        </label>
+      <div class="card" aria-label="Фильтры дашборда">
+        <h2>Фильтры</h2>
+        <div class="grid" style="align-items: end">
+          <label class="field">
+            Продуктовая группа
+            <select id="groupFilter">
+              <option value="">Все</option>
+            </select>
+          </label>
+          <label class="field">
+            Бренд
+            <input id="brandFilter" type="text" placeholder="Например, Haier" />
+          </label>
+          <label class="field">
+            Статус проекта
+            <select id="statusFilter">
+              <option value="">Все</option>
+              <option value="active">Активный</option>
+              <option value="closed">Закрыт</option>
+              <option value="archived">Архивирован</option>
+            </select>
+          </label>
+          <label class="field" style="flex-direction: row; gap: 12px; align-items: center">
+            <input id="showArchived" type="checkbox" />
+            <span>Показывать архивные проекты и группы</span>
+          </label>
+        </div>
+        <div class="actions" style="margin-top: 12px">
+          <button id="applyFilters" class="primary">Обновить</button>
+          <button id="resetFilters" class="ghost">Сбросить фильтры</button>
+        </div>
       </div>
-      <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
-        <button id="applyFilters">Обновить</button>
-        <button id="resetFilters" class="ghost">Сбросить фильтры</button>
-      </div>
-    </div>
 
-    <div class="grid">
       <div class="card">
-        <h2>Сводка по статусам</h2>
-        <ul id="statusSummary"></ul>
+        <h2>Ключевые показатели</h2>
+        <div class="kpi-grid" id="kpiGrid"></div>
       </div>
+
+      <div class="layout-two">
+        <div class="card">
+          <h2>Распределение по брендам</h2>
+          <div id="brandList" class="list"></div>
+        </div>
+        <div class="card">
+          <h2>Прогресс по GTM</h2>
+          <div id="gtmProgress" class="list"></div>
+        </div>
+      </div>
+
+      <div class="layout-two">
+        <div class="card risk-block">
+          <h2>Риски</h2>
+          <ul id="riskList" class="list"></ul>
+        </div>
+        <div class="card">
+          <h2>Ближайшие дедлайны</h2>
+          <table id="upcomingTable"></table>
+        </div>
+      </div>
+
       <div class="card">
-        <h2>Ближайшие важные даты</h2>
-        <table id="upcomingTable" style="width: 100%; border-collapse: collapse"></table>
+        <h2>Продуктовые группы</h2>
+        <div id="groupGrid" class="grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Последние изменения</h2>
+        <ul id="recentChanges" class="list"></ul>
       </div>
     </div>
-
-    <div class="card">
-      <h2>Продуктовые группы</h2>
-      <div id="groupGrid" class="grid"></div>
-    </div>
-
-    <div class="card">
-      <h2>Последние изменения</h2>
-      <ul id="recentChanges" style="max-height: 320px; overflow: auto"></ul>
-    </div>
-
-    <footer>Интерфейс на русском языке; характеристики RU/EN показываются рядом. Главная страница — отправная точка для перехода
-      в группы и проекты.</footer>
 
     <div id="contextMenu" class="context-menu" hidden>
       <ul id="contextMenuList"></ul>
@@ -275,6 +486,7 @@
 
     <script src="/theme.js" defer></script>
     <script>
+      const kpiGrid = document.getElementById("kpiGrid");
       const statusList = document.getElementById("statusSummary");
       const groupGrid = document.getElementById("groupGrid");
       const upcomingTable = document.getElementById("upcomingTable");
@@ -287,6 +499,9 @@
       const resetFilters = document.getElementById("resetFilters");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const brandList = document.getElementById("brandList");
+      const gtmProgress = document.getElementById("gtmProgress");
+      const riskList = document.getElementById("riskList");
       const filterStorageKey = "hpt-dashboard-filters";
 
       async function loadGroupsForFilter() {
@@ -327,75 +542,157 @@
         }
       }
 
-      function renderStatus(summary) {
-        statusList.innerHTML = "";
-        const entries = [
-          { label: "Активные", value: summary.active },
-          { label: "Закрытые", value: summary.closed },
-          { label: "Архивированные", value: summary.archived },
+      function renderKPIs(kpis) {
+        kpiGrid.innerHTML = "";
+        const items = [
+          {
+            title: "Всего проектов",
+            value: kpis.total_projects,
+            note: `${kpis.active} активных, ${kpis.closed} закрытых, ${kpis.archived} архивных`,
+            percent: kpis.completion_rate,
+            hint: "Доля завершённых проектов",
+          },
+          {
+            title: "Проекты с рисками",
+            value: kpis.overdue_projects,
+            note: `Риск в ${Math.round(kpis.overdue_rate * 100)}% проектов`,
+            percent: kpis.overdue_rate,
+            hint: "Просрочки или ручной флаг риска",
+          },
+          {
+            title: "Продуктовые группы",
+            value: kpis.active_groups,
+            note: `${kpis.risky_groups} с рисками",
+            percent: kpis.risky_groups && kpis.active_groups ? kpis.risky_groups / kpis.active_groups : 0,
+            hint: "Активные и проблемные группы",
+          },
         ];
-        entries.forEach((item) => {
-          const li = document.createElement("li");
-          li.textContent = `${item.label}: ${item.value}`;
-          statusList.appendChild(li);
+
+        items.forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "kpi";
+          div.innerHTML = `<div class="muted">${item.title}</div><strong>${item.value}</strong><div class="muted">${item.note}</div>`;
+          const progress = document.createElement("div");
+          progress.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${Math.min(item.percent * 100, 100)}%`;
+          progress.title = item.hint;
+          progress.appendChild(span);
+          div.appendChild(progress);
+          kpiGrid.appendChild(div);
         });
       }
 
-        function renderGroups(groups) {
-          groupGrid.innerHTML = "";
-          groups.forEach((group) => {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.dataset.groupId = group.id;
-            const risk = group.risk ? " ⚠️" : "";
-            card.innerHTML = `<strong><a href="/groups.html?group=${group.id}">${group.name}</a></strong>${risk}<br />Активных проектов: ${group.active_projects}`;
-            card.addEventListener("contextmenu", (event) => {
-              event.preventDefault();
-              openContextMenu(event, "group", group);
-            });
-            groupGrid.appendChild(card);
-          });
-        }
-
-      function renderUpcoming(rows) {
-        if (!rows.length) {
-          upcomingTable.innerHTML = "<tr><td>Нет ближайших дат</td></tr>";
+      function renderBrands(brands) {
+        brandList.innerHTML = "";
+        if (!brands.length) {
+          brandList.innerHTML = "<p class=\"muted\">Нет данных</p>";
           return;
         }
-          const header = `<tr><th align="left">Проект</th><th align="left">Группа</th><th align="left">Тип</th><th align="left">Элемент</th><th align="left">Плановая дата</th><th align="left">Δ дней</th></tr>`;
-          const body = rows
-            .map((row) => {
-              const marker = row.risk || row.days_delta < 0 ? "⚠️" : "";
-              return `<tr data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/project.html?id=${row.project_id}">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
-            })
-            .join("");
-          upcomingTable.innerHTML = header + body;
+        const max = Math.max(...brands.map((b) => b.projects));
+        brands.forEach((item) => {
+          const li = document.createElement("div");
+          li.className = "kpi";
+          const pct = Math.round((item.projects / max) * 100);
+          li.innerHTML = `<div><strong>${item.brand}</strong></div><div class="muted">${item.projects} проект(ов)</div>`;
+          const bar = document.createElement("div");
+          bar.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${pct}%`;
+          bar.appendChild(span);
+          li.appendChild(bar);
+          brandList.appendChild(li);
+        });
+      }
 
-          Array.from(upcomingTable.querySelectorAll("tr[data-project-id]"))
-            .forEach((row) => {
-              row.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                openContextMenu(event, "project", {
-                  id: row.dataset.projectId,
-                  group_id: row.dataset.groupId,
-                  name: row.querySelector("a")?.textContent || "Проект",
-                });
+      function renderGtmProgress(dist) {
+        gtmProgress.innerHTML = "";
+        const rows = [
+          { label: "Стартовые этапы", value: dist.early },
+          { label: "Середина", value: dist.middle },
+          { label: "Финал", value: dist.late },
+          { label: "Без этапов", value: dist.none },
+        ];
+        const max = Math.max(...rows.map((r) => r.value), 1);
+        rows.forEach((row) => {
+          const card = document.createElement("div");
+          card.className = "kpi";
+          const pct = Math.round((row.value / max) * 100);
+          card.innerHTML = `<div><strong>${row.label}</strong></div><div class="muted">${row.value} проект(ов)</div>`;
+          const bar = document.createElement("div");
+          bar.className = "progress";
+          const span = document.createElement("span");
+          span.style.width = `${pct}%`;
+          bar.appendChild(span);
+          card.appendChild(bar);
+          gtmProgress.appendChild(card);
+        });
+      }
+
+      function renderGroups(groups) {
+        groupGrid.innerHTML = "";
+        if (!groups.length) {
+          groupGrid.innerHTML = "<p class=\"muted\">Нет групп по текущему фильтру</p>";
+          return;
+        }
+        groups.forEach((group) => {
+          const card = document.createElement("div");
+          card.className = "group-card";
+          card.dataset.groupId = group.id;
+          const risk = group.risk ? '<span class="risk">⚠️ Риск</span>' : "";
+          card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong>${group.name}</strong>${risk}</div><div class="muted">Активных проектов: ${group.active_projects}</div><a href="/groups.html?group=${group.id}">Перейти в группу</a>`;
+          card.addEventListener("click", () => {
+            window.location.href = `/groups.html?group=${group.id}`;
+          });
+          card.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "group", group);
+          });
+          groupGrid.appendChild(card);
+        });
+      }
+
+      function renderUpcoming(rows) {
+        const header = `<tr><th>Проект</th><th>Группа</th><th>Тип</th><th>Элемент</th><th>Плановая дата</th><th>Δ дней</th></tr>`;
+        if (!rows.length) {
+          upcomingTable.innerHTML = header + '<tr><td colspan="6" class="muted">Нет ближайших дат</td></tr>';
+          return;
+        }
+        const body = rows
+          .map((row) => {
+            const overdue = row.days_delta < 0;
+            const marker = row.risk || overdue ? "⚠️" : "";
+            return `<tr class="${overdue ? "overdue" : ""}" data-project-id="${row.project_id}" data-group-id="${row.group_id}"><td><a href="/project.html?id=${row.project_id}">${row.project_name}</a></td><td>${row.group_name}</td><td>${row.kind === "gtm_stage" ? "GTM-этап" : "Задача"}</td><td>${row.title}</td><td>${row.planned_date}</td><td>${row.days_delta} ${marker}</td></tr>`;
+          })
+          .join("");
+        upcomingTable.innerHTML = header + body;
+
+        Array.from(upcomingTable.querySelectorAll("tr[data-project-id]"))
+          .forEach((row) => {
+            row.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              openContextMenu(event, "project", {
+                id: row.dataset.projectId,
+                group_id: row.dataset.groupId,
+                name: row.querySelector("a")?.textContent || "Проект",
               });
             });
-        }
+          });
+      }
 
       function renderChanges(items) {
         recentList.innerHTML = "";
         if (!items.length) {
-          recentList.innerHTML = "<li>Нет изменений</li>";
+          recentList.innerHTML = "<li class=\"muted\">Нет изменений</li>";
           return;
         }
         items.forEach((item) => {
           const li = document.createElement("li");
+          li.className = "group-card";
           const date = new Date(item.occurred_at).toLocaleString();
-          li.innerHTML = `<strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> (${item.group_name}) — ${item.summary}<br /><small>${date}</small>`;
+          li.innerHTML = `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><span class="muted">${date}</span></div><div>${item.summary}</div>`;
           if (item.details) {
-            li.innerHTML += `<div>${item.details}</div>`;
+            li.innerHTML += `<div class="muted">${item.details}</div>`;
           }
           li.dataset.projectId = item.project_id;
           li.dataset.groupId = item.group_id;
@@ -411,14 +708,36 @@
         });
       }
 
+      function renderRisks(items) {
+        riskList.innerHTML = "";
+        if (!items.length) {
+          riskList.innerHTML = "<li class=\"muted\">Нет рисков</li>";
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><div class="risk">${item.reason}${item.overdue_days ? ` · ${item.overdue_days} дн.` : ""}</div>`;
+          li.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openContextMenu(event, "project", {
+              id: item.project_id,
+              group_id: null,
+              name: item.project_name,
+            });
+          });
+          riskList.appendChild(li);
+        });
+      }
+
       function openContextMenu(event, type, data) {
         const actions = [];
         if (type === "group") {
           actions.push({ label: "Открыть группу", href: `/groups.html?group=${data.id}` });
           actions.push({
-            label: "Показать только эту группу",
+            label: "Фильтр по этой группе",
             action: () => {
               groupFilter.value = data.id;
+              persistFilters();
               loadDashboard();
             },
           });
@@ -429,6 +748,7 @@
               label: "Фильтр по группе проекта",
               action: () => {
                 groupFilter.value = data.group_id;
+                persistFilters();
                 loadDashboard();
               },
             });
@@ -485,8 +805,11 @@
           return;
         }
         const payload = await res.json();
-        renderStatus(payload.statuses);
+        renderKPIs(payload.kpis);
+        renderBrands(payload.brands);
+        renderGtmProgress(payload.gtm_distribution);
         renderGroups(payload.groups);
+        renderRisks(payload.risk_projects);
         renderUpcoming(payload.upcoming);
         renderChanges(payload.recent_changes);
       }

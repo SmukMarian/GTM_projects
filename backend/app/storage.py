@@ -23,11 +23,14 @@ from .models import (
     CharacteristicSection,
     CharacteristicTemplate,
     Comment,
+    BrandMetric,
     DashboardPayload,
+    DashboardKPI,
     FileAttachment,
     GTMTemplate,
     GTMStage,
     GroupStatus,
+    GTMDistribution,
     HistoryEvent,
     ImageAttachment,
     ProductGroup,
@@ -35,6 +38,7 @@ from .models import (
     ProjectStatus,
     RecentChange,
     GroupDashboardCard,
+    RiskProject,
     StatusSummary,
     UpcomingItem,
     Subtask,
@@ -776,6 +780,23 @@ class LocalRepository:
                 return True
         return False
 
+    @staticmethod
+    def _project_overdue_days(project: Project, today: date) -> int:
+        """Самое сильное просроченное значение для проекта (в днях)."""
+
+        max_overdue = 0
+        for stage in project.gtm_stages:
+            if stage.planned_end and stage.status not in {StageStatus.DONE, StageStatus.CANCELLED}:
+                overdue = (today - stage.planned_end).days
+                if overdue > max_overdue:
+                    max_overdue = overdue
+        for task in project.tasks:
+            if task.due_date and task.status != TaskStatus.DONE:
+                overdue = (today - task.due_date).days
+                if overdue > max_overdue:
+                    max_overdue = overdue
+        return max_overdue
+
     def build_dashboard(
         self,
         *,
@@ -807,6 +828,40 @@ class LocalRepository:
                 status_summary.closed += 1
             elif project.status == ProjectStatus.ARCHIVED:
                 status_summary.archived += 1
+
+        brand_metrics: dict[str, int] = {}
+        for project in filtered_projects:
+            brand_name = project.brand.strip() or "Без бренда"
+            brand_metrics[brand_name] = brand_metrics.get(brand_name, 0) + 1
+
+        gtm_distribution = GTMDistribution()
+        for project in filtered_projects:
+            if not project.gtm_stages:
+                gtm_distribution.none += 1
+                continue
+
+            stages_sorted = sorted(project.gtm_stages, key=lambda s: s.order)
+            current_index: int | None = None
+            if project.current_gtm_stage_id:
+                for idx, stage in enumerate(stages_sorted):
+                    if stage.id == project.current_gtm_stage_id:
+                        current_index = idx
+                        break
+            if current_index is None:
+                for idx, stage in enumerate(stages_sorted):
+                    if stage.status not in {StageStatus.DONE, StageStatus.CANCELLED}:
+                        current_index = idx
+                        break
+            if current_index is None:
+                current_index = len(stages_sorted) - 1
+
+            ratio = (current_index + 1) / max(len(stages_sorted), 1)
+            if ratio <= 1 / 3:
+                gtm_distribution.early += 1
+            elif ratio <= 2 / 3:
+                gtm_distribution.middle += 1
+            else:
+                gtm_distribution.late += 1
 
         if include_archived:
             groups = list(self.store.product_groups)
@@ -865,6 +920,7 @@ class LocalRepository:
         upcoming = upcoming[:upcoming_limit]
 
         recent_events: list[RecentChange] = []
+        risk_projects: list[RiskProject] = []
         for project in filtered_projects:
             group_name = next((g.name for g in self.store.product_groups if g.id == project.group_id), "")
             for event in project.history:
@@ -879,12 +935,55 @@ class LocalRepository:
                     )
                 )
 
+            if self._project_has_risk(project, today):
+                overdue_days = self._project_overdue_days(project, today)
+                reason = "Просрочка по задачам/этапам" if overdue_days > 0 else "Отмечен риск"
+                risk_projects.append(
+                    RiskProject(
+                        project_id=project.id,
+                        project_name=project.name,
+                        group_name=group_name,
+                        overdue_days=overdue_days,
+                        reason=reason,
+                    )
+                )
+
         recent_events.sort(key=lambda item: item.occurred_at, reverse=True)
         recent_events = recent_events[:changes_limit]
+
+        total_projects = len(filtered_projects)
+        overdue_projects = len(risk_projects)
+        active_groups = len(groups)
+        risky_groups = len([g for g in group_cards if g.risk])
+        completion_rate = 0.0
+        if status_summary.active + status_summary.closed:
+            completion_rate = status_summary.closed / (status_summary.active + status_summary.closed)
+        overdue_rate = 0.0
+        if total_projects:
+            overdue_rate = overdue_projects / total_projects
 
         return DashboardPayload(
             statuses=status_summary,
             groups=group_cards,
+            kpis=DashboardKPI(
+                total_projects=total_projects,
+                active=status_summary.active,
+                closed=status_summary.closed,
+                archived=status_summary.archived,
+                completion_rate=round(completion_rate, 3),
+                overdue_projects=overdue_projects,
+                overdue_rate=round(overdue_rate, 3),
+                active_groups=active_groups,
+                risky_groups=risky_groups,
+            ),
+            brands=[
+                BrandMetric(brand=name, projects=count)
+                for name, count in sorted(brand_metrics.items(), key=lambda item: item[1], reverse=True)
+            ],
+            gtm_distribution=gtm_distribution,
+            risk_projects=sorted(
+                risk_projects, key=lambda r: (r.overdue_days * -1, r.project_name)
+            ),
             upcoming=upcoming,
             recent_changes=recent_events,
         )

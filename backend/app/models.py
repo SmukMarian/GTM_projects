@@ -238,6 +238,46 @@ class GroupDashboardCard(BaseModel):
     risk: bool
 
 
+class BrandMetric(BaseModel):
+    """Количество проектов по бренду."""
+
+    brand: str
+    projects: int
+
+
+class GTMDistribution(BaseModel):
+    """Распределение проектов по стадии прохождения GTM."""
+
+    early: int = 0
+    middle: int = 0
+    late: int = 0
+    none: int = 0
+
+
+class RiskProject(BaseModel):
+    """Проекты с рисками/просрочками."""
+
+    project_id: UUID
+    project_name: str
+    group_name: str
+    overdue_days: int
+    reason: str
+
+
+class DashboardKPI(BaseModel):
+    """Ключевые показатели для дашборда."""
+
+    total_projects: int = 0
+    active: int = 0
+    closed: int = 0
+    archived: int = 0
+    completion_rate: float = 0.0
+    overdue_projects: int = 0
+    overdue_rate: float = 0.0
+    active_groups: int = 0
+    risky_groups: int = 0
+
+
 class UpcomingItem(BaseModel):
     """Ближайшая важная дата (этап или задача)."""
 
@@ -267,6 +307,10 @@ class DashboardPayload(BaseModel):
 
     statuses: StatusSummary
     groups: list[GroupDashboardCard]
+    kpis: DashboardKPI
+    brands: list[BrandMetric]
+    gtm_distribution: GTMDistribution
+    risk_projects: list[RiskProject]
     upcoming: list[UpcomingItem]
     recent_changes: list[RecentChange]
 
