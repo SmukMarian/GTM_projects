@@ -244,6 +244,106 @@
         padding: 12px;
         background: #fff;
       }
+
+      .task-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+        margin-bottom: 12px;
+      }
+
+      .task-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        font-size: 0.85rem;
+      }
+
+      .status-chip.todo {
+        background: #eef2ff;
+        color: #312e81;
+      }
+
+      .status-chip.in_progress {
+        background: #e0f2fe;
+        color: #075985;
+      }
+
+      .status-chip.done {
+        background: #ecfdf3;
+        color: #166534;
+      }
+
+      .task-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .task-column {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .tag {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: #f8fafc;
+        font-size: 0.85rem;
+      }
+
+      .tag.due-overdue {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+
+      .tag.due-soon {
+        background: #fffbeb;
+        color: #92400e;
+      }
+
+      .subtasks {
+        margin-top: 10px;
+        padding-left: 0;
+      }
+
+      .subtasks li {
+        list-style: none;
+        margin: 6px 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .comment-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+
+      .comment-item {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
     </style>
   </head>
   <body>
@@ -296,6 +396,45 @@
         </div>
       </div>
       <div id="characteristics"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Задачи и подзадачи</h2>
+        <div class="toolbar" style="margin: 0">
+          <button class="primary" onclick="openTaskForm()">Новая задача</button>
+          <button id="taskViewToggle" onclick="toggleTaskView()">Переключить вид: список</button>
+        </div>
+      </div>
+      <div class="toolbar" style="gap: 16px">
+        <label style="width: 200px">
+          Статус
+          <select id="taskStatusFilter">
+            <option value="all">Все</option>
+            <option value="todo">ToDo</option>
+            <option value="in_progress">В работе</option>
+            <option value="done">Готово</option>
+          </select>
+        </label>
+        <label style="width: 200px">
+          Сроки
+          <select id="taskDueFilter">
+            <option value="all">Все сроки</option>
+            <option value="upcoming">Ближайшие 7 дней</option>
+            <option value="overdue">Просроченные</option>
+          </select>
+        </label>
+        <label style="width: 220px">
+          GTM-этап
+          <select id="taskGtmFilter">
+            <option value="">Все этапы</option>
+          </select>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
+          <input type="checkbox" id="taskHideDone" /> Скрыть выполненные
+        </label>
+      </div>
+      <div id="tasks"></div>
     </div>
 
     <div id="contextMenu" class="context-menu">
@@ -357,6 +496,52 @@
       </div>
     </div>
 
+    <div id="taskModal" class="modal-backdrop">
+      <div class="modal">
+        <h3 id="taskModalTitle">Задача</h3>
+        <form id="taskForm">
+          <input type="hidden" id="taskId" />
+          <label>
+            Заголовок
+            <input required id="taskTitle" />
+          </label>
+          <label>
+            Описание
+            <textarea id="taskDescription" rows="3"></textarea>
+          </label>
+          <div class="grid-two">
+            <label>
+              Статус
+              <select id="taskStatus">
+                <option value="todo">ToDo</option>
+                <option value="in_progress">В работе</option>
+                <option value="done">Готово</option>
+              </select>
+            </label>
+            <label>
+              Срок выполнения
+              <input type="date" id="taskDueDate" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              GTM-этап
+              <select id="taskGtmStage">
+                <option value="">Не задан</option>
+              </select>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
+              <input type="checkbox" id="taskImportant" /> Отметить как важную
+            </label>
+          </div>
+          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end">
+            <button type="button" onclick="closeTaskModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
       const params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
@@ -366,6 +551,15 @@
       const characteristicContainer = document.getElementById("characteristics");
       const characteristicTemplateSelect = document.getElementById("characteristicTemplateSelect");
       const characteristicImport = document.getElementById("characteristicImport");
+      const tasksContainer = document.getElementById("tasks");
+      const taskStatusFilter = document.getElementById("taskStatusFilter");
+      const taskDueFilter = document.getElementById("taskDueFilter");
+      const taskGtmFilter = document.getElementById("taskGtmFilter");
+      const taskHideDone = document.getElementById("taskHideDone");
+      const taskViewToggle = document.getElementById("taskViewToggle");
+      const taskModal = document.getElementById("taskModal");
+      const taskGtmStageSelect = document.getElementById("taskGtmStage");
+
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
 
@@ -374,12 +568,35 @@
       let gtmStages = [];
       let characteristicTemplates = [];
       let characteristicSections = [];
+      let tasks = [];
+      let taskView = "list";
+      const taskFilters = { status: "all", due: "all", gtm: "", hideDone: false };
 
       if (!projectId) {
         stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
       } else {
         loadData();
       }
+
+      taskStatusFilter.addEventListener("change", (event) => {
+        taskFilters.status = event.target.value;
+        loadTasks();
+      });
+
+      taskDueFilter.addEventListener("change", (event) => {
+        taskFilters.due = event.target.value;
+        renderTasks();
+      });
+
+      taskGtmFilter.addEventListener("change", (event) => {
+        taskFilters.gtm = event.target.value;
+        loadTasks();
+      });
+
+      taskHideDone.addEventListener("change", (event) => {
+        taskFilters.hideDone = event.target.checked;
+        loadTasks();
+      });
 
       async function loadData() {
         await Promise.all([
@@ -389,6 +606,7 @@
           loadCharacteristicTemplates(),
           loadCharacteristics(),
         ]);
+        await loadTasks();
       }
 
       async function loadProject() {
@@ -411,6 +629,7 @@
         const res = await fetch(`/api/projects/${projectId}/gtm-stages`);
         gtmStages = res.ok ? await res.json() : [];
         renderStages();
+        renderTaskFilters();
       }
 
       async function loadCharacteristicTemplates() {
@@ -815,6 +1034,519 @@
         a.download = `gtm_stages_${projectId}.xlsx`;
         a.click();
         window.URL.revokeObjectURL(url);
+      }
+
+      async function loadTasks() {
+        const params = new URLSearchParams();
+        if (taskFilters.status !== "all") params.append("status", taskFilters.status);
+        if (taskFilters.hideDone) params.append("only_active", "true");
+        if (taskFilters.gtm) params.append("gtm_stage_id", taskFilters.gtm);
+        const res = await fetch(`/api/projects/${projectId}/tasks?${params.toString()}`);
+        tasks = res.ok ? await res.json() : [];
+        renderTasks();
+      }
+
+      function renderTaskFilters() {
+        taskGtmFilter.innerHTML = "";
+        const all = document.createElement("option");
+        all.value = "";
+        all.textContent = "Все этапы";
+        taskGtmFilter.appendChild(all);
+
+        taskGtmStageSelect.innerHTML = "";
+        const none = document.createElement("option");
+        none.value = "";
+        none.textContent = "Не задан";
+        taskGtmStageSelect.appendChild(none);
+
+        const sorted = [...gtmStages].sort((a, b) => a.order - b.order);
+        sorted.forEach((stage) => {
+          const option = document.createElement("option");
+          option.value = stage.id;
+          option.textContent = `${stage.order}. ${stage.title}`;
+          taskGtmFilter.appendChild(option.cloneNode(true));
+          taskGtmStageSelect.appendChild(option);
+        });
+
+        taskGtmFilter.value = taskFilters.gtm;
+      }
+
+      function taskStatusLabel(value) {
+        return {
+          todo: "ToDo",
+          in_progress: "В работе",
+          done: "Готово",
+        }[value] || value;
+      }
+
+      function stageTitle(stageId) {
+        if (!stageId) return "Без этапа";
+        const stage = gtmStages.find((s) => s.id === stageId);
+        return stage ? `${stage.order}. ${stage.title}` : "Без этапа";
+      }
+
+      function dueInfo(task) {
+        if (!task.due_date) return { text: "Срок не назначен", className: "tag" };
+        const today = new Date();
+        const due = new Date(task.due_date);
+        const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+        if (task.status === "done") {
+          return { text: `Срок: ${task.due_date}`, className: "tag" };
+        }
+        if (due < today) {
+          return { text: `Просрочено на ${Math.abs(diffDays)} дн.`, className: "tag due-overdue" };
+        }
+        if (diffDays <= 7) {
+          return { text: `До срока ${diffDays} дн.`, className: "tag due-soon" };
+        }
+        return { text: `Срок: ${task.due_date}`, className: "tag" };
+      }
+
+      function applyTaskFilters(list = tasks) {
+        return list.filter((task) => {
+          if (taskFilters.status !== "all" && task.status !== taskFilters.status) return false;
+          if (taskFilters.gtm && task.gtm_stage_id !== taskFilters.gtm) return false;
+          if (taskFilters.due === "overdue") {
+            if (!task.due_date) return false;
+            const due = new Date(task.due_date);
+            if (due >= new Date() || task.status === "done") return false;
+          }
+          if (taskFilters.due === "upcoming") {
+            if (!task.due_date) return false;
+            const due = new Date(task.due_date);
+            const diffDays = Math.floor((due - new Date()) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0 || diffDays > 7) return false;
+          }
+          return true;
+        });
+      }
+
+      function toggleTaskView() {
+        taskView = taskView === "list" ? "board" : "list";
+        renderTasks();
+      }
+
+      function renderTasks() {
+        const filtered = applyTaskFilters();
+        taskViewToggle.textContent = taskView === "list" ? "Переключить вид: доска" : "Переключить вид: список";
+        if (!filtered.length) {
+          tasksContainer.innerHTML = "<p class='muted'>Задачи ещё не созданы или не подходят под фильтр.</p>";
+          return;
+        }
+
+        if (taskView === "board") {
+          renderTaskBoard(filtered);
+        } else {
+          renderTaskList(filtered);
+        }
+      }
+
+      function renderTaskBoard(list) {
+        const statuses = [
+          { key: "todo", title: "ToDo" },
+          { key: "in_progress", title: "В работе" },
+          { key: "done", title: "Готово" },
+        ];
+        const board = document.createElement("div");
+        board.className = "task-board";
+        statuses.forEach((column) => {
+          const col = document.createElement("div");
+          col.className = "task-column";
+          const columnTasks = list.filter((t) => t.status === column.key);
+          col.innerHTML = `<div class="stage-header"><h3 style="margin:0">${column.title}</h3><span class="chip">${columnTasks.length}</span></div>`;
+
+          if (!columnTasks.length) {
+            const empty = document.createElement("p");
+            empty.className = "muted";
+            empty.textContent = "Нет задач";
+            col.appendChild(empty);
+          } else {
+            columnTasks
+              .slice()
+              .sort((a, b) => (a.due_date || "")?.localeCompare(b.due_date || ""))
+              .forEach((task) => {
+                const card = document.createElement("div");
+                card.className = "task-card";
+                const due = dueInfo(task);
+                card.innerHTML = `
+                  <div class="stage-header">
+                    <div>
+                      <strong>${task.title}</strong>
+                      <div class="muted">${stageTitle(task.gtm_stage_id)}</div>
+                    </div>
+                    <div style="display:flex; gap:6px">
+                      <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                      <button class="ghost" onclick="deleteTask('${task.id}')">🗑️</button>
+                    </div>
+                  </div>
+                  <div class="task-meta" style="margin-top:6px">
+                    <span class="status-chip ${task.status}">${taskStatusLabel(task.status)}</span>
+                    <span class="${due.className}">${due.text}</span>
+                    ${task.important ? '<span class="tag">⭐ Важно</span>' : ""}
+                  </div>
+                  <div class="muted" style="margin-top:6px">${task.description || "Без описания"}</div>
+                  <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'todo')">ToDo</button>
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'in_progress')">В работу</button>
+                    <button class="ghost" onclick="changeTaskStatus('${task.id}', 'done')">Готово</button>
+                    <button class="ghost" onclick="addSubtask('${task.id}')">+ Подзадача</button>
+                  </div>
+                `;
+                card.addEventListener("contextmenu", (event) => {
+                  event.preventDefault();
+                  const actions = [
+                    { label: "Редактировать", action: () => openTaskForm(task.id) },
+                    { label: "ToDo", action: () => changeTaskStatus(task.id, "todo") },
+                    { label: "В работу", action: () => changeTaskStatus(task.id, "in_progress") },
+                    { label: "Готово", action: () => changeTaskStatus(task.id, "done") },
+                    { label: task.important ? "Снять важность" : "Сделать важной", action: () => toggleImportant(task.id) },
+                    { label: "Удалить", action: () => deleteTask(task.id) },
+                  ];
+                  openContextMenu(event, actions);
+                });
+                col.appendChild(card);
+              });
+          }
+          board.appendChild(col);
+        });
+        tasksContainer.innerHTML = "";
+        tasksContainer.appendChild(board);
+      }
+
+      function renderTaskList(list) {
+        tasksContainer.innerHTML = "";
+        list
+          .slice()
+          .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""))
+          .forEach((task) => {
+            const card = document.createElement("div");
+            card.className = "task-card";
+            const due = dueInfo(task);
+            card.innerHTML = `
+              <div class="stage-header">
+                <div>
+                  <strong>${task.title}</strong>
+                  <div class="muted">${stageTitle(task.gtm_stage_id)}</div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center">
+                  <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                  <button class="ghost" onclick="deleteTask('${task.id}')">🗑️</button>
+                </div>
+              </div>
+              <div class="task-meta" style="margin-top:6px">
+                <span class="status-chip ${task.status}">${taskStatusLabel(task.status)}</span>
+                <span class="${due.className}">${due.text}</span>
+                ${task.important ? '<span class="tag">⭐ Важно</span>' : ""}
+              </div>
+              <div class="muted" style="margin-top:6px">${task.description || "Без описания"}</div>
+            `;
+
+            const actionBar = document.createElement("div");
+            actionBar.style.display = "flex";
+            actionBar.style.gap = "8px";
+            actionBar.style.flexWrap = "wrap";
+            actionBar.style.marginTop = "8px";
+            [
+              { label: "ToDo", next: "todo" },
+              { label: "В работу", next: "in_progress" },
+              { label: "Готово", next: "done" },
+            ].forEach((action) => {
+              const btn = document.createElement("button");
+              btn.className = "ghost";
+              btn.textContent = action.label;
+              btn.addEventListener("click", () => changeTaskStatus(task.id, action.next));
+              actionBar.appendChild(btn);
+            });
+            const importantBtn = document.createElement("button");
+            importantBtn.className = "ghost";
+            importantBtn.textContent = task.important ? "Снять важность" : "Сделать важной";
+            importantBtn.addEventListener("click", () => toggleImportant(task.id));
+            actionBar.appendChild(importantBtn);
+            const addSubBtn = document.createElement("button");
+            addSubBtn.className = "ghost";
+            addSubBtn.textContent = "+ Подзадача";
+            addSubBtn.addEventListener("click", () => addSubtask(task.id));
+            actionBar.appendChild(addSubBtn);
+            card.appendChild(actionBar);
+
+            const subtasksList = document.createElement("ul");
+            subtasksList.className = "subtasks";
+            const subtasks = [...(task.subtasks || [])].sort((a, b) => a.order - b.order);
+            if (!subtasks.length) {
+              const li = document.createElement("li");
+              li.className = "muted";
+              li.textContent = "Подзадач пока нет";
+              subtasksList.appendChild(li);
+            } else {
+              subtasks.forEach((sub) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                  <input type="checkbox" ${sub.done ? "checked" : ""} />
+                  <span ${sub.done ? 'style="text-decoration: line-through; color:#94a3b8"' : ''}>${sub.title}</span>
+                `;
+                li.querySelector("input").addEventListener("change", (event) => {
+                  toggleSubtask(task.id, sub.id, event.target.checked);
+                });
+                const editBtn = document.createElement("button");
+                editBtn.className = "ghost";
+                editBtn.textContent = "Изменить";
+                editBtn.addEventListener("click", () => editSubtask(task.id, sub.id));
+                const delBtn = document.createElement("button");
+                delBtn.className = "ghost";
+                delBtn.textContent = "Удалить";
+                delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
+                li.appendChild(editBtn);
+                li.appendChild(delBtn);
+                li.addEventListener("contextmenu", (event) => {
+                  event.preventDefault();
+                  const actions = [
+                    { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
+                    { label: "Переименовать", action: () => editSubtask(task.id, sub.id) },
+                    { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
+                  ];
+                  openContextMenu(event, actions);
+                });
+                subtasksList.appendChild(li);
+              });
+            }
+            card.appendChild(subtasksList);
+
+            const commentsBlock = document.createElement("div");
+            commentsBlock.style.marginTop = "10px";
+            commentsBlock.innerHTML = `<strong>Комментарии</strong>`;
+            const commentList = document.createElement("ul");
+            commentList.className = "comment-list";
+            if (!task.comments?.length) {
+              const empty = document.createElement("li");
+              empty.className = "muted";
+              empty.textContent = "Комментариев нет";
+              commentList.appendChild(empty);
+            } else {
+              task.comments
+                .slice()
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .forEach((comment) => {
+                  const item = document.createElement("li");
+                  item.className = "comment-item";
+                  const created = new Date(comment.created_at).toLocaleString("ru-RU");
+                  item.innerHTML = `<div class="muted" style="font-size:0.85rem">${created}</div><div>${comment.text}</div>`;
+                  const del = document.createElement("button");
+                  del.className = "ghost";
+                  del.textContent = "Удалить";
+                  del.addEventListener("click", () => deleteTaskComment(task.id, comment.id));
+                  item.appendChild(del);
+                  commentList.appendChild(item);
+                });
+            }
+            commentsBlock.appendChild(commentList);
+            const addCommentBtn = document.createElement("button");
+            addCommentBtn.className = "ghost";
+            addCommentBtn.textContent = "+ Комментарий";
+            addCommentBtn.addEventListener("click", () => addTaskComment(task.id));
+            commentsBlock.appendChild(addCommentBtn);
+            card.appendChild(commentsBlock);
+
+            card.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              const actions = [
+                { label: "Редактировать", action: () => openTaskForm(task.id) },
+                { label: "ToDo", action: () => changeTaskStatus(task.id, "todo") },
+                { label: "В работу", action: () => changeTaskStatus(task.id, "in_progress") },
+                { label: "Готово", action: () => changeTaskStatus(task.id, "done") },
+                { label: task.important ? "Снять важность" : "Сделать важной", action: () => toggleImportant(task.id) },
+                { label: "Удалить", action: () => deleteTask(task.id) },
+              ];
+              openContextMenu(event, actions);
+            });
+
+            tasksContainer.appendChild(card);
+          });
+      }
+
+      function openTaskForm(taskId = null) {
+        taskModal.style.display = "flex";
+        const task = tasks.find((t) => t.id === taskId);
+        document.getElementById("taskModalTitle").textContent = task ? "Редактирование задачи" : "Новая задача";
+        document.getElementById("taskId").value = task?.id || "";
+        document.getElementById("taskTitle").value = task?.title || "";
+        document.getElementById("taskDescription").value = task?.description || "";
+        document.getElementById("taskStatus").value = task?.status || "todo";
+        document.getElementById("taskDueDate").value = task?.due_date || "";
+        document.getElementById("taskImportant").checked = task?.important || false;
+        taskGtmStageSelect.value = task?.gtm_stage_id || "";
+      }
+
+      function closeTaskModal() {
+        taskModal.style.display = "none";
+      }
+
+      document.getElementById("taskForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          title: document.getElementById("taskTitle").value,
+          description: document.getElementById("taskDescription").value || null,
+          status: document.getElementById("taskStatus").value,
+          due_date: document.getElementById("taskDueDate").value || null,
+          important: document.getElementById("taskImportant").checked,
+          gtm_stage_id: document.getElementById("taskGtmStage").value || null,
+          subtasks: [],
+          comments: [],
+        };
+        const taskId = document.getElementById("taskId").value;
+        let res;
+        if (taskId) {
+          const existing = tasks.find((t) => t.id === taskId);
+          payload.subtasks = existing?.subtasks || [];
+          payload.comments = existing?.comments || [];
+          payload.id = taskId;
+          res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } else {
+          res = await fetch(`/api/projects/${projectId}/tasks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }
+        if (!res.ok) {
+          alert("Не удалось сохранить задачу");
+          return;
+        }
+        closeTaskModal();
+        await loadTasks();
+      });
+
+      async function changeTaskStatus(taskId, status) {
+        const existing = tasks.find((t) => t.id === taskId);
+        if (!existing) return;
+        const payload = { ...existing, status };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить статус");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function toggleImportant(taskId) {
+        const existing = tasks.find((t) => t.id === taskId);
+        if (!existing) return;
+        const payload = { ...existing, important: !existing.important };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить важность");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteTask(taskId) {
+        if (!confirm("Удалить задачу и её подзадачи?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить задачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function addSubtask(taskId) {
+        const title = prompt("Текст подзадачи");
+        if (!title) return;
+        const task = tasks.find((t) => t.id === taskId);
+        const order = task?.subtasks?.length || 0;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, done: false, order }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function toggleSubtask(taskId, subtaskId, done) {
+        const task = tasks.find((t) => t.id === taskId);
+        const sub = task?.subtasks.find((s) => s.id === subtaskId);
+        if (!task || !sub) return;
+        const payload = { ...sub, done };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function editSubtask(taskId, subtaskId) {
+        const task = tasks.find((t) => t.id === taskId);
+        const sub = task?.subtasks.find((s) => s.id === subtaskId);
+        if (!task || !sub) return;
+        const title = prompt("Текст подзадачи", sub.title);
+        if (title === null || title.trim() === "") return;
+        const payload = { ...sub, title: title.trim() };
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteSubtask(taskId, subtaskId) {
+        if (!confirm("Удалить подзадачу?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить подзадачу");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function addTaskComment(taskId) {
+        const text = prompt("Комментарий к задаче");
+        if (!text || !text.trim()) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text.trim() }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        await loadTasks();
+      }
+
+      async function deleteTaskComment(taskId, commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadTasks();
       }
 
       function renderCharacteristics() {
