@@ -1,4 +1,4 @@
-"""Настройки приложения Haier Project Tracker."""
+"""Настройки приложения Projects Tracker."""
 
 from __future__ import annotations
 

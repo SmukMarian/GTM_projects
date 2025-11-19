@@ -1,4 +1,4 @@
-# Haier Project Tracker — Dev Tasks
+# Projects Tracker — Dev Tasks
 
 Чек-лист задач для реализации проекта согласно `Haier_Project_Tracker_TZ.md`.  
 Отмечай выполненные пункты `[x]`.

@@ -1,4 +1,4 @@
-"""Базовый сервер Haier Project Tracker.
+"""Базовый сервер Projects Tracker.
 
 Этот модуль поднимает минимальное FastAPI-приложение, которое будет
 обслуживать фронтенд и API. На данном этапе реализован только health-check
@@ -54,7 +54,7 @@ from .storage import LocalRepository
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = BASE_DIR / "frontend"
 
-app = FastAPI(title="Haier Project Tracker", version="0.1.0")
+app = FastAPI(title="Projects Tracker", version="0.1.0")
 repository = LocalRepository(settings.primary_store)
 
 
@@ -1256,4 +1256,4 @@ else:
     def frontend_placeholder() -> str:
         """Заглушка, если фронтенд ещё не настроен."""
 
-        return "<h1>Haier Project Tracker</h1><p>Фронтенд ещё не настроен.</p>"
+        return "<h1>Projects Tracker</h1><p>Фронтенд ещё не настроен.</p>"

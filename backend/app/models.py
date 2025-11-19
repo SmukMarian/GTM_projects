@@ -1,4 +1,4 @@
-"""Доменные модели Haier Project Tracker.
+"""Доменные модели Projects Tracker.
 
 Файл задаёт Pydantic-модели и перечисления, соответствующие сущностям
 из `Haier_Project_Tracker_TZ.md`. Модели служат единым контрактом между

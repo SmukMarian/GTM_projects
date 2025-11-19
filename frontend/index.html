@@ -18,7 +18,7 @@
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Haier Project Tracker — Дашборд</title>
+    <title>Projects Tracker — Дашборд</title>
     <style>
       :root {
         color-scheme: light;
@@ -60,7 +60,11 @@
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
@@ -570,6 +574,18 @@
         transform: translateY(-2px);
         background-color: var(--surface-muted);
       }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -580,9 +596,9 @@
     </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
@@ -597,7 +613,7 @@
       <header>
         <div>
           <div class="pill">Дашборд</div>
-          <h1>Haier Project Tracker</h1>
+          <h1>Projects Tracker</h1>
           <p class="lead">Сводка по проектам, рискам и ближайшим дедлайнам</p>
         </div>
       </header>
@@ -1110,8 +1126,16 @@
         loadDashboard();
       });
 
+      showArchived.addEventListener("change", () => {
+        persistFilters();
+        loadDashboard();
+      });
+
       restoreFilters();
       loadGroupsForFilter().then(loadDashboard);
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>

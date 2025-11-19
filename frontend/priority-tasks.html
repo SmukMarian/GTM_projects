@@ -17,7 +17,7 @@
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Важные задачи — Haier Project Tracker</title>
+    <title>Важные задачи — Projects Tracker</title>
     <style>
       :root {
         color-scheme: light;
@@ -77,15 +77,18 @@
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
       .theme-toggle-group {
         position: fixed;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
+        top: 14px;
+        right: 20px;
         z-index: 950;
         display: inline-flex;
         background: rgba(255, 255, 255, 0.8);
@@ -93,6 +96,7 @@
         border: 1px solid var(--border);
         box-shadow: var(--shadow);
         overflow: hidden;
+        transform: none;
       }
 
       [data-theme="dark"] .theme-toggle-group {
@@ -407,6 +411,18 @@
           transform: rotate(360deg);
         }
       }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -417,9 +433,9 @@
     </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
@@ -464,11 +480,12 @@
         loadingBlock.hidden = false;
         grid.innerHTML = "";
         try {
-          const url = new URL(window.location.origin + "/api/tasks/priority-summary");
+          const params = new URLSearchParams();
           if (includeArchived.checked) {
-            url.searchParams.set("include_archived_projects", "true");
+            params.set("include_archived_projects", "true");
           }
-          const res = await fetch(url);
+          const query = params.toString();
+          const res = await fetch(`/api/tasks/priority-summary${query ? `?${query}` : ""}`);
           if (!res.ok) {
             throw new Error("Сервер ответил с ошибкой");
           }
@@ -596,5 +613,8 @@
       refreshBtn.addEventListener("click", loadSpotlight);
       loadSpotlight();
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>

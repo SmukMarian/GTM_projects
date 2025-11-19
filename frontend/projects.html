@@ -18,7 +18,7 @@
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Проекты — Haier Project Tracker</title>
+    <title>Проекты — Projects Tracker</title>
     <style>
       :root {
         color-scheme: light;
@@ -58,7 +58,11 @@
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
@@ -168,6 +172,10 @@
         min-width: 0;
       }
 
+      .form-field.status-field {
+        grid-column: 1 / -1;
+      }
+
       .filter-actions {
         display: flex;
         justify-content: space-between;
@@ -197,6 +205,18 @@
         display: inline-flex;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
       }
 
       button {
@@ -585,9 +605,9 @@
     </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
@@ -630,7 +650,7 @@
           Плановый запуск по
           <input type="date" id="plannedTo" />
         </label>
-        <div class="form-field">
+        <div class="form-field status-field">
           <span>Статусы</span>
           <div class="checkbox-list status-row">
             <label class="checkbox"><input type="checkbox" value="active" class="status-filter" /> <span>Активные</span></label>
@@ -1441,5 +1461,8 @@
       restoreFilters();
       loadGroups().then(loadProjects);
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>
