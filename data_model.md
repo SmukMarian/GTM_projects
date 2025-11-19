@@ -1,4 +1,4 @@
-# Haier Project Tracker — Модель данных
+# Projects Tracker — Модель данных
 
 Текстовое описание сущностей и связей согласно `Haier_Project_Tracker_TZ.md`. Служит ориентиром для реализации хранилища и API.
 
