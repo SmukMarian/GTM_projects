@@ -459,6 +459,10 @@
               <button onclick="exportCharacteristics()">Экспорт Excel</button>
               <input type="file" id="characteristicImport" accept=".xlsx" style="display: none" />
             </div>
+            <p class="muted" style="margin: 8px 0 0">
+              Импорт принимает столбцы «Секция», «Label RU/EN», «Value RU/EN» и «Тип поля» плюс необязательные «Порядок секции/поля»;
+              новые секции и поля будут созданы автоматически.
+            </p>
           </div>
           <form id="newSectionForm" class="inline-editor" autocomplete="off">
             <div class="inline-editor-grid">
