@@ -259,12 +259,50 @@
         gap: 12px;
       }
 
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .view-switch {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .view-switch button {
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+
+      .view-switch button.active {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
       .stage-card {
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px;
         margin-bottom: 12px;
         background: var(--surface);
+      }
+
+      .stage-card.collapsed {
+        padding-bottom: 6px;
+      }
+
+      .stage-card.collapsed .stage-description,
+      .stage-card.collapsed .stage-progress,
+      .stage-card.collapsed .stage-meta-grid,
+      .stage-card.collapsed .stage-controls,
+      .stage-card.collapsed .stage-task-list {
+        display: none;
       }
 
       .stage-header {
@@ -336,6 +374,10 @@
         font-size: 0.9rem;
       }
 
+      .stage-description.empty {
+        font-style: italic;
+      }
+
       .stage-progress {
         margin-top: 10px;
       }
@@ -362,6 +404,109 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      .compact-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+
+      .compact-table th,
+      .compact-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .compact-table th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        background: var(--surface-muted);
+      }
+
+      .compact-table tbody tr:nth-child(even) {
+        background: rgba(148, 163, 184, 0.08);
+      }
+
+      .compact-table .chip {
+        margin-right: 4px;
+      }
+
+      .table-actions {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .kanban-board {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+
+      .kanban-column {
+        flex: 1;
+        min-width: 220px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kanban-column-header {
+        padding: 12px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .kanban-column-body {
+        padding: 0 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 160px;
+      }
+
+      .kanban-column.drop-ready {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+      }
+
+      .kanban-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .kanban-card.dragging {
+        opacity: 0.6;
+      }
+
+      .kanban-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .kanban-empty {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-style: italic;
       }
 
       .stage-task-header {
@@ -1455,17 +1600,35 @@
     <div class="card">
       <div class="stage-header" style="margin-bottom: 8px">
         <h2>GTM-этапы</h2>
-        <div class="toolbar" style="margin: 0">
-          <button class="primary" onclick="openStageForm()">Добавить этап</button>
-          <select id="templateSelect"></select>
-          <button onclick="applyTemplate()">Применить шаблон</button>
-          <button onclick="saveTemplate()">Сохранить как шаблон</button>
-          <button onclick="triggerImport()">Импорт Excel</button>
-          <button onclick="exportStages()">Экспорт Excel</button>
-          <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+        <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
+          <button type="button" data-stage-view="cards">Карточки</button>
+          <button type="button" data-stage-view="table">Таблица</button>
         </div>
       </div>
+      <div class="toolbar" style="margin: 0">
+        <button class="primary" onclick="openStageForm()">Добавить этап</button>
+        <select id="templateSelect"></select>
+        <button onclick="applyTemplate()">Применить шаблон</button>
+        <button onclick="saveTemplate()">Сохранить как шаблон</button>
+        <button onclick="triggerImport()">Импорт Excel</button>
+        <button onclick="exportStages()">Экспорт Excel</button>
+        <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+      </div>
       <div id="stages"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Компактный список задач</h2>
+        <div class="view-switch" id="taskViewSwitch" role="group" aria-label="Вид задач">
+          <button type="button" data-task-view="table">Таблица</button>
+          <button type="button" data-task-view="kanban">Канбан</button>
+        </div>
+      </div>
+      <p class="muted" style="margin-top: 0">
+        Переключайте таблицу и канбан, чтобы быстро приоритизировать задачи вне карточек этапов.
+      </p>
+      <div id="taskCompactContent" class="table-scroll"></div>
     </div>
 
     <div class="card">
@@ -1828,6 +1991,9 @@
       const discussionList = document.getElementById("discussionList");
       const discussionComposer = document.getElementById("discussionComposer");
       const closeDiscussionButton = document.getElementById("closeDiscussionButton");
+      const stageViewSwitch = document.getElementById("stageViewSwitch");
+      const taskViewSwitch = document.getElementById("taskViewSwitch");
+      const taskCompactContent = document.getElementById("taskCompactContent");
 
       const galleryContainer = document.getElementById("gallery");
       const imageUploadInput = document.getElementById("imageUploadInput");
@@ -1890,6 +2056,11 @@
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
       const projectRiskEl = document.getElementById("project-risk");
       const taskStatusWeight = { not_started: 0, todo: 0, in_progress: 0.5, done: 1, cancelled: 0 };
+      const kanbanStatuses = [
+        { key: "todo", label: "ToDo" },
+        { key: "in_progress", label: "В работе" },
+        { key: "done", label: "Готово" },
+      ];
 
       let project = null;
       let groupInfo = null;
@@ -1903,8 +2074,23 @@
       let files = [];
       let projectComments = [];
       let historyEvents = [];
+      const stageViewKey = "hpt_stage_view_mode";
+      const taskViewKey = "hpt_task_view_mode";
+      const collapsedStagesKey = "hpt_collapsed_stages";
       const collapsedTasksKey = "hpt_collapsed_tasks";
+      let stageViewMode = localStorage.getItem(stageViewKey) === "table" ? "table" : "cards";
+      let taskViewMode = localStorage.getItem(taskViewKey) === "kanban" ? "kanban" : "table";
+      let collapsedStages = new Set();
       let collapsedTasks = new Set();
+      try {
+        const storedStages = JSON.parse(localStorage.getItem(collapsedStagesKey) || "[]");
+        if (Array.isArray(storedStages)) {
+          collapsedStages = new Set(storedStages);
+        }
+      } catch (error) {
+        console.warn("Не удалось прочитать состояние свернутых этапов", error);
+        collapsedStages = new Set();
+      }
       try {
         const storedCollapsed = JSON.parse(localStorage.getItem(collapsedTasksKey) || "[]");
         if (Array.isArray(storedCollapsed)) {
@@ -1916,6 +2102,7 @@
       }
       let discussionContext = null;
       let focusTaskHandled = false;
+      let draggedTaskId = null;
 
       basicsForm?.addEventListener("submit", saveBasics);
       fileForm?.addEventListener("submit", handleFileSubmit);
@@ -1926,6 +2113,26 @@
       });
       openCharacteristicsBtn?.addEventListener("click", () => {
         window.location.href = `/characteristics.html?id=${projectId}`;
+      });
+      stageViewSwitch?.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-stage-view]");
+        if (!target) return;
+        const mode = target.dataset.stageView;
+        if (mode && mode !== stageViewMode) {
+          stageViewMode = mode;
+          localStorage.setItem(stageViewKey, stageViewMode);
+          renderStages();
+        }
+      });
+      taskViewSwitch?.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-task-view]");
+        if (!target) return;
+        const mode = target.dataset.taskView;
+        if (mode && mode !== taskViewMode) {
+          taskViewMode = mode;
+          localStorage.setItem(taskViewKey, taskViewMode);
+          renderCompactTaskView();
+        }
       });
       closeDiscussionButton?.addEventListener("click", closeDiscussionModal);
       discussionModal?.addEventListener("click", (event) => {
@@ -2274,18 +2481,59 @@
         return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
       }
 
+      function updateStageViewSwitch() {
+        stageViewSwitch?.querySelectorAll("[data-stage-view]").forEach((btn) => {
+          const isActive = btn.dataset.stageView === stageViewMode;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+      }
+
+      function updateTaskViewSwitch() {
+        taskViewSwitch?.querySelectorAll("[data-task-view]").forEach((btn) => {
+          const isActive = btn.dataset.taskView === taskViewMode;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+      }
+
+      function isStageCollapsed(stageId) {
+        return collapsedStages.has(String(stageId));
+      }
+
+      function setStageCollapsed(stageId, collapsed) {
+        const normalizedId = String(stageId);
+        if (collapsed) {
+          collapsedStages.add(normalizedId);
+        } else {
+          collapsedStages.delete(normalizedId);
+        }
+        try {
+          localStorage.setItem(collapsedStagesKey, JSON.stringify(Array.from(collapsedStages)));
+        } catch (error) {
+          console.warn("Не удалось сохранить состояние этапов", error);
+        }
+      }
+
 
       function renderStages() {
         gtmStages.sort((a, b) => a.order - b.order);
+        updateStageViewSwitch();
         if (!gtmStages.length) {
           stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           return;
         }
 
+        if (stageViewMode === "table") {
+          renderStageTable();
+          return;
+        }
+
         stagesContainer.innerHTML = "";
         gtmStages.forEach((stage, index) => {
+          const collapsed = isStageCollapsed(stage.id);
           const card = document.createElement("div");
-          card.className = "stage-card";
+          card.className = `stage-card${collapsed ? " collapsed" : ""}`;
           card.dataset.stageId = stage.id;
           const percent = Math.round(stageProgressScore(stage) * 100);
           card.innerHTML = `
@@ -2295,6 +2543,9 @@
                   <strong>${index + 1}. ${stage.title}</strong>
                   <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
                     💬 <span class="count">${stage.comments?.length || 0}</span>
+                  </button>
+                  <button class="icon-button" data-stage-collapse="${stage.id}" aria-label="Свернуть этап">
+                    ${collapsed ? "▾" : "▴"}
                   </button>
                 </div>
                 <div class="stage-description" id="stage-desc-${stage.id}"></div>
@@ -2341,7 +2592,13 @@
 
           const desc = card.querySelector(`#stage-desc-${stage.id}`);
           if (desc) {
-            desc.innerHTML = stage.description || '<span class="muted">Описание не заполнено</span>';
+            if (stage.description) {
+              desc.innerHTML = stage.description;
+              desc.classList.remove("empty");
+            } else {
+              desc.innerHTML = '<span class="muted">Описание не заполнено</span>';
+              desc.classList.add("empty");
+            }
           }
           const taskSlot = card.querySelector(`#stage-tasks-${stage.id}`);
           if (taskSlot) {
@@ -2349,9 +2606,80 @@
           }
           const stageCommentBtn = card.querySelector(`[data-stage-comments='${stage.id}']`);
           stageCommentBtn?.addEventListener("click", () => openStageDiscussion(stage.id));
+          const collapseBtn = card.querySelector(`[data-stage-collapse='${stage.id}']`);
+          if (collapseBtn) {
+            collapseBtn.title = collapsed ? "Развернуть этап" : "Свернуть этап";
+            collapseBtn.setAttribute("aria-label", collapsed ? "Развернуть этап" : "Свернуть этап");
+            collapseBtn.addEventListener("click", () => {
+              const nextCollapsed = !card.classList.contains("collapsed");
+              card.classList.toggle("collapsed", nextCollapsed);
+              collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
+              const label = nextCollapsed ? "Развернуть этап" : "Свернуть этап";
+              collapseBtn.title = label;
+              collapseBtn.setAttribute("aria-label", label);
+              setStageCollapsed(stage.id, nextCollapsed);
+            });
+          }
 
           stagesContainer.appendChild(card);
         });
+      }
+
+      function renderStageTable() {
+        stagesContainer.innerHTML = "";
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-scroll";
+        const table = document.createElement("table");
+        table.className = "compact-table";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Этап</th>
+              <th>План / Факт</th>
+              <th>Статус</th>
+              <th>Задач</th>
+              <th>Риск</th>
+              <th>Комментарии</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+        `;
+        const tbody = document.createElement("tbody");
+        const taskCount = tasks.reduce((acc, task) => {
+          const key = task.gtm_stage_id || "__none";
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        gtmStages.forEach((stage, index) => {
+          const row = document.createElement("tr");
+          const planned = `${stage.planned_start || "—"} → ${stage.planned_end || "—"}`;
+          const fact = stage.actual_end || "—";
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${stage.title}</td>
+            <td><div>${planned}</div><div class="muted">Факт: ${fact}</div></td>
+            <td><span class="chip">${statusLabel(stage.status)}</span></td>
+            <td>${taskCount[stage.id] || 0}</td>
+            <td>${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : "—"}</td>
+            <td>${stage.comments?.length || 0}</td>
+            <td>
+              <div class="table-actions">
+                <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
+                <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬</button>
+                <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
+              </div>
+            </td>
+          `;
+          row.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openStageContextMenu(event, stage, index);
+          });
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        stagesContainer.appendChild(wrapper);
       }
 
       function renderStageTasks(stage) {
@@ -2522,6 +2850,204 @@
         });
 
         return wrapper;
+      }
+
+      function renderCompactTaskView() {
+        if (!taskCompactContent) return;
+        updateTaskViewSwitch();
+        taskCompactContent.innerHTML = "";
+        taskCompactContent.classList.toggle("table-scroll", taskViewMode === "table");
+        if (!tasks.length) {
+          taskCompactContent.innerHTML = '<p class="muted">Задачи ещё не добавлены.</p>';
+          return;
+        }
+        if (taskViewMode === "table") {
+          taskCompactContent.appendChild(buildTaskTable());
+        } else {
+          taskCompactContent.appendChild(buildKanbanBoard());
+        }
+      }
+
+      function buildTaskTable() {
+        const table = document.createElement("table");
+        table.className = "compact-table";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Задача</th>
+              <th>Этап</th>
+              <th>Статус</th>
+              <th>Важность</th>
+              <th>Срочность</th>
+              <th>Срок</th>
+              <th>Прогресс</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+        `;
+        const tbody = document.createElement("tbody");
+        const orderMap = gtmStages.reduce((acc, stage, index) => {
+          acc[stage.id] = index;
+          return acc;
+        }, {});
+        const statusOrder = { todo: 0, in_progress: 1, done: 2 };
+        const sortedTasks = [...tasks].sort((a, b) => {
+          const stageDiff = (orderMap[a.gtm_stage_id] ?? 999) - (orderMap[b.gtm_stage_id] ?? 999);
+          if (stageDiff !== 0) return stageDiff;
+          const statusDiff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+          if (statusDiff !== 0) return statusDiff;
+          const aDate = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
+          const bDate = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY;
+          if (aDate !== bDate) return aDate - bDate;
+          return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
+        });
+        sortedTasks.forEach((task) => {
+          const due = dueInfo(task);
+          const progress = taskProgress(task);
+          const toggleStatus = task.status === "done" ? "todo" : "done";
+          const toggleTitle = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
+          const toggleIcon = toggleStatus === "todo" ? "↺" : "✔";
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${task.title}</strong></td>
+            <td>${stageTitle(task.gtm_stage_id)}</td>
+            <td><span class="chip">${taskStatusLabel(task.status)}</span></td>
+            <td>${task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—"}</td>
+            <td>${task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—"}</td>
+            <td><span class="${due.className}">${due.text}</span></td>
+            <td>${progress.label}</td>
+            <td>
+              <div class="table-actions">
+                <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                <button class="ghost" onclick="openTaskDiscussion('${task.id}')">💬</button>
+                <button class="ghost" title="${toggleTitle}" onclick="changeTaskStatus('${task.id}', '${toggleStatus}')">${toggleIcon}</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function buildKanbanBoard() {
+        const board = document.createElement("div");
+        board.className = "kanban-board";
+        const grouped = { todo: [], in_progress: [], done: [] };
+        tasks.forEach((task) => {
+          const bucket = grouped[task.status] || grouped.todo;
+          bucket.push(task);
+        });
+        Object.keys(grouped).forEach((key) => {
+          grouped[key].sort((a, b) => {
+            const aDate = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
+            const bDate = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY;
+            if (aDate !== bDate) return aDate - bDate;
+            return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
+          });
+        });
+        kanbanStatuses.forEach(({ key, label }) => {
+          const column = document.createElement("div");
+          column.className = "kanban-column";
+          const header = document.createElement("div");
+          header.className = "kanban-column-header";
+          header.innerHTML = `<span>${label}</span><span class="muted">${grouped[key]?.length || 0}</span>`;
+          const body = document.createElement("div");
+          body.className = "kanban-column-body";
+          body.dataset.status = key;
+          body.addEventListener("dragover", handleKanbanDragOver);
+          body.addEventListener("dragleave", handleKanbanDragLeave);
+          body.addEventListener("drop", handleKanbanDrop);
+          if (!grouped[key]?.length) {
+            const empty = document.createElement("p");
+            empty.className = "kanban-empty";
+            empty.textContent = "Нет задач";
+            body.appendChild(empty);
+          } else {
+            grouped[key].forEach((task) => body.appendChild(createKanbanCard(task)));
+          }
+          column.appendChild(header);
+          column.appendChild(body);
+          board.appendChild(column);
+        });
+        return board;
+      }
+
+      function createKanbanCard(task) {
+        const card = document.createElement("div");
+        card.className = "kanban-card";
+        card.draggable = true;
+        card.dataset.taskId = task.id;
+        card.addEventListener("dragstart", handleKanbanDragStart);
+        card.addEventListener("dragend", handleKanbanDragEnd);
+        card.addEventListener("dblclick", () => openTaskForm(task.id));
+        const title = document.createElement("strong");
+        title.textContent = task.title;
+        card.appendChild(title);
+        const meta = document.createElement("div");
+        meta.className = "kanban-meta";
+        meta.innerHTML = `<span>${stageTitle(task.gtm_stage_id)}</span>`;
+        const due = dueInfo(task);
+        meta.innerHTML += `<span class="${due.className}">${due.text}</span>`;
+        card.appendChild(meta);
+        const badges = document.createElement("div");
+        badges.className = "task-badges";
+        if (task.important) {
+          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
+        }
+        if (task.urgency === "high") {
+          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
+        }
+        const statusChip = document.createElement("span");
+        statusChip.className = "chip";
+        statusChip.textContent = taskStatusLabel(task.status);
+        badges.appendChild(statusChip);
+        card.appendChild(badges);
+        return card;
+      }
+
+      function handleKanbanDragStart(event) {
+        const card = event.currentTarget;
+        draggedTaskId = card.dataset.taskId;
+        card.classList.add("dragging");
+        if (event.dataTransfer) {
+          event.dataTransfer.setData("text/plain", draggedTaskId);
+          event.dataTransfer.effectAllowed = "move";
+        }
+      }
+
+      function handleKanbanDragEnd(event) {
+        event.currentTarget.classList.remove("dragging");
+        draggedTaskId = null;
+      }
+
+      function handleKanbanDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add("drop-ready");
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = "move";
+        }
+      }
+
+      function handleKanbanDragLeave(event) {
+        event.currentTarget.classList.remove("drop-ready");
+      }
+
+      async function handleKanbanDrop(event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove("drop-ready");
+        const status = event.currentTarget.dataset.status;
+        if (!draggedTaskId || !status) {
+          draggedTaskId = null;
+          return;
+        }
+        const task = tasks.find((t) => String(t.id) === String(draggedTaskId));
+        draggedTaskId = null;
+        if (task && task.status !== status) {
+          await changeTaskStatus(task.id, status);
+        } else {
+          renderCompactTaskView();
+        }
       }
 
       function taskProgressScore(task) {
@@ -2808,6 +3334,7 @@
         tasks = res.ok ? await res.json() : [];
         renderStages();
         renderGtmProgress();
+        renderCompactTaskView();
         focusTaskIfNeeded();
       }
 
