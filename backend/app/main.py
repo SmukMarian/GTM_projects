@@ -47,6 +47,7 @@ from .models import (
     Subtask,
     Task,
     TaskStatus,
+    TaskSpotlightSummary,
 )
 from .storage import LocalRepository
 
@@ -729,6 +730,13 @@ def list_tasks(
         return repo.list_tasks(project_id, statuses=statuses, only_active=only_active, gtm_stage_id=gtm_stage_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.get("/api/tasks/priority-summary", response_model=TaskSpotlightSummary)
+def get_priority_tasks(
+    include_archived_projects: bool = False, repo: LocalRepository = Depends(get_repository)
+) -> TaskSpotlightSummary:
+    return repo.build_priority_task_summary(include_archived_projects=include_archived_projects)
 
 
 @app.post("/api/projects/{project_id}/tasks", response_model=Task, status_code=201)

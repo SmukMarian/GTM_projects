@@ -149,6 +149,31 @@ class Task(BaseModel):
     comments: list["Comment"] = Field(default_factory=list)
 
 
+class SpotlightTask(BaseModel):
+    """Краткая карточка задачи для сводки важности/срочности."""
+
+    task_id: UUID
+    title: str
+    project_id: UUID
+    project_name: str
+    group_id: UUID
+    group_name: str
+    gtm_stage_id: UUID | None = None
+    gtm_stage_title: str | None = None
+    due_date: date | None = None
+    due_in_days: int | None = None
+    important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
+    status: TaskStatus = TaskStatus.TODO
+    overdue: bool = False
+
+
+class TaskSpotlightSummary(BaseModel):
+    urgent_and_important: list[SpotlightTask] = Field(default_factory=list)
+    important_only: list[SpotlightTask] = Field(default_factory=list)
+    urgent_only: list[SpotlightTask] = Field(default_factory=list)
+
+
 class Comment(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     text: str

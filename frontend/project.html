@@ -704,6 +704,11 @@
         margin-bottom: 12px;
       }
 
+      .task-card.task-highlight {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2);
+      }
+
       .task-card.collapsed .task-details,
       .task-card.collapsed .task-inline-actions,
       .task-card.collapsed .task-description,
@@ -1347,6 +1352,7 @@
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
         </nav>
       </div>
@@ -1808,6 +1814,7 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
+      const focusTaskId = params.get("task");
       const stagesContainer = document.getElementById("stages");
       const templateSelect = document.getElementById("templateSelect");
       const importInput = document.getElementById("importInput");
@@ -1908,6 +1915,7 @@
         collapsedTasks = new Set();
       }
       let discussionContext = null;
+      let focusTaskHandled = false;
 
       basicsForm?.addEventListener("submit", saveBasics);
       fileForm?.addEventListener("submit", handleFileSubmit);
@@ -2039,6 +2047,25 @@
           collapsedTasks.delete(normalizedId);
         }
         persistCollapsedTasks();
+      }
+
+      function focusTaskIfNeeded() {
+        if (!focusTaskId || focusTaskHandled) return;
+        const card = document.querySelector(`.task-card[data-task-id='${focusTaskId}']`);
+        if (!card) return;
+        focusTaskHandled = true;
+        if (card.classList.contains("collapsed")) {
+          card.classList.remove("collapsed");
+          setTaskCollapsed(focusTaskId, false);
+          const collapseBtn = document.querySelector(`[data-task-collapse='${focusTaskId}']`);
+          if (collapseBtn) {
+            collapseBtn.textContent = "▴";
+            collapseBtn.title = "Свернуть задачу";
+          }
+        }
+        card.classList.add("task-highlight");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => card.classList.remove("task-highlight"), 4000);
       }
 
       async function loadData() {
@@ -2387,6 +2414,7 @@
           const collapseBtn = document.createElement("button");
           collapseBtn.type = "button";
           collapseBtn.className = "icon-button";
+          collapseBtn.dataset.taskCollapse = task.id;
           collapseBtn.textContent = collapsed ? "▾" : "▴";
           collapseBtn.title = collapsed ? "Развернуть задачу" : "Свернуть задачу";
           collapseBtn.addEventListener("click", () => {
@@ -2780,6 +2808,7 @@
         tasks = res.ok ? await res.json() : [];
         renderStages();
         renderGtmProgress();
+        focusTaskIfNeeded();
       }
 
       function renderTaskFilters() {
