@@ -113,6 +113,10 @@ def save_uploaded_file(upload: UploadFile, base_dir: Path) -> Path:
     base_dir.mkdir(parents=True, exist_ok=True)
     filename = upload.filename or "file"
     target = base_dir / f"{uuid4().hex}_{filename}"
+    try:
+        upload.file.seek(0)
+    except Exception:
+        pass
     with target.open("wb") as buffer:
         shutil.copyfileobj(upload.file, buffer)
     return target.relative_to(settings.data_dir)

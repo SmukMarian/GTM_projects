@@ -326,15 +326,6 @@
         margin-top: 8px;
       }
 
-      .comment-block {
-        margin-top: 16px;
-        padding-top: 12px;
-        border-top: 1px solid var(--divider);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
       .comment-block-header {
         display: flex;
         justify-content: space-between;
@@ -342,22 +333,65 @@
         gap: 8px;
       }
 
-      .comment-editor {
+      .checkbox-lite {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-weight: 600;
+      }
+
+      .checkbox-lite input {
+        accent-color: var(--accent);
+        width: 18px;
+        height: 18px;
+      }
+
+      .comment-block {
+        margin-top: 14px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
+      }
+
+      .comment-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .comment-item {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .comment-editor {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       .comment-actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-      }
-
-      .checkbox-lite input {
-        accent-color: var(--accent);
-        width: 16px;
-        height: 16px;
+        justify-content: flex-end;
       }
 
       .muted {
@@ -434,6 +468,23 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+
+      .modal form .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .modal form .checkbox-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-weight: 600;
       }
 
       .modal .modal-actions {
@@ -1482,42 +1533,43 @@
         <div class="modal modal-wide">
           <h3 id="taskModalTitle">Задача</h3>
           <form id="taskForm">
-          <input type="hidden" id="taskId" />
-          <label>
-            Заголовок
-            <input required id="taskTitle" />
-          </label>
-          <label>
-            Описание
-            <textarea id="taskDescription" rows="3"></textarea>
-          </label>
-          <div class="grid-two">
+            <input type="hidden" id="taskId" />
+            <div class="form-grid">
+              <label>
+                Заголовок
+                <input required id="taskTitle" />
+              </label>
+              <label>
+                GTM-этап
+                <select id="taskGtmStage" required></select>
+              </label>
+            </div>
+            <div class="form-grid">
+              <label>
+                Статус
+                <select id="taskStatus">
+                  <option value="todo">ToDo</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="done">Готово</option>
+                </select>
+              </label>
+              <label>
+                Срок выполнения
+                <input type="date" id="taskDueDate" />
+              </label>
+            </div>
             <label>
-              Статус
-              <select id="taskStatus">
-                <option value="todo">ToDo</option>
-                <option value="in_progress">В работе</option>
-                <option value="done">Готово</option>
-              </select>
+              Описание
+              <textarea id="taskDescription" rows="3" placeholder="Детали и критерии задачи"></textarea>
             </label>
-            <label>
-              Срок выполнения
-              <input type="date" id="taskDueDate" />
+            <label class="checkbox-row checkbox-lite" style="justify-content: flex-start">
+              <input type="checkbox" id="taskImportant" />
+              <span>Отметить как важную</span>
             </label>
-          </div>
-          <div class="grid-two">
-            <label>
-              GTM-этап
-              <select id="taskGtmStage" required></select>
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600">
-              <input type="checkbox" id="taskImportant" /> Отметить как важную
-            </label>
-          </div>
-          <div class="modal-actions">
-            <button type="button" onclick="closeTaskModal()">Отмена</button>
-            <button class="primary" type="submit">Сохранить</button>
-          </div>
+            <div class="modal-actions">
+              <button type="button" onclick="closeTaskModal()">Отмена</button>
+              <button class="primary" type="submit">Сохранить</button>
+            </div>
           </form>
         </div>
       </div>

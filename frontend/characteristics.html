@@ -8,147 +8,346 @@
     <script defer src="/theme.js"></script>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted-text: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
       }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted-text: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+      }
+
       body {
         margin: 0;
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--background);
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
         color: var(--text);
       }
+
       .theme-toggle-group {
         position: fixed;
-        top: 12px;
-        right: 12px;
-        display: flex;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
         gap: 6px;
-        z-index: 10;
-      }
-      .theme-toggle-group button {
-        border: 1px solid var(--border);
+        padding: 6px;
         background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
         color: var(--text);
-        border-radius: 8px;
-        padding: 6px 10px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
         cursor: pointer;
       }
-      .app-shell {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 16px;
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
       }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
       .topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
         background: var(--surface);
-        padding: 12px 16px;
-        border-radius: 12px;
         border: 1px solid var(--border);
-        margin-bottom: 16px;
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
       }
-      .topbar nav a {
-        margin-left: 12px;
-        color: var(--text);
-        text-decoration: none;
-        font-weight: 600;
-      }
+
       .logo {
         display: inline-flex;
         align-items: center;
         gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
         text-decoration: none;
         color: var(--text);
-        font-weight: 700;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
       }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
       .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 32px 20px 88px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
       }
+
       .card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 16px;
-        box-shadow: var(--shadow-soft, none);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
       }
-      .stage-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
+
+      .pill {
+        display: inline-flex;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        font-size: 0.85rem;
       }
+
       .toolbar {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        align-items: center;
       }
+
+      button {
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: var(--text);
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
       button.primary {
         background: var(--accent);
-        color: white;
+        color: #fff;
         border: none;
-        border-radius: 10px;
-        padding: 8px 12px;
-        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
       }
-      button {
-        border: 1px solid var(--border);
-        background: var(--surface-muted, transparent);
-        color: var(--text);
-        border-radius: 10px;
-        padding: 8px 12px;
-        cursor: pointer;
+
+      button.ghost {
+        background: transparent;
+        border-color: transparent;
       }
-      .pill {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--surface-muted);
-        font-size: 12px;
-      }
-      .muted {
-        color: var(--muted-text);
-      }
+
       .section-card {
-        background: var(--surface-muted);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 12px;
+        border-radius: 14px;
+        padding: 14px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
-      table {
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .section-header h3 {
+        margin: 0;
+      }
+
+      .section-body table {
         width: 100%;
         border-collapse: collapse;
+        border-radius: 12px;
+        overflow: hidden;
       }
+
       th,
       td {
         border: 1px solid var(--border);
-        padding: 8px;
+        padding: 8px 10px;
         text-align: left;
+        vertical-align: top;
       }
+
       th {
         background: var(--surface);
       }
-      .inline-input {
+
+      .inline-input,
+      select,
+      textarea,
+      input[type="text"],
+      input[type="number"] {
         width: 100%;
-        padding: 6px 8px;
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid var(--border);
+        padding: 8px 10px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+      }
+
+      select {
         background: var(--surface);
       }
+
+      .inline-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .inline-input:focus,
+      select:focus,
+      textarea:focus,
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+      }
+
       .inline-status {
         font-size: 12px;
         color: var(--muted-text);
         margin-top: 4px;
       }
+
       .inline-status.saving {
         color: var(--accent);
       }
+
       .inline-status.error {
-        color: var(--danger, #ef4444);
+        color: var(--danger);
+      }
+
+      .empty-state {
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+        text-align: center;
+        color: var(--muted-text);
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1100;
+      }
+
+      .modal-backdrop[data-open="true"] {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        width: min(800px, 94vw);
+        max-height: 92vh;
+        overflow: auto;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .modal form {
+        display: grid;
+        gap: 12px;
+      }
+
+      .modal h3 {
+        margin: 0;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chips {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .chips span {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 0.85rem;
       }
     </style>
   </head>
@@ -190,7 +389,7 @@
           <div class="stage-header" style="margin-bottom: 8px">
             <h2>Управление характеристиками</h2>
             <div class="toolbar" style="margin: 0">
-              <button class="primary" onclick="promptSection()">Добавить секцию</button>
+              <button class="primary" onclick="openSectionModal()">Добавить секцию</button>
               <select id="characteristicTemplateSelect"></select>
               <button onclick="applyCharacteristicTemplate()">Применить шаблон</button>
               <button onclick="saveCharacteristicTemplate()">Сохранить как шаблон</button>
@@ -205,6 +404,63 @@
       </div>
     </div>
 
+    <div id="sectionModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal">
+        <h3 id="sectionModalTitle">Новая секция</h3>
+        <form id="sectionForm">
+          <input type="hidden" id="sectionId" />
+          <label>
+            Название секции
+            <input id="sectionTitle" required placeholder="Например: Основные параметры" />
+          </label>
+          <label>
+            Порядок
+            <input type="number" id="sectionOrder" min="0" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" onclick="closeSectionModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="fieldModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal">
+        <h3 id="fieldModalTitle">Поле характеристики</h3>
+        <form id="fieldForm">
+          <input type="hidden" id="fieldSectionId" />
+          <input type="hidden" id="fieldId" />
+          <label>
+            Label RU
+            <input id="fieldLabelRu" required />
+          </label>
+          <label>
+            Label EN
+            <input id="fieldLabelEn" required />
+          </label>
+          <label>
+            Тип поля
+            <select id="fieldType">
+              <option value="text">Текст</option>
+              <option value="number">Число</option>
+              <option value="select">Список</option>
+              <option value="checkbox">Да/Нет</option>
+              <option value="other">Другое</option>
+            </select>
+          </label>
+          <label>
+            Порядок
+            <input type="number" id="fieldOrder" min="0" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" onclick="closeFieldModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
       const params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
@@ -214,12 +470,42 @@
       const projectNameEl = document.getElementById("project-name");
       const projectMetaEl = document.getElementById("project-meta");
       const backButton = document.getElementById("back-to-project");
+      const sectionModal = document.getElementById("sectionModal");
+      const sectionForm = document.getElementById("sectionForm");
+      const sectionModalTitle = document.getElementById("sectionModalTitle");
+      const sectionIdInput = document.getElementById("sectionId");
+      const sectionTitleInput = document.getElementById("sectionTitle");
+      const sectionOrderInput = document.getElementById("sectionOrder");
+      const fieldModal = document.getElementById("fieldModal");
+      const fieldForm = document.getElementById("fieldForm");
+      const fieldModalTitle = document.getElementById("fieldModalTitle");
+      const fieldSectionIdInput = document.getElementById("fieldSectionId");
+      const fieldIdInput = document.getElementById("fieldId");
+      const fieldLabelRuInput = document.getElementById("fieldLabelRu");
+      const fieldLabelEnInput = document.getElementById("fieldLabelEn");
+      const fieldTypeSelect = document.getElementById("fieldType");
+      const fieldOrderInput = document.getElementById("fieldOrder");
 
       let characteristicTemplates = [];
       let characteristicSections = [];
       let characteristicSaveTimers = new Map();
       let project = null;
       let groups = [];
+      let editingSectionId = null;
+      let editingFieldId = null;
+
+      sectionModal.addEventListener("click", (event) => {
+        if (event.target === sectionModal) closeSectionModal();
+      });
+      fieldModal.addEventListener("click", (event) => {
+        if (event.target === fieldModal) closeFieldModal();
+      });
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          if (sectionModal.dataset.open === "true") closeSectionModal();
+          if (fieldModal.dataset.open === "true") closeFieldModal();
+        }
+      });
 
       if (!projectId) {
         characteristicContainer.innerHTML = "<p>Не передан параметр id</p>";
@@ -276,10 +562,115 @@
         });
       }
 
+      function openSectionModal(sectionId = null) {
+        const current = characteristicSections.find((s) => s.id === sectionId);
+        editingSectionId = sectionId;
+        sectionModalTitle.textContent = current ? "Редактирование секции" : "Новая секция";
+        sectionIdInput.value = sectionId || "";
+        sectionTitleInput.value = current?.title || "";
+        sectionOrderInput.value = current?.order ?? characteristicSections.length;
+        sectionModal.dataset.open = "true";
+      }
+
+      function closeSectionModal() {
+        editingSectionId = null;
+        sectionForm.reset();
+        sectionIdInput.value = "";
+        sectionModal.dataset.open = "false";
+      }
+
+      sectionForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          title: sectionTitleInput.value.trim(),
+          order: Number(sectionOrderInput.value ?? 0) || 0,
+        };
+        if (!payload.title) return;
+        if (editingSectionId) {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${editingSectionId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, id: editingSectionId }),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить секцию");
+            return;
+          }
+        } else {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось создать секцию");
+            return;
+          }
+        }
+        closeSectionModal();
+        await loadCharacteristics();
+      });
+
+      function openFieldModal(sectionId, fieldId = null) {
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        if (!section) return;
+        const current = section.fields.find((f) => f.id === fieldId);
+        editingFieldId = fieldId;
+        fieldSectionIdInput.value = sectionId;
+        fieldIdInput.value = fieldId || "";
+        fieldModalTitle.textContent = current ? "Редактирование поля" : "Новое поле";
+        fieldLabelRuInput.value = current?.label_ru || "";
+        fieldLabelEnInput.value = current?.label_en || "";
+        fieldTypeSelect.value = current?.field_type || "text";
+        fieldOrderInput.value = current?.order ?? section.fields.length;
+        fieldModal.dataset.open = "true";
+      }
+
+      function closeFieldModal() {
+        editingFieldId = null;
+        fieldForm.reset();
+        fieldSectionIdInput.value = "";
+        fieldModal.dataset.open = "false";
+      }
+
+      fieldForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const sectionId = fieldSectionIdInput.value;
+        if (!sectionId) return;
+        const section = characteristicSections.find((s) => s.id === sectionId);
+        const current = section?.fields.find((f) => f.id === editingFieldId);
+        const payload = {
+          label_ru: fieldLabelRuInput.value.trim(),
+          label_en: fieldLabelEnInput.value.trim(),
+          field_type: fieldTypeSelect.value,
+          order: Number(fieldOrderInput.value ?? 0) || 0,
+        };
+        if (!payload.label_ru || !payload.label_en) return;
+        const url = editingFieldId
+          ? `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${editingFieldId}`
+          : `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields`;
+        const method = editingFieldId ? "PUT" : "POST";
+        const body = editingFieldId
+          ? { ...current, ...payload, id: editingFieldId }
+          : { ...payload, value_ru: null, value_en: null };
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить поле");
+          return;
+        }
+        closeFieldModal();
+        await loadCharacteristics();
+      });
+
       function buildCharacteristicValueControl(sectionId, field, key) {
         if (field.field_type === "checkbox") {
           const input = document.createElement("input");
           input.type = "checkbox";
+          input.className = "inline-checkbox";
           input.checked = Boolean(field[key]);
           input.addEventListener("change", () => {
             field[key] = input.checked;
@@ -310,7 +701,7 @@
         characteristicContainer.innerHTML = "";
         const sortedSections = [...characteristicSections].sort((a, b) => a.order - b.order);
         if (!sortedSections.length) {
-          characteristicContainer.innerHTML = "<p class='muted'>Секции характеристик пока не добавлены.</p>";
+          characteristicContainer.innerHTML = "<div class='empty-state'>Секции характеристик пока не добавлены.</div>";
           return;
         }
         sortedSections.forEach((section, sIndex) => {
@@ -323,8 +714,8 @@
                 <div class="muted">Порядок: ${section.order}</div>
               </div>
               <div class="toolbar" style="margin:0">
-                <button class="ghost" onclick="promptSection('${section.id}')">Редактировать</button>
-                <button class="ghost" onclick="promptField('${section.id}')">+ Поле</button>
+                <button class="ghost" onclick="openSectionModal('${section.id}')">Редактировать</button>
+                <button class="ghost" onclick="openFieldModal('${section.id}')">+ Поле</button>
                 <button class="ghost" onclick="moveSection('${section.id}', -1)" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
                 <button class="ghost" onclick="moveSection('${section.id}', 1)" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
                 <button onclick="deleteSection('${section.id}')">Удалить</button>
@@ -373,7 +764,7 @@
               const editBtn = document.createElement("button");
               editBtn.className = "ghost";
               editBtn.textContent = "Редактировать";
-              editBtn.onclick = () => promptField(section.id, field.id);
+              editBtn.onclick = () => openFieldModal(section.id, field.id);
               const upBtn = document.createElement("button");
               upBtn.className = "ghost";
               upBtn.textContent = "↑";
@@ -434,38 +825,6 @@
         characteristicSaveTimers.set(key, timer);
       }
 
-      async function promptSection(sectionId = null) {
-        const current = characteristicSections.find((s) => s.id === sectionId);
-        const title = prompt("Название секции", current?.title || "");
-        if (title === null || title.trim() === "") return;
-        const order = Number(prompt("Порядок", current?.order ?? characteristicSections.length) || 0);
-
-        const payload = { title: title.trim(), order, fields: current?.fields || [] };
-        if (sectionId) {
-          payload.id = sectionId;
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert("Не удалось обновить секцию");
-            return;
-          }
-        } else {
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert("Не удалось создать секцию");
-            return;
-          }
-        }
-        await loadCharacteristics();
-      }
-
       async function deleteSection(sectionId) {
         if (!confirm("Удалить секцию и все её поля?")) return;
         const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, { method: "DELETE" });
@@ -494,54 +853,6 @@
         );
         characteristicSections = sorted;
         renderCharacteristics();
-      }
-
-      async function promptField(sectionId, fieldId = null) {
-        const section = characteristicSections.find((s) => s.id === sectionId);
-        if (!section) return;
-        const current = section.fields.find((f) => f.id === fieldId);
-        const label_ru = prompt("Label RU", current?.label_ru || "");
-        if (label_ru === null || label_ru.trim() === "") return;
-        const label_en = prompt("Label EN", current?.label_en || "");
-        if (label_en === null || label_en.trim() === "") return;
-        const value_ru = prompt("Value RU", current?.value_ru ?? "");
-        if (value_ru === null) return;
-        const value_en = prompt("Value EN", current?.value_en ?? "");
-        if (value_en === null) return;
-        const field_type = prompt("Тип (text/number/select/checkbox/other)", current?.field_type || "text") || "text";
-
-        const payload = {
-          label_ru: label_ru.trim(),
-          label_en: label_en.trim(),
-          value_ru: value_ru || null,
-          value_en: value_en || null,
-          field_type: field_type.toLowerCase(),
-          order: current?.order ?? section.fields.length,
-        };
-
-        if (fieldId) {
-          payload.id = fieldId;
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert("Не удалось обновить поле");
-            return;
-          }
-        } else {
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert("Не удалось добавить поле");
-            return;
-          }
-        }
-        await loadCharacteristics();
       }
 
       async function deleteField(sectionId, fieldId) {

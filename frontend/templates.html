@@ -3,11 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Шаблоны — Haier Project Tracker</title>
     <script>
       (() => {
         const key = "hpt-theme";
-        const normalize = (value) =>
-          value === "dark" || value === "light" || value === "system" ? value : null;
+        const normalize = (value) => (value === "dark" || value === "light" || value === "system" ? value : null);
         const stored = normalize(localStorage.getItem(key));
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
         const mode = stored || "system";
@@ -17,8 +18,6 @@
         document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Шаблоны — Haier Project Tracker</title>
     <style>
       :root {
         color-scheme: light;
@@ -34,7 +33,6 @@
         --divider: rgba(148, 163, 184, 0.35);
         --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
         --accent: #10a37f;
-        --accent-strong: #19b88f;
         --accent-soft: rgba(16, 163, 127, 0.12);
         --danger: #ef4444;
       }
@@ -51,7 +49,6 @@
         --divider: rgba(148, 163, 184, 0.25);
         --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
         --accent: #10a37f;
-        --accent-strong: #19b88f;
         --accent-soft: rgba(16, 163, 127, 0.2);
         --danger: #f87171;
       }
@@ -60,6 +57,35 @@
         margin: 0;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
         color: var(--text);
+      }
+
+      .theme-toggle-group {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: inline-flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+      }
+
+      .theme-toggle-group button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .theme-toggle-group button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
       }
 
       .app-shell {
@@ -122,6 +148,20 @@
         max-width: 1240px;
         margin: 0 auto;
         padding: 32px 20px 88px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
       .pill {
@@ -136,57 +176,39 @@
         font-size: 0.85rem;
       }
 
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: var(--shadow);
-        margin-bottom: 16px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 14px;
-      }
-
-      .template-card {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        background: var(--surface-muted);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .template-card h3 {
-        margin: 0;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .actions {
+      .toolbar {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        align-items: center;
       }
 
       button {
-        border-radius: 10px;
+        border-radius: 12px;
         border: 1px solid var(--border);
-        background: var(--surface);
-        padding: 8px 12px;
+        background: var(--surface-muted);
+        color: var(--text);
+        padding: 10px 14px;
+        font-weight: 600;
         cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
       }
 
       button.primary {
         background: var(--accent);
         color: #fff;
         border: none;
+        box-shadow: 0 12px 30px rgba(16, 163, 127, 0.2);
+      }
+
+      button.ghost {
+        background: transparent;
+        border-color: transparent;
       }
 
       button.danger {
@@ -195,36 +217,164 @@
         border: none;
       }
 
-      .theme-toggle-group {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        display: inline-flex;
-        gap: 6px;
-        padding: 6px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        box-shadow: var(--shadow);
-        z-index: 1000;
+      .muted {
+        color: var(--muted);
+        font-size: 0.95rem;
       }
 
-      .theme-toggle-group button {
-        border: none;
-        background: transparent;
-        color: var(--text);
-        padding: 8px 10px;
-        border-radius: 999px;
-        font-weight: 700;
+      .split-panel {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+        gap: 16px;
+      }
+
+      .template-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .template-list-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
         cursor: pointer;
       }
 
-      .theme-toggle-group button[data-active="true"] {
-        background: var(--accent-soft);
-        color: var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      .template-list-item[data-active="true"] {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+      }
+
+      .template-list-item header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .template-detail {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--surface-muted);
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .template-detail input,
+      .template-detail textarea,
+      .template-detail select {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .detail-header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .detail-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .stage-stack,
+      .section-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .stage-card,
+      .section-card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .stage-card-header,
+      .section-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .task-card,
+      .field-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .subtask-list,
+      .field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .subtask-row,
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 100px auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .field-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) 110px auto;
+      }
+
+      .subtask-row input[type="text"] {
+        grid-column: span 1;
+      }
+
+      .empty-state {
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .pill.badge {
+        border-radius: 8px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 900px) {
+        .split-panel {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
+    <script defer src="/theme.js"></script>
   </head>
   <body>
     <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
@@ -247,141 +397,808 @@
       </div>
     </div>
     <div class="page">
-      <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
-        <div>
-          <span class="pill">Шаблоны</span>
-          <h1 style="margin: 6px 0 4px">Управление шаблонами</h1>
-          <p class="muted" style="margin: 0">GTM и характеристики для повторного использования.</p>
-        </div>
-        <div class="actions">
-          <button class="primary" id="newGtm">+ Шаблон GTM</button>
-          <button class="primary" id="newChar">+ Шаблон характеристик</button>
+      <div class="card">
+        <div class="toolbar" style="justify-content: space-between; align-items: flex-start">
+          <div>
+            <span class="pill">Шаблоны</span>
+            <h1 style="margin: 6px 0 4px">Управление GTM и характеристиками</h1>
+            <p class="muted" style="margin: 0">
+              Создавайте, редактируйте и переиспользуйте готовые структуры этапов и характеристик.
+            </p>
+          </div>
+          <div class="toolbar">
+            <button class="primary" id="newGtm">+ Шаблон GTM</button>
+            <button class="primary" id="newChar">+ Шаблон характеристик</button>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <h2 style="margin-top: 0">Шаблоны GTM-этапов</h2>
-        <div class="grid" id="gtmGrid"></div>
-      </div>
+      <section class="card template-section">
+        <div class="stage-card-header">
+          <div>
+            <h2 style="margin: 0">Шаблоны GTM-этапов</h2>
+            <p class="muted" style="margin: 0">Этапы, задачи и подзадачи для быстрого старта проектов.</p>
+          </div>
+          <div class="toolbar">
+            <button id="refreshGtm">Обновить</button>
+          </div>
+        </div>
+        <div class="split-panel">
+          <div class="template-list" id="gtmList"></div>
+          <div class="template-detail" id="gtmDetail"></div>
+        </div>
+      </section>
 
-      <div class="card">
-        <h2 style="margin-top: 0">Шаблоны характеристик</h2>
-        <div class="grid" id="charGrid"></div>
-      </div>
+      <section class="card template-section">
+        <div class="stage-card-header">
+          <div>
+            <h2 style="margin: 0">Шаблоны характеристик</h2>
+            <p class="muted" style="margin: 0">Секции и поля, которые можно применять к проектам.</p>
+          </div>
+          <div class="toolbar">
+            <button id="refreshChar">Обновить</button>
+          </div>
+        </div>
+        <div class="split-panel">
+          <div class="template-list" id="charList"></div>
+          <div class="template-detail" id="charDetail"></div>
+        </div>
+      </section>
     </div>
 
-    <script src="/theme.js" defer></script>
     <script>
-      const gtmGrid = document.getElementById("gtmGrid");
-      const charGrid = document.getElementById("charGrid");
+      const gtmList = document.getElementById("gtmList");
+      const gtmDetail = document.getElementById("gtmDetail");
+      const charList = document.getElementById("charList");
+      const charDetail = document.getElementById("charDetail");
       const newGtmBtn = document.getElementById("newGtm");
       const newCharBtn = document.getElementById("newChar");
+      document.getElementById("refreshGtm").addEventListener("click", () => loadTemplates(gtmState.activeId, charState.activeId));
+      document.getElementById("refreshChar").addEventListener("click", () => loadTemplates(gtmState.activeId, charState.activeId));
 
-      function renderGtm(templates) {
-        gtmGrid.innerHTML = "";
-        if (!templates.length) {
-          gtmGrid.innerHTML = '<p class="muted">Шаблоны GTM не добавлены</p>';
-          return;
-        }
-        templates.forEach((tpl) => {
-          const stages = tpl.stages || [];
-          const tasks = stages.reduce((sum, stage) => sum + (stage.tasks?.length || 0), 0);
-          const div = document.createElement("div");
-          div.className = "template-card";
-          div.innerHTML = `
-            <h3>${tpl.name}</h3>
-            <div class="muted">Этапов: ${stages.length} · Задач: ${tasks}</div>
-            <div class="actions">
-              <button class="ghost" data-action="rename">Переименовать</button>
-              <button class="danger" data-action="delete">Удалить</button>
-            </div>
-          `;
-          div.querySelector('[data-action="rename"]').addEventListener("click", async () => {
-            const nextName = prompt("Новое имя шаблона", tpl.name);
-            if (!nextName) return;
-            await fetch(`/api/gtm-templates/${tpl.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...tpl, name: nextName }),
+      const clone = (value) => (window.structuredClone ? structuredClone(value) : JSON.parse(JSON.stringify(value)));
+      const createId = () =>
+        window.crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+              const r = (Math.random() * 16) | 0;
+              const v = c === "x" ? r : (r & 0x3) | 0x8;
+              return v.toString(16);
             });
-            loadTemplates();
-          });
-          div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-            if (!confirm("Удалить шаблон GTM?")) return;
-            await fetch(`/api/gtm-templates/${tpl.id}`, { method: "DELETE" });
-            loadTemplates();
-          });
-          gtmGrid.appendChild(div);
-        });
-      }
 
-      function renderChars(templates) {
-        charGrid.innerHTML = "";
-        if (!templates.length) {
-          charGrid.innerHTML = '<p class="muted">Шаблоны характеристик не добавлены</p>';
-          return;
-        }
-        templates.forEach((tpl) => {
-          const sections = tpl.sections || [];
-          const fields = sections.reduce((sum, s) => sum + (s.fields?.length || 0), 0);
-          const div = document.createElement("div");
-          div.className = "template-card";
-          div.innerHTML = `
-            <h3>${tpl.name}</h3>
-            <div class="muted">Секций: ${sections.length} · Полей: ${fields}</div>
-            <div class="actions">
-              <button class="ghost" data-action="rename">Переименовать</button>
-              <button class="danger" data-action="delete">Удалить</button>
-            </div>
-          `;
-          div.querySelector('[data-action="rename"]').addEventListener("click", async () => {
-            const nextName = prompt("Новое имя шаблона", tpl.name);
-            if (!nextName) return;
-            await fetch(`/api/characteristic-templates/${tpl.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...tpl, name: nextName }),
-            });
-            loadTemplates();
-          });
-          div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-            if (!confirm("Удалить шаблон характеристик?")) return;
-            await fetch(`/api/characteristic-templates/${tpl.id}`, { method: "DELETE" });
-            loadTemplates();
-          });
-          charGrid.appendChild(div);
-        });
-      }
+      const gtmState = { list: [], activeId: null, draft: null, dirty: false };
+      const charState = { list: [], activeId: null, draft: null, dirty: false };
 
-      async function loadTemplates() {
+      async function loadTemplates(nextGtmId = null, nextCharId = null) {
         const [gtmRes, charRes] = await Promise.all([
           fetch("/api/gtm-templates"),
           fetch("/api/characteristic-templates"),
         ]);
-        renderGtm(gtmRes.ok ? await gtmRes.json() : []);
-        renderChars(charRes.ok ? await charRes.json() : []);
+        gtmState.list = gtmRes.ok ? await gtmRes.json() : [];
+        charState.list = charRes.ok ? await charRes.json() : [];
+        renderGtmList();
+        renderCharList();
+        if (nextGtmId && gtmState.list.some((tpl) => tpl.id === nextGtmId)) {
+          selectGtmTemplate(nextGtmId);
+        } else if (gtmState.activeId) {
+          selectGtmTemplate(gtmState.activeId);
+        } else {
+          gtmState.draft = null;
+          gtmState.activeId = null;
+          renderGtmDetail();
+        }
+        if (nextCharId && charState.list.some((tpl) => tpl.id === nextCharId)) {
+          selectCharTemplate(nextCharId);
+        } else if (charState.activeId) {
+          selectCharTemplate(charState.activeId);
+        } else {
+          charState.draft = null;
+          charState.activeId = null;
+          renderCharDetail();
+        }
       }
 
-      async function createGtm() {
-        await fetch("/api/gtm-templates", {
+      function renderGtmList() {
+        gtmList.innerHTML = "";
+        if (!gtmState.list.length) {
+          gtmList.innerHTML = "<div class='empty-state'>Шаблоны GTM ещё не созданы.</div>";
+          return;
+        }
+        gtmState.list.forEach((tpl) => {
+          const card = document.createElement("div");
+          card.className = "template-list-item";
+          if (tpl.id === gtmState.activeId) card.dataset.active = "true";
+          const header = document.createElement("header");
+          const title = document.createElement("strong");
+          title.textContent = tpl.name;
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "ghost danger";
+          deleteBtn.textContent = "Удалить";
+          deleteBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            deleteGtmTemplate(tpl.id);
+          });
+          header.append(title, deleteBtn);
+          const meta = document.createElement("div");
+          const stages = tpl.stages?.length || 0;
+          const tasks = tpl.tasks?.length || 0;
+          meta.className = "muted";
+          meta.textContent = `Этапов: ${stages} · Задач: ${tasks}`;
+          card.append(header, meta);
+          card.tabIndex = 0;
+          card.addEventListener("click", () => selectGtmTemplate(tpl.id));
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") selectGtmTemplate(tpl.id);
+          });
+          gtmList.appendChild(card);
+        });
+      }
+
+      function renderCharList() {
+        charList.innerHTML = "";
+        if (!charState.list.length) {
+          charList.innerHTML = "<div class='empty-state'>Шаблоны характеристик ещё не созданы.</div>";
+          return;
+        }
+        charState.list.forEach((tpl) => {
+          const card = document.createElement("div");
+          card.className = "template-list-item";
+          if (tpl.id === charState.activeId) card.dataset.active = "true";
+          const header = document.createElement("header");
+          const title = document.createElement("strong");
+          title.textContent = tpl.name;
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "ghost danger";
+          deleteBtn.textContent = "Удалить";
+          deleteBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            deleteCharTemplate(tpl.id);
+          });
+          header.append(title, deleteBtn);
+          const meta = document.createElement("div");
+          const sections = tpl.sections?.length || 0;
+          const fields = tpl.sections?.reduce((sum, section) => sum + (section.fields?.length || 0), 0) || 0;
+          meta.className = "muted";
+          meta.textContent = `Секций: ${sections} · Полей: ${fields}`;
+          card.append(header, meta);
+          card.tabIndex = 0;
+          card.addEventListener("click", () => selectCharTemplate(tpl.id));
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") selectCharTemplate(tpl.id);
+          });
+          charList.appendChild(card);
+        });
+      }
+
+      function selectGtmTemplate(templateId) {
+        const template = gtmState.list.find((tpl) => tpl.id === templateId);
+        if (!template) return;
+        gtmState.activeId = templateId;
+        gtmState.draft = clone(template);
+        gtmState.draft.stages = gtmState.draft.stages || [];
+        gtmState.draft.tasks = gtmState.draft.tasks || [];
+        gtmState.dirty = false;
+        renderGtmList();
+        renderGtmDetail();
+      }
+
+      function selectCharTemplate(templateId) {
+        const template = charState.list.find((tpl) => tpl.id === templateId);
+        if (!template) return;
+        charState.activeId = templateId;
+        charState.draft = clone(template);
+        charState.draft.sections = charState.draft.sections || [];
+        charState.draft.sections.forEach((section) => {
+          section.fields = section.fields || [];
+        });
+        charState.dirty = false;
+        renderCharList();
+        renderCharDetail();
+      }
+
+      function renderGtmDetail() {
+        gtmDetail.innerHTML = "";
+        const draft = gtmState.draft;
+        if (!draft) {
+          gtmDetail.innerHTML = "<div class='empty-state'>Выберите или создайте шаблон GTM.</div>";
+          return;
+        }
+        const header = document.createElement("div");
+        header.className = "detail-header";
+        const nameLabel = document.createElement("label");
+        nameLabel.textContent = "Название";
+        const nameInput = document.createElement("input");
+        nameInput.value = draft.name || "";
+        nameInput.addEventListener("input", (event) => {
+          draft.name = event.target.value;
+          markGtmDirty();
+        });
+        nameLabel.appendChild(nameInput);
+        const descLabel = document.createElement("label");
+        descLabel.textContent = "Описание";
+        const descInput = document.createElement("textarea");
+        descInput.rows = 2;
+        descInput.value = draft.description || "";
+        descInput.addEventListener("input", (event) => {
+          draft.description = event.target.value || null;
+          markGtmDirty();
+        });
+        descLabel.appendChild(descInput);
+        const actions = document.createElement("div");
+        actions.className = "detail-actions";
+        const resetBtn = document.createElement("button");
+        resetBtn.id = "gtmResetBtn";
+        resetBtn.textContent = "Сбросить";
+        resetBtn.addEventListener("click", () => selectGtmTemplate(draft.id));
+        const saveBtn = document.createElement("button");
+        saveBtn.id = "gtmSaveBtn";
+        saveBtn.className = "primary";
+        saveBtn.textContent = "Сохранить";
+        saveBtn.addEventListener("click", saveGtmTemplate);
+        actions.append(resetBtn, saveBtn);
+        header.append(nameLabel, descLabel, actions);
+        gtmDetail.appendChild(header);
+
+        const stageStack = document.createElement("div");
+        stageStack.className = "stage-stack";
+        const stages = [...(draft.stages || [])].sort((a, b) => a.order - b.order);
+        stages.forEach((stage, index) => stageStack.appendChild(createStageCard(stage, index, stages.length)));
+        const addStageBtn = document.createElement("button");
+        addStageBtn.className = "ghost";
+        addStageBtn.textContent = "+ Добавить этап";
+        addStageBtn.addEventListener("click", addGtmStage);
+        gtmDetail.append(stageStack, addStageBtn);
+        updateGtmDirtyState();
+      }
+
+      function createStageCard(stage, index, total) {
+        const card = document.createElement("div");
+        card.className = "stage-card";
+        const header = document.createElement("div");
+        header.className = "stage-card-header";
+        const titleInput = document.createElement("input");
+        titleInput.value = stage.title || "";
+        titleInput.placeholder = "Название этапа";
+        titleInput.addEventListener("input", (event) => {
+          stage.title = event.target.value;
+          markGtmDirty();
+        });
+        const headerActions = document.createElement("div");
+        headerActions.className = "toolbar";
+        const upBtn = document.createElement("button");
+        upBtn.textContent = "↑";
+        upBtn.disabled = index === 0;
+        upBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          moveGtmStage(stage.id, -1);
+        });
+        const downBtn = document.createElement("button");
+        downBtn.textContent = "↓";
+        downBtn.disabled = index === total - 1;
+        downBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          moveGtmStage(stage.id, 1);
+        });
+        const delBtn = document.createElement("button");
+        delBtn.className = "ghost danger";
+        delBtn.textContent = "Удалить";
+        delBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteGtmStage(stage.id);
+        });
+        headerActions.append(upBtn, downBtn, delBtn);
+        header.append(titleInput, headerActions);
+        const desc = document.createElement("textarea");
+        desc.rows = 2;
+        desc.placeholder = "Критерии завершения этапа";
+        desc.value = stage.description || "";
+        desc.addEventListener("input", (event) => {
+          stage.description = event.target.value || null;
+          markGtmDirty();
+        });
+        card.append(header, desc);
+
+        const tasksWrapper = document.createElement("div");
+        tasksWrapper.className = "stage-stack";
+        const tasks = (gtmState.draft.tasks || []).filter((task) => task.gtm_stage_id === stage.id);
+        tasks.forEach((task) => tasksWrapper.appendChild(createTaskCard(task)));
+        const addTaskBtn = document.createElement("button");
+        addTaskBtn.className = "ghost";
+        addTaskBtn.textContent = "+ Задача";
+        addTaskBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          addGtmTask(stage.id);
+        });
+        tasksWrapper.appendChild(addTaskBtn);
+        card.appendChild(tasksWrapper);
+        return card;
+      }
+
+      function createTaskCard(task) {
+        const card = document.createElement("div");
+        card.className = "task-card";
+        const title = document.createElement("input");
+        title.value = task.title || "";
+        title.placeholder = "Название задачи";
+        title.addEventListener("input", (event) => {
+          task.title = event.target.value;
+          markGtmDirty();
+        });
+        const desc = document.createElement("textarea");
+        desc.rows = 2;
+        desc.placeholder = "Описание задачи";
+        desc.value = task.description || "";
+        desc.addEventListener("input", (event) => {
+          task.description = event.target.value || null;
+          markGtmDirty();
+        });
+        const subtaskList = document.createElement("div");
+        subtaskList.className = "subtask-list";
+        (task.subtasks || []).sort((a, b) => a.order - b.order).forEach((subtask) => {
+          const row = document.createElement("div");
+          row.className = "subtask-row";
+          const subInput = document.createElement("input");
+          subInput.type = "text";
+          subInput.value = subtask.title || "";
+          subInput.placeholder = "Подзадача";
+          subInput.addEventListener("input", (event) => {
+            subtask.title = event.target.value;
+            markGtmDirty();
+          });
+          const orderInput = document.createElement("input");
+          orderInput.type = "number";
+          orderInput.value = subtask.order ?? 0;
+          orderInput.addEventListener("input", (event) => {
+            subtask.order = Number(event.target.value) || 0;
+            markGtmDirty();
+          });
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "ghost danger";
+          deleteBtn.textContent = "×";
+          deleteBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            deleteGtmSubtask(task.id, subtask.id);
+          });
+          row.append(subInput, orderInput, deleteBtn);
+          subtaskList.appendChild(row);
+        });
+        const addSubtaskBtn = document.createElement("button");
+        addSubtaskBtn.className = "ghost";
+        addSubtaskBtn.textContent = "+ Подзадача";
+        addSubtaskBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          addGtmSubtask(task.id);
+        });
+        const actions = document.createElement("div");
+        actions.className = "detail-actions";
+        const deleteTaskBtn = document.createElement("button");
+        deleteTaskBtn.className = "ghost danger";
+        deleteTaskBtn.textContent = "Удалить задачу";
+        deleteTaskBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteGtmTask(task.id);
+        });
+        actions.appendChild(deleteTaskBtn);
+        card.append(title, desc, subtaskList, addSubtaskBtn, actions);
+        return card;
+      }
+
+      function markGtmDirty() {
+        gtmState.dirty = true;
+        updateGtmDirtyState();
+      }
+
+      function updateGtmDirtyState() {
+        const saveBtn = document.getElementById("gtmSaveBtn");
+        const resetBtn = document.getElementById("gtmResetBtn");
+        if (saveBtn) saveBtn.disabled = !gtmState.dirty;
+        if (resetBtn) resetBtn.disabled = !gtmState.dirty;
+      }
+
+      function addGtmStage() {
+        if (!gtmState.draft) return;
+        const order = (gtmState.draft.stages || []).length;
+        const stage = {
+          id: createId(),
+          title: `Новый этап ${order + 1}`,
+          description: null,
+          order,
+          planned_start: null,
+          planned_end: null,
+          actual_end: null,
+          status: "not_started",
+          risk_flag: false,
+          checklist: [],
+        };
+        gtmState.draft.stages = [...(gtmState.draft.stages || []), stage];
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function moveGtmStage(stageId, delta) {
+        if (!gtmState.draft?.stages) return;
+        const sorted = [...gtmState.draft.stages].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((stage) => stage.id === stageId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((stage, idx) => (stage.order = idx));
+        gtmState.draft.stages = sorted;
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function deleteGtmStage(stageId) {
+        if (!gtmState.draft?.stages) return;
+        gtmState.draft.stages = gtmState.draft.stages.filter((stage) => stage.id !== stageId);
+        gtmState.draft.stages.forEach((stage, idx) => (stage.order = idx));
+        gtmState.draft.tasks = (gtmState.draft.tasks || []).filter((task) => task.gtm_stage_id !== stageId);
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function addGtmTask(stageId) {
+        if (!gtmState.draft) return;
+        const task = {
+          id: createId(),
+          title: "Новая задача",
+          description: null,
+          status: "todo",
+          due_date: null,
+          important: false,
+          gtm_stage_id: stageId,
+          subtasks: [],
+          comments: [],
+        };
+        gtmState.draft.tasks = [...(gtmState.draft.tasks || []), task];
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function deleteGtmTask(taskId) {
+        if (!gtmState.draft) return;
+        gtmState.draft.tasks = (gtmState.draft.tasks || []).filter((task) => task.id !== taskId);
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function addGtmSubtask(taskId) {
+        const task = gtmState.draft?.tasks?.find((t) => t.id === taskId);
+        if (!task) return;
+        const subtask = { id: createId(), title: "Подзадача", done: false, order: task.subtasks?.length || 0 };
+        task.subtasks = [...(task.subtasks || []), subtask];
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      function deleteGtmSubtask(taskId, subtaskId) {
+        const task = gtmState.draft?.tasks?.find((t) => t.id === taskId);
+        if (!task) return;
+        task.subtasks = (task.subtasks || []).filter((sub) => sub.id !== subtaskId);
+        markGtmDirty();
+        renderGtmDetail();
+      }
+
+      async function saveGtmTemplate() {
+        if (!gtmState.draft) return;
+        const res = await fetch(`/api/gtm-templates/${gtmState.draft.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(gtmState.draft),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить шаблон GTM");
+          return;
+        }
+        gtmState.dirty = false;
+        await loadTemplates(gtmState.draft.id, charState.activeId);
+      }
+
+      async function deleteGtmTemplate(templateId) {
+        if (!confirm("Удалить шаблон GTM?")) return;
+        const res = await fetch(`/api/gtm-templates/${templateId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить шаблон");
+          return;
+        }
+        if (gtmState.activeId === templateId) {
+          gtmState.activeId = null;
+          gtmState.draft = null;
+        }
+        await loadTemplates(gtmState.activeId, charState.activeId);
+      }
+
+      function renderCharDetail() {
+        charDetail.innerHTML = "";
+        const draft = charState.draft;
+        if (!draft) {
+          charDetail.innerHTML = "<div class='empty-state'>Выберите или создайте шаблон характеристик.</div>";
+          return;
+        }
+        const header = document.createElement("div");
+        header.className = "detail-header";
+        const nameLabel = document.createElement("label");
+        nameLabel.textContent = "Название";
+        const nameInput = document.createElement("input");
+        nameInput.value = draft.name || "";
+        nameInput.addEventListener("input", (event) => {
+          draft.name = event.target.value;
+          markCharDirty();
+        });
+        nameLabel.appendChild(nameInput);
+        const descLabel = document.createElement("label");
+        descLabel.textContent = "Описание";
+        const descInput = document.createElement("textarea");
+        descInput.rows = 2;
+        descInput.value = draft.description || "";
+        descInput.addEventListener("input", (event) => {
+          draft.description = event.target.value || null;
+          markCharDirty();
+        });
+        descLabel.appendChild(descInput);
+        const actions = document.createElement("div");
+        actions.className = "detail-actions";
+        const resetBtn = document.createElement("button");
+        resetBtn.id = "charResetBtn";
+        resetBtn.textContent = "Сбросить";
+        resetBtn.addEventListener("click", () => selectCharTemplate(draft.id));
+        const saveBtn = document.createElement("button");
+        saveBtn.id = "charSaveBtn";
+        saveBtn.className = "primary";
+        saveBtn.textContent = "Сохранить";
+        saveBtn.addEventListener("click", saveCharTemplate);
+        actions.append(resetBtn, saveBtn);
+        header.append(nameLabel, descLabel, actions);
+        charDetail.appendChild(header);
+
+        const sectionStack = document.createElement("div");
+        sectionStack.className = "section-stack";
+        const sections = [...(draft.sections || [])].sort((a, b) => a.order - b.order);
+        sections.forEach((section, index) => sectionStack.appendChild(createCharSectionCard(section, index, sections.length)));
+        const addSectionBtn = document.createElement("button");
+        addSectionBtn.className = "ghost";
+        addSectionBtn.textContent = "+ Добавить секцию";
+        addSectionBtn.addEventListener("click", addCharSection);
+        charDetail.append(sectionStack, addSectionBtn);
+        updateCharDirtyState();
+      }
+
+      function createCharSectionCard(section, index, total) {
+        const card = document.createElement("div");
+        card.className = "section-card";
+        const header = document.createElement("div");
+        header.className = "section-card-header";
+        const titleInput = document.createElement("input");
+        titleInput.value = section.title || "";
+        titleInput.placeholder = "Название секции";
+        titleInput.addEventListener("input", (event) => {
+          section.title = event.target.value;
+          markCharDirty();
+        });
+        const orderInput = document.createElement("input");
+        orderInput.type = "number";
+        orderInput.value = section.order ?? index;
+        orderInput.style.maxWidth = "90px";
+        orderInput.addEventListener("input", (event) => {
+          section.order = Number(event.target.value) || 0;
+          markCharDirty();
+        });
+        const headerActions = document.createElement("div");
+        headerActions.className = "toolbar";
+        const upBtn = document.createElement("button");
+        upBtn.textContent = "↑";
+        upBtn.disabled = index === 0;
+        upBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          moveCharSection(section.id, -1);
+        });
+        const downBtn = document.createElement("button");
+        downBtn.textContent = "↓";
+        downBtn.disabled = index === total - 1;
+        downBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          moveCharSection(section.id, 1);
+        });
+        const delBtn = document.createElement("button");
+        delBtn.className = "ghost danger";
+        delBtn.textContent = "Удалить";
+        delBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteCharSection(section.id);
+        });
+        headerActions.append(upBtn, downBtn, delBtn);
+        header.append(titleInput, orderInput, headerActions);
+        card.appendChild(header);
+
+        const fieldList = document.createElement("div");
+        fieldList.className = "field-list";
+        const fields = [...(section.fields || [])].sort((a, b) => a.order - b.order);
+        fields.forEach((field, idx) => fieldList.appendChild(createCharFieldRow(section.id, field, idx, fields.length)));
+        const addFieldBtn = document.createElement("button");
+        addFieldBtn.className = "ghost";
+        addFieldBtn.textContent = "+ Поле";
+        addFieldBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          addCharField(section.id);
+        });
+        card.append(fieldList, addFieldBtn);
+        return card;
+      }
+
+      function createCharFieldRow(sectionId, field, index, total) {
+        const row = document.createElement("div");
+        row.className = "field-row";
+        const labelRu = document.createElement("input");
+        labelRu.value = field.label_ru || "";
+        labelRu.placeholder = "Label RU";
+        labelRu.addEventListener("input", (event) => {
+          field.label_ru = event.target.value;
+          markCharDirty();
+        });
+        const labelEn = document.createElement("input");
+        labelEn.value = field.label_en || "";
+        labelEn.placeholder = "Label EN";
+        labelEn.addEventListener("input", (event) => {
+          field.label_en = event.target.value;
+          markCharDirty();
+        });
+        const typeSelect = document.createElement("select");
+        ["text", "number", "select", "checkbox", "other"].forEach((type) => {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = type;
+          if (field.field_type === type) option.selected = true;
+          typeSelect.appendChild(option);
+        });
+        typeSelect.addEventListener("change", (event) => {
+          field.field_type = event.target.value;
+          markCharDirty();
+        });
+        const orderInput = document.createElement("input");
+        orderInput.type = "number";
+        orderInput.value = field.order ?? index;
+        orderInput.addEventListener("input", (event) => {
+          field.order = Number(event.target.value) || 0;
+          markCharDirty();
+        });
+        const actions = document.createElement("div");
+        actions.className = "detail-actions";
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "ghost danger";
+        deleteBtn.textContent = "Удалить";
+        deleteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteCharField(sectionId, field.id);
+        });
+        actions.appendChild(deleteBtn);
+        row.append(labelRu, labelEn, typeSelect, orderInput, actions);
+        return row;
+      }
+
+      function markCharDirty() {
+        charState.dirty = true;
+        updateCharDirtyState();
+      }
+
+      function updateCharDirtyState() {
+        const saveBtn = document.getElementById("charSaveBtn");
+        const resetBtn = document.getElementById("charResetBtn");
+        if (saveBtn) saveBtn.disabled = !charState.dirty;
+        if (resetBtn) resetBtn.disabled = !charState.dirty;
+      }
+
+      function addCharSection() {
+        if (!charState.draft) return;
+        const section = { id: createId(), title: "Новая секция", order: (charState.draft.sections || []).length, fields: [] };
+        charState.draft.sections = [...(charState.draft.sections || []), section];
+        markCharDirty();
+        renderCharDetail();
+      }
+
+      function moveCharSection(sectionId, delta) {
+        if (!charState.draft?.sections) return;
+        const sorted = [...charState.draft.sections].sort((a, b) => a.order - b.order);
+        const index = sorted.findIndex((section) => section.id === sectionId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= sorted.length) return;
+        [sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+        sorted.forEach((section, idx) => (section.order = idx));
+        charState.draft.sections = sorted;
+        markCharDirty();
+        renderCharDetail();
+      }
+
+      function deleteCharSection(sectionId) {
+        if (!charState.draft?.sections) return;
+        charState.draft.sections = charState.draft.sections.filter((section) => section.id !== sectionId);
+        charState.draft.sections.forEach((section, idx) => (section.order = idx));
+        markCharDirty();
+        renderCharDetail();
+      }
+
+      function addCharField(sectionId) {
+        const section = charState.draft?.sections?.find((s) => s.id === sectionId);
+        if (!section) return;
+        const field = {
+          id: createId(),
+          label_ru: "Параметр RU",
+          label_en: "Parameter EN",
+          value_ru: null,
+          value_en: null,
+          field_type: "text",
+          order: section.fields?.length || 0,
+        };
+        section.fields = [...(section.fields || []), field];
+        markCharDirty();
+        renderCharDetail();
+      }
+
+      function deleteCharField(sectionId, fieldId) {
+        const section = charState.draft?.sections?.find((s) => s.id === sectionId);
+        if (!section) return;
+        section.fields = section.fields.filter((field) => field.id !== fieldId);
+        section.fields.forEach((field, idx) => (field.order = idx));
+        markCharDirty();
+        renderCharDetail();
+      }
+
+      async function saveCharTemplate() {
+        if (!charState.draft) return;
+        const res = await fetch(`/api/characteristic-templates/${charState.draft.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(charState.draft),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить шаблон характеристик");
+          return;
+        }
+        charState.dirty = false;
+        await loadTemplates(gtmState.activeId, charState.draft.id);
+      }
+
+      async function deleteCharTemplate(templateId) {
+        if (!confirm("Удалить шаблон характеристик?")) return;
+        const res = await fetch(`/api/characteristic-templates/${templateId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить шаблон");
+          return;
+        }
+        if (charState.activeId === templateId) {
+          charState.activeId = null;
+          charState.draft = null;
+        }
+        await loadTemplates(gtmState.activeId, null);
+      }
+
+      newGtmBtn.addEventListener("click", async () => {
+        const res = await fetch("/api/gtm-templates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Новый шаблон", description: null, stages: [] }),
+          body: JSON.stringify({ name: "Новый шаблон GTM", description: null, stages: [], tasks: [] }),
         });
-        loadTemplates();
-      }
+        if (!res.ok) {
+          alert("Не удалось создать шаблон GTM");
+          return;
+        }
+        const created = await res.json();
+        await loadTemplates(created.id, charState.activeId);
+      });
 
-      async function createChar() {
-        await fetch("/api/characteristic-templates", {
+      newCharBtn.addEventListener("click", async () => {
+        const res = await fetch("/api/characteristic-templates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Новый шаблон", description: null, sections: [] }),
+          body: JSON.stringify({ name: "Новый шаблон характеристик", description: null, sections: [] }),
         });
-        loadTemplates();
-      }
+        if (!res.ok) {
+          alert("Не удалось создать шаблон характеристик");
+          return;
+        }
+        const created = await res.json();
+        await loadTemplates(gtmState.activeId, created.id);
+      });
 
-      newGtmBtn.addEventListener("click", createGtm);
-      newCharBtn.addEventListener("click", createChar);
       loadTemplates();
     </script>
   </body>
