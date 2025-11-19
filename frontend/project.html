@@ -38,6 +38,15 @@
         --accent-soft: rgba(16, 163, 127, 0.12);
         --danger: #ef4444;
         --warning: #f59e0b;
+        --flag-important-bg: #ffe6ef;
+        --flag-important-text: #a80738;
+        --flag-important-border: #ffb3c9;
+        --flag-urgent-bg: #fff2e0;
+        --flag-urgent-text: #b54708;
+        --flag-urgent-border: #f5c997;
+        --flag-risk-bg: #fff7d6;
+        --flag-risk-text: #92400e;
+        --flag-risk-border: #f4ce6a;
       }
 
       [data-theme="dark"] {
@@ -56,6 +65,15 @@
         --accent-soft: rgba(16, 163, 127, 0.2);
         --danger: #f87171;
         --warning: #fbbf24;
+        --flag-important-bg: rgba(255, 99, 150, 0.16);
+        --flag-important-text: #ff9cbf;
+        --flag-important-border: rgba(255, 99, 150, 0.5);
+        --flag-urgent-bg: rgba(255, 183, 77, 0.18);
+        --flag-urgent-text: #ffddb0;
+        --flag-urgent-border: rgba(255, 183, 77, 0.5);
+        --flag-risk-bg: rgba(250, 204, 21, 0.15);
+        --flag-risk-text: #ffe79a;
+        --flag-risk-border: rgba(250, 204, 21, 0.6);
       }
 
       body {
@@ -256,6 +274,13 @@
         align-items: center;
       }
 
+      .stage-title-line {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
       .chip {
         display: inline-flex;
         align-items: center;
@@ -264,11 +289,45 @@
         background: var(--surface-muted);
         border-radius: 8px;
         font-size: 0.85rem;
+        border: 1px solid transparent;
       }
 
       .chip.warn {
-        background: rgba(248, 113, 113, 0.16);
-        color: #fca5a5;
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
+        font-weight: 600;
+      }
+
+      .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .flag-important {
+        background: var(--flag-important-bg);
+        color: var(--flag-important-text);
+        border-color: var(--flag-important-border);
+      }
+
+      .flag-urgent {
+        background: var(--flag-urgent-bg);
+        color: var(--flag-urgent-text);
+        border-color: var(--flag-urgent-border);
+      }
+
+      .flag-risk {
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
       }
 
       .stage-description {
@@ -326,6 +385,34 @@
         margin-top: 8px;
       }
 
+      .icon-button {
+        border-radius: 999px;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-size: 0.9rem;
+      }
+
+      .icon-button:hover {
+        background: var(--surface);
+      }
+
+      .comment-trigger {
+        min-width: 48px;
+        padding: 0 12px;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .comment-trigger .count {
+        font-weight: 700;
+      }
+
       .comment-block-header {
         display: flex;
         justify-content: space-between;
@@ -368,6 +455,18 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      #discussionList {
+        max-height: 45vh;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .discussion-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
       .comment-item {
@@ -455,6 +554,19 @@
         width: min(820px, 96vw);
       }
 
+      .modal.modal-tall {
+        width: min(820px, 96vw);
+        max-height: 80vh;
+      }
+
+      .modal-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
       .modal h3 {
         margin: 0 0 10px;
       }
@@ -481,6 +593,35 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 12px;
+      }
+
+      .task-flags-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .flag-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-weight: 600;
+      }
+
+      .flag-checkbox input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .flag-select {
+        flex: 1;
+        min-width: 220px;
       }
 
       .modal form .checkbox-row {
@@ -561,6 +702,46 @@
         padding: 12px;
         background: var(--surface);
         margin-bottom: 12px;
+      }
+
+      .task-card.collapsed .task-details,
+      .task-card.collapsed .task-inline-actions,
+      .task-card.collapsed .task-description,
+      .task-card.collapsed .subtasks,
+      .task-card.collapsed .subtask-inline {
+        display: none;
+      }
+
+      .task-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .task-top-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .task-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0;
+      }
+
+      .task-description {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-bottom: 8px;
+      }
+
+      .task-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
       .task-meta {
@@ -1130,8 +1311,9 @@
       }
 
       .risk-chip.warn {
-        border-color: var(--danger);
-        color: var(--danger);
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
       }
 
       .progress-bar {
@@ -1557,10 +1739,19 @@
               Описание
               <textarea id="taskDescription" rows="3" placeholder="Детали и критерии задачи"></textarea>
             </label>
-            <label class="checkbox-row checkbox-lite" style="justify-content: flex-start">
-              <input type="checkbox" id="taskImportant" />
-              <span>Отметить как важную</span>
-            </label>
+            <div class="task-flags-row">
+              <label class="flag-checkbox">
+                <input type="checkbox" id="taskImportant" />
+                <span>Важная задача</span>
+              </label>
+              <label class="flag-select">
+                Срочность
+                <select id="taskUrgency">
+                  <option value="normal">Обычная</option>
+                  <option value="high">Срочно</option>
+                </select>
+              </label>
+            </div>
             <div class="modal-actions">
               <button type="button" onclick="closeTaskModal()">Отмена</button>
               <button class="primary" type="submit">Сохранить</button>
@@ -1599,6 +1790,19 @@
         </div>
       </div>
 
+      <div id="discussionModal" class="modal-backdrop">
+        <div class="modal modal-tall">
+          <div class="modal-heading">
+            <h3 id="discussionTitle">Комментарии</h3>
+            <button type="button" class="icon-button" id="closeDiscussionButton" aria-label="Закрыть обсуждение">✕</button>
+          </div>
+          <div class="discussion-body">
+            <ul id="discussionList" class="comment-list"></ul>
+            <div id="discussionComposer"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <script>
@@ -1611,6 +1815,12 @@
       const basicsModal = document.getElementById("basicsModal");
       const taskModal = document.getElementById("taskModal");
       const taskGtmStageSelect = document.getElementById("taskGtmStage");
+      const taskUrgencyField = document.getElementById("taskUrgency");
+      const discussionModal = document.getElementById("discussionModal");
+      const discussionTitle = document.getElementById("discussionTitle");
+      const discussionList = document.getElementById("discussionList");
+      const discussionComposer = document.getElementById("discussionComposer");
+      const closeDiscussionButton = document.getElementById("closeDiscussionButton");
 
       const galleryContainer = document.getElementById("gallery");
       const imageUploadInput = document.getElementById("imageUploadInput");
@@ -1686,6 +1896,18 @@
       let files = [];
       let projectComments = [];
       let historyEvents = [];
+      const collapsedTasksKey = "hpt_collapsed_tasks";
+      let collapsedTasks = new Set();
+      try {
+        const storedCollapsed = JSON.parse(localStorage.getItem(collapsedTasksKey) || "[]");
+        if (Array.isArray(storedCollapsed)) {
+          collapsedTasks = new Set(storedCollapsed);
+        }
+      } catch (error) {
+        console.warn("Не удалось прочитать состояние свернутых задач", error);
+        collapsedTasks = new Set();
+      }
+      let discussionContext = null;
 
       basicsForm?.addEventListener("submit", saveBasics);
       fileForm?.addEventListener("submit", handleFileSubmit);
@@ -1696,6 +1918,12 @@
       });
       openCharacteristicsBtn?.addEventListener("click", () => {
         window.location.href = `/characteristics.html?id=${projectId}`;
+      });
+      closeDiscussionButton?.addEventListener("click", closeDiscussionModal);
+      discussionModal?.addEventListener("click", (event) => {
+        if (event.target === discussionModal) {
+          closeDiscussionModal();
+        }
       });
 
       if (!projectId) {
@@ -1791,6 +2019,26 @@
         wrapper.appendChild(toolbar);
         wrapper.appendChild(area);
         return { wrapper, area };
+      }
+
+      function persistCollapsedTasks() {
+        localStorage.setItem(collapsedTasksKey, JSON.stringify(Array.from(collapsedTasks)));
+      }
+
+      function isTaskCollapsed(taskId) {
+        if (!taskId) return false;
+        return collapsedTasks.has(String(taskId));
+      }
+
+      function setTaskCollapsed(taskId, collapsed) {
+        if (!taskId) return;
+        const normalizedId = String(taskId);
+        if (collapsed) {
+          collapsedTasks.add(normalizedId);
+        } else {
+          collapsedTasks.delete(normalizedId);
+        }
+        persistCollapsedTasks();
       }
 
       async function loadData() {
@@ -2016,7 +2264,12 @@
           card.innerHTML = `
             <div class="stage-header">
               <div>
-                <strong>${index + 1}. ${stage.title}</strong>
+                <div class="stage-title-line">
+                  <strong>${index + 1}. ${stage.title}</strong>
+                  <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
+                    💬 <span class="count">${stage.comments?.length || 0}</span>
+                  </button>
+                </div>
                 <div class="stage-description" id="stage-desc-${stage.id}"></div>
               </div>
               <div class="stage-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
@@ -2052,7 +2305,6 @@
               <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
             </div>
             <div id="stage-tasks-${stage.id}"></div>
-            <div id="stage-comments-${stage.id}"></div>
           `;
 
           card.addEventListener("contextmenu", (event) => {
@@ -2068,10 +2320,8 @@
           if (taskSlot) {
             taskSlot.replaceWith(renderStageTasks(stage));
           }
-          const commentSlot = card.querySelector(`#stage-comments-${stage.id}`);
-          if (commentSlot) {
-            commentSlot.replaceWith(renderStageComments(stage));
-          }
+          const stageCommentBtn = card.querySelector(`[data-stage-comments='${stage.id}']`);
+          stageCommentBtn?.addEventListener("click", () => openStageDiscussion(stage.id));
 
           stagesContainer.appendChild(card);
         });
@@ -2114,48 +2364,67 @@
         }
 
         stageTasks.forEach((task) => {
+          const collapsed = isTaskCollapsed(task.id);
           const card = document.createElement("div");
-          card.className = "task-card compact";
+          card.className = `task-card${collapsed ? " collapsed" : ""}`;
           card.dataset.taskId = task.id;
 
           const topRow = document.createElement("div");
-          topRow.className = "stage-task-header";
+          topRow.className = "task-top-row";
           const info = document.createElement("div");
-          info.style.display = "flex";
-          info.style.flexDirection = "column";
-          info.style.gap = "4px";
           const titleEl = document.createElement("strong");
           titleEl.textContent = task.title;
           info.appendChild(titleEl);
-          if (task.description) {
-            const desc = document.createElement("div");
-            desc.className = "muted";
-            desc.textContent = task.description;
-            info.appendChild(desc);
-          }
+          topRow.appendChild(info);
+          const topActions = document.createElement("div");
+          topActions.className = "task-top-actions";
+          const commentBtn = document.createElement("button");
+          commentBtn.type = "button";
+          commentBtn.className = "icon-button comment-trigger";
+          commentBtn.innerHTML = `💬 <span class="count">${task.comments?.length || 0}</span>`;
+          commentBtn.title = "Комментарии";
+          commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
+          const collapseBtn = document.createElement("button");
+          collapseBtn.type = "button";
+          collapseBtn.className = "icon-button";
+          collapseBtn.textContent = collapsed ? "▾" : "▴";
+          collapseBtn.title = collapsed ? "Развернуть задачу" : "Свернуть задачу";
+          collapseBtn.addEventListener("click", () => {
+            const nextCollapsed = !card.classList.contains("collapsed");
+            card.classList.toggle("collapsed", nextCollapsed);
+            collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
+            collapseBtn.title = nextCollapsed ? "Развернуть задачу" : "Свернуть задачу";
+            setTaskCollapsed(task.id, nextCollapsed);
+          });
+          topActions.appendChild(commentBtn);
+          topActions.appendChild(collapseBtn);
+          topRow.appendChild(topActions);
+          card.appendChild(topRow);
 
-          const tagBar = document.createElement("div");
-          tagBar.style.display = "flex";
-          tagBar.style.flexWrap = "wrap";
-          tagBar.style.gap = "6px";
+          const badges = document.createElement("div");
+          badges.className = "task-badges";
           const statusChip = document.createElement("span");
           statusChip.className = "chip";
           statusChip.textContent = taskStatusLabel(task.status);
-          tagBar.appendChild(statusChip);
+          badges.appendChild(statusChip);
           const due = dueInfo(task);
           const dueChip = document.createElement("span");
           dueChip.className = due.className;
           dueChip.textContent = due.text;
-          tagBar.appendChild(dueChip);
+          badges.appendChild(dueChip);
           if (task.important) {
             const importantChip = document.createElement("span");
-            importantChip.className = "chip warn";
+            importantChip.className = "flag-badge flag-important";
             importantChip.textContent = "Важно";
-            tagBar.appendChild(importantChip);
+            badges.appendChild(importantChip);
           }
-          topRow.appendChild(info);
-          topRow.appendChild(tagBar);
-          card.appendChild(topRow);
+          if (task.urgency === "high") {
+            const urgentChip = document.createElement("span");
+            urgentChip.className = "flag-badge flag-urgent";
+            urgentChip.textContent = "Срочно";
+            badges.appendChild(urgentChip);
+          }
+          card.appendChild(badges);
 
           const progress = taskProgress(task);
           const progressBlock = document.createElement("div");
@@ -2165,6 +2434,15 @@
             <div class="muted">Прогресс задачи: ${progress.label}</div>
           `;
           card.appendChild(progressBlock);
+
+          const details = document.createElement("div");
+          details.className = "task-details";
+          if (task.description) {
+            const desc = document.createElement("div");
+            desc.className = "task-description";
+            desc.textContent = task.description;
+            details.appendChild(desc);
+          }
 
           const actions = document.createElement("div");
           actions.className = "task-inline-actions";
@@ -2189,10 +2467,10 @@
           actions.appendChild(toggleStatusBtn);
           actions.appendChild(importantBtn);
           actions.appendChild(deleteBtn);
-          card.appendChild(actions);
+          details.appendChild(actions);
 
-          card.appendChild(renderSubtasksSection(task));
-          card.appendChild(renderTaskComments(task));
+          details.appendChild(renderSubtasksSection(task));
+          card.appendChild(details);
 
           card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
@@ -2206,6 +2484,7 @@
                 label: task.important ? "Снять важность" : "Отметить как важную",
                 action: () => toggleImportant(task.id),
               },
+              { label: "Комментарии", action: () => openTaskDiscussion(task.id) },
               { label: "Удалить", action: () => deleteTask(task.id) },
             ];
             openContextMenu(event, menu);
@@ -2217,167 +2496,6 @@
         return wrapper;
       }
 
-      function renderStageComments(stage) {
-        const block = document.createElement("div");
-        block.className = "comment-block";
-        block.dataset.stageId = stage.id;
-        const header = document.createElement("div");
-        header.className = "comment-block-header";
-        const title = document.createElement("strong");
-        title.textContent = "Комментарии этапа";
-        const addBtn = document.createElement("button");
-        addBtn.className = "ghost";
-        addBtn.textContent = "Добавить";
-        addBtn.addEventListener("click", () => focusStageCommentEditor(stage.id));
-        header.appendChild(title);
-        header.appendChild(addBtn);
-        block.appendChild(header);
-
-        const list = document.createElement("ul");
-        list.className = "comment-list";
-        const stageComments = stage.comments?.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) || [];
-        if (!stageComments.length) {
-          const empty = document.createElement("li");
-          empty.className = "muted";
-          empty.textContent = "Комментариев пока нет";
-          list.appendChild(empty);
-        } else {
-          stageComments.forEach((comment) => {
-            const item = document.createElement("li");
-            item.className = "comment-item";
-            item.id = `stage-comment-${stage.id}-${comment.id}`;
-            const meta = document.createElement("div");
-            meta.className = "muted";
-            meta.style.fontSize = "0.85rem";
-            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${
-              comment.edited_at ? " · изменено" : ""
-            }`;
-            const body = document.createElement("div");
-            body.innerHTML = comment.text || "";
-            const actions = document.createElement("div");
-            actions.className = "comment-actions";
-            const editBtn = document.createElement("button");
-            editBtn.className = "ghost";
-            editBtn.textContent = "Редактировать";
-            editBtn.addEventListener("click", () => openStageCommentEditor(stage.id, comment));
-            const delBtn = document.createElement("button");
-            delBtn.className = "ghost";
-            delBtn.textContent = "Удалить";
-            delBtn.addEventListener("click", () => deleteStageComment(stage.id, comment.id));
-            actions.appendChild(editBtn);
-            actions.appendChild(delBtn);
-            item.appendChild(meta);
-            item.appendChild(body);
-            item.appendChild(actions);
-            list.appendChild(item);
-          });
-        }
-
-        block.appendChild(list);
-        block.appendChild(renderStageCommentComposer(stage.id));
-        return block;
-      }
-
-      function renderStageCommentComposer(stageId) {
-        const composer = document.createElement("div");
-        composer.className = "comment-editor";
-        const editorId = `stage-comment-editor-${stageId}`;
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий к этапу", true);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Добавить";
-        saveBtn.addEventListener("click", () => addStageComment(stageId, editorHtml(area), area));
-        const clearBtn = document.createElement("button");
-        clearBtn.className = "ghost";
-        clearBtn.textContent = "Очистить";
-        clearBtn.addEventListener("click", () => {
-          area.innerHTML = "";
-        });
-        actions.appendChild(saveBtn);
-        actions.appendChild(clearBtn);
-        composer.appendChild(wrapper);
-        composer.appendChild(actions);
-        return composer;
-      }
-
-      async function addStageComment(stageId, html, areaRef = null) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось добавить комментарий");
-          return;
-        }
-        if (areaRef) areaRef.innerHTML = "";
-        await loadStages();
-      }
-
-      function openStageCommentEditor(stageId, comment) {
-        const item = document.getElementById(`stage-comment-${stageId}-${comment.id}`);
-        if (!item) return;
-        item.innerHTML = "";
-        const editorId = `stage-comment-edit-${stageId}-${comment.id}`;
-        const editor = document.createElement("div");
-        editor.className = "comment-editor";
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
-        area.innerHTML = comment.text || "";
-        editor.appendChild(wrapper);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Сохранить";
-        saveBtn.addEventListener("click", async () => {
-          const html = editorHtml(area);
-          if (!html) return;
-          await updateStageComment(stageId, comment.id, html);
-        });
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "ghost";
-        cancelBtn.textContent = "Отмена";
-        cancelBtn.addEventListener("click", () => renderStages());
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-        editor.appendChild(actions);
-        item.appendChild(editor);
-      }
-
-      async function updateStageComment(stageId, commentId, text) {
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось сохранить комментарий");
-          return;
-        }
-        await loadStages();
-      }
-
-      async function deleteStageComment(stageId, commentId) {
-        if (!confirm("Удалить комментарий этапа?")) return;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, { method: "DELETE" });
-        if (!res.ok) {
-          alert("Не удалось удалить комментарий");
-          return;
-        }
-        await loadStages();
-      }
-
-      function focusStageCommentEditor(stageId) {
-        const area = document.getElementById(`stage-comment-editor-${stageId}`);
-        if (area) {
-          area.scrollIntoView({ behavior: "smooth", block: "center" });
-          area.focus();
-        }
-      }
       function taskProgressScore(task) {
         if (!task) return 0;
         const subtasks = task.subtasks || [];
@@ -2438,7 +2556,7 @@
           { label: "Редактировать", action: () => openStageForm(stage.id) },
           { label: stage.risk_flag ? "Снять риск" : "Отметить риск", action: () => toggleRisk(stage.id, !stage.risk_flag) },
           { label: "Добавить задачу", action: () => openTaskForm(null, stage.id) },
-          { label: "Добавить комментарий", action: () => focusStageCommentEditor(stage.id) },
+          { label: "Комментарии", action: () => openStageDiscussion(stage.id) },
           { label: "Переместить вверх", disabled: index === 0, action: () => moveStage(stage.id, -1) },
           { label: "Переместить вниз", disabled: index === gtmStages.length - 1, action: () => moveStage(stage.id, 1) },
           { label: "Удалить", action: () => deleteStage(stage.id) },
@@ -2811,83 +2929,262 @@
         return wrapper;
       }
 
-      function renderTaskCommentComposer(taskId) {
-        const editorId = `task-comment-editor-${taskId}`;
-        const composer = document.createElement("div");
-        composer.className = "comment-editor";
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
+      function openTaskDiscussion(taskId) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (!task || !discussionModal) return;
+        discussionContext = { type: "task", id: taskId };
+        discussionModal.style.display = "flex";
+        discussionModal.dataset.open = "true";
+        discussionTitle.textContent = `Комментарии к задаче: ${task.title}`;
+        renderDiscussionModalContent();
+      }
+
+      function openStageDiscussion(stageId) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage || !discussionModal) return;
+        discussionContext = { type: "stage", id: stageId };
+        discussionModal.style.display = "flex";
+        discussionModal.dataset.open = "true";
+        discussionTitle.textContent = `Комментарии к этапу: ${stage.title}`;
+        renderDiscussionModalContent();
+      }
+
+      function closeDiscussionModal() {
+        if (!discussionModal) return;
+        discussionModal.style.display = "none";
+        discussionModal.dataset.open = "false";
+        discussionList.innerHTML = "";
+        discussionComposer.innerHTML = "";
+        discussionContext = null;
+      }
+
+      function getDiscussionOwner() {
+        if (!discussionContext) return null;
+        if (discussionContext.type === "task") {
+          return tasks.find((t) => t.id === discussionContext.id) || null;
+        }
+        if (discussionContext.type === "stage") {
+          return gtmStages.find((s) => s.id === discussionContext.id) || null;
+        }
+        return null;
+      }
+
+      function renderDiscussionModalContent() {
+        if (!discussionModal || !discussionContext) return;
+        const owner = getDiscussionOwner();
+        if (!owner) {
+          discussionList.innerHTML = "<li class='muted'>Комментарии недоступны</li>";
+          discussionComposer.innerHTML = "";
+          return;
+        }
+        const comments = owner.comments?.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) || [];
+        discussionList.innerHTML = "";
+        if (!comments.length) {
+          const empty = document.createElement("li");
+          empty.className = "muted";
+          empty.textContent = "Комментариев пока нет";
+          discussionList.appendChild(empty);
+        } else {
+          comments.forEach((comment) => {
+            const item = document.createElement("li");
+            item.className = "comment-item";
+            item.id = `discussion-comment-${comment.id}`;
+            const meta = document.createElement("div");
+            meta.className = "muted";
+            meta.style.fontSize = "0.85rem";
+            const edited = comment.edited_at
+              ? ` · изменено ${new Date(comment.edited_at).toLocaleString("ru-RU")}`
+              : "";
+            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${edited}`;
+            const body = document.createElement("div");
+            body.innerHTML = comment.text || "";
+            const actions = document.createElement("div");
+            actions.className = "comment-actions";
+            const editBtn = document.createElement("button");
+            editBtn.className = "ghost";
+            editBtn.textContent = "Редактировать";
+            editBtn.addEventListener("click", () => startDiscussionEdit(comment.id));
+            const delBtn = document.createElement("button");
+            delBtn.className = "ghost";
+            delBtn.textContent = "Удалить";
+            delBtn.addEventListener("click", () => {
+              if (!discussionContext) return;
+              if (discussionContext.type === "task") {
+                deleteTaskComment(discussionContext.id, comment.id);
+              } else {
+                deleteStageComment(discussionContext.id, comment.id);
+              }
+            });
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+            item.appendChild(meta);
+            item.appendChild(body);
+            item.appendChild(actions);
+            discussionList.appendChild(item);
+          });
+        }
+
+        discussionComposer.innerHTML = "";
+        const editorContainer = document.createElement("div");
+        editorContainer.className = "comment-editor";
+        const editorId = `discussion-editor-${discussionContext.type}-${owner.id}`;
+        const { wrapper, area } = createRichEditor(editorId, "Новый комментарий", true);
+        editorContainer.appendChild(wrapper);
+        const composerActions = document.createElement("div");
+        composerActions.className = "comment-actions";
         const saveBtn = document.createElement("button");
         saveBtn.className = "primary";
         saveBtn.textContent = "Добавить";
-        saveBtn.addEventListener("click", () => addTaskComment(taskId, editorHtml(area), area));
+        saveBtn.addEventListener("click", () => {
+          if (!discussionContext) return;
+          const html = editorHtml(area);
+          if (discussionContext.type === "task") {
+            addTaskComment(owner.id, html, area);
+          } else {
+            addStageComment(owner.id, html, area);
+          }
+        });
         const clearBtn = document.createElement("button");
         clearBtn.className = "ghost";
         clearBtn.textContent = "Очистить";
         clearBtn.addEventListener("click", () => {
           area.innerHTML = "";
         });
-        actions.appendChild(saveBtn);
-        actions.appendChild(clearBtn);
-        composer.appendChild(wrapper);
-        composer.appendChild(actions);
-        return composer;
+        composerActions.appendChild(saveBtn);
+        composerActions.appendChild(clearBtn);
+        editorContainer.appendChild(composerActions);
+        discussionComposer.appendChild(editorContainer);
       }
 
-      function renderTaskComments(task) {
-        const block = document.createElement("div");
-        block.className = "comment-block";
-        const header = document.createElement("div");
-        header.className = "comment-block-header";
-        const title = document.createElement("strong");
-        title.textContent = "Комментарии";
-        header.appendChild(title);
-        block.appendChild(header);
-
-        const commentList = document.createElement("ul");
-        commentList.className = "comment-list";
-        if (!task.comments?.length) {
-          const empty = document.createElement("li");
-          empty.className = "muted";
-          empty.textContent = "Комментариев нет";
-          commentList.appendChild(empty);
-        } else {
-          task.comments
-            .slice()
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .forEach((comment) => {
-              const item = document.createElement("li");
-              item.className = "comment-item";
-              item.id = `task-comment-${task.id}-${comment.id}`;
-              const created = new Date(comment.created_at).toLocaleString("ru-RU");
-              const meta = document.createElement("div");
-              meta.className = "muted";
-              meta.style.fontSize = "0.85rem";
-              meta.textContent = `${created}${comment.edited_at ? " · изменено" : ""}`;
-              const body = document.createElement("div");
-              body.innerHTML = comment.text || "";
-              const actions = document.createElement("div");
-              actions.className = "comment-actions";
-              const editBtn = document.createElement("button");
-              editBtn.className = "ghost";
-              editBtn.textContent = "Редактировать";
-              editBtn.addEventListener("click", () => openTaskCommentEditor(task.id, comment));
-              const del = document.createElement("button");
-              del.className = "ghost";
-              del.textContent = "Удалить";
-              del.addEventListener("click", () => deleteTaskComment(task.id, comment.id));
-              actions.appendChild(editBtn);
-              actions.appendChild(del);
-              item.appendChild(meta);
-              item.appendChild(body);
-              item.appendChild(actions);
-              commentList.appendChild(item);
-            });
+      function refreshDiscussionModal() {
+        if (discussionModal?.dataset.open === "true" && discussionContext) {
+          renderDiscussionModalContent();
         }
-        block.appendChild(commentList);
-        block.appendChild(renderTaskCommentComposer(task.id));
-        return block;
+      }
+
+      function startDiscussionEdit(commentId) {
+        const owner = getDiscussionOwner();
+        if (!owner) return;
+        const comment = owner.comments?.find((c) => c.id === commentId);
+        if (!comment) return;
+        const item = document.getElementById(`discussion-comment-${commentId}`);
+        if (!item) return;
+        item.innerHTML = "";
+        const editorId = `discussion-edit-${commentId}`;
+        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
+        area.innerHTML = comment.text || "";
+        item.appendChild(wrapper);
+        const actions = document.createElement("div");
+        actions.className = "comment-actions";
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "primary";
+        saveBtn.textContent = "Сохранить";
+        saveBtn.addEventListener("click", () => persistDiscussionUpdate(commentId, editorHtml(area)));
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "ghost";
+        cancelBtn.textContent = "Отмена";
+        cancelBtn.addEventListener("click", renderDiscussionModalContent);
+        actions.appendChild(saveBtn);
+        actions.appendChild(cancelBtn);
+        item.appendChild(actions);
+      }
+
+      async function persistDiscussionUpdate(commentId, html) {
+        const text = (html || "").trim();
+        if (!text || !discussionContext) return;
+        if (discussionContext.type === "task") {
+          await updateTaskComment(discussionContext.id, commentId, text);
+        } else {
+          await updateStageComment(discussionContext.id, commentId, text);
+        }
+      }
+
+      async function addTaskComment(taskId, html, areaRef = null) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        if (areaRef) areaRef.innerHTML = "";
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function updateTaskComment(taskId, commentId, html) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить комментарий");
+          return;
+        }
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function deleteTaskComment(taskId, commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function addStageComment(stageId, html, areaRef = null) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        if (areaRef) areaRef.innerHTML = "";
+        await loadStages();
+        refreshDiscussionModal();
+      }
+
+      async function updateStageComment(stageId, commentId, text) {
+        const prepared = (text || "").trim();
+        if (!prepared) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: prepared }),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить комментарий");
+          return;
+        }
+        await loadStages();
+        refreshDiscussionModal();
+      }
+
+      async function deleteStageComment(stageId, commentId) {
+        if (!confirm("Удалить комментарий этапа?")) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+        return;
+        }
+        await loadStages();
+        refreshDiscussionModal();
       }
 
       function openTaskForm(taskId = null, defaultStageId = null) {
@@ -2900,6 +3197,9 @@
         document.getElementById("taskStatus").value = task?.status || "todo";
         document.getElementById("taskDueDate").value = task?.due_date || "";
         document.getElementById("taskImportant").checked = task?.important || false;
+        if (taskUrgencyField) {
+          taskUrgencyField.value = task?.urgency || "normal";
+        }
         if (task?.gtm_stage_id) {
           taskGtmStageSelect.value = task.gtm_stage_id;
         } else if (defaultStageId) {
@@ -2924,6 +3224,7 @@
           status: document.getElementById("taskStatus").value,
           due_date: document.getElementById("taskDueDate").value || null,
           important: document.getElementById("taskImportant").checked,
+          urgency: taskUrgencyField?.value || "normal",
           gtm_stage_id: document.getElementById("taskGtmStage").value || null,
           subtasks: [],
           comments: [],
@@ -3059,70 +3360,6 @@
         const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" });
         if (!res.ok) {
           alert("Не удалось удалить подзадачу");
-          return;
-        }
-        await loadTasks();
-      }
-
-      async function addTaskComment(taskId, html, areaRef = null) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось добавить комментарий");
-          return;
-        }
-        if (areaRef) areaRef.innerHTML = "";
-        await loadTasks();
-      }
-
-      function openTaskCommentEditor(taskId, comment) {
-        const item = document.getElementById(`task-comment-${taskId}-${comment.id}`);
-        if (!item) return;
-        item.innerHTML = "";
-        const editorId = `task-comment-edit-${taskId}-${comment.id}`;
-        const { wrapper, area } = createRichEditor(editorId, "Текст комментария", true);
-        area.innerHTML = comment.text || "";
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Сохранить";
-        saveBtn.addEventListener("click", () => updateTaskComment(taskId, comment.id, editorHtml(area)));
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "ghost";
-        cancelBtn.textContent = "Отмена";
-        cancelBtn.addEventListener("click", () => loadTasks());
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-        item.appendChild(wrapper);
-        item.appendChild(actions);
-      }
-
-      async function updateTaskComment(taskId, commentId, html) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось обновить комментарий");
-          return;
-        }
-        await loadTasks();
-      }
-
-      async function deleteTaskComment(taskId, commentId) {
-        if (!confirm("Удалить комментарий?")) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
-        if (!res.ok) {
-          alert("Не удалось удалить комментарий");
           return;
         }
         await loadTasks();

@@ -39,6 +39,11 @@ class TaskStatus(str, Enum):
     DONE = "done"
 
 
+class TaskUrgency(str, Enum):
+    NORMAL = "normal"
+    HIGH = "high"
+
+
 class PriorityLevel(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -138,6 +143,7 @@ class Task(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     due_date: date | None = None
     important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
     gtm_stage_id: UUID | None = None
     subtasks: list[Subtask] = Field(default_factory=list)
     comments: list["Comment"] = Field(default_factory=list)
