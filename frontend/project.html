@@ -1448,6 +1448,102 @@
         font-size: 12px;
       }
 
+      .custom-fields-panel {
+        margin-top: 16px;
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .custom-fields-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .custom-fields-panel-header .muted {
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+      }
+
+      .custom-fields-panel-header strong {
+        font-size: 1rem;
+      }
+
+      .custom-fields-panel-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .custom-field-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .custom-field-chip {
+        display: inline-flex;
+        flex-direction: column;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        min-width: 160px;
+      }
+
+      .custom-field-chip span {
+        font-size: 12px;
+        color: var(--muted-text);
+      }
+
+      .custom-fields-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .custom-field-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      .custom-field-row label {
+        flex: 1 1 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .custom-field-row input {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font: inherit;
+        color: var(--text);
+      }
+
+      .custom-field-row button {
+        white-space: nowrap;
+        height: 40px;
+      }
+
       .progress-shell {
         background: var(--surface-muted);
         border: 1px solid var(--border);
@@ -1579,6 +1675,19 @@
               <span>FOB цена</span>
               <strong id="project-fob">—</strong>
             </div>
+          </div>
+          <div class="custom-fields-panel" aria-live="polite">
+            <div class="custom-fields-panel-header">
+              <div>
+                <div class="muted">Пользовательские поля</div>
+                <strong id="custom-fields-summary">Нет значений</strong>
+              </div>
+              <div class="custom-fields-panel-actions">
+                <button class="ghost" type="button" id="add-custom-field">➕ Поле</button>
+                <button class="ghost" type="button" id="edit-custom-fields">Редактировать</button>
+              </div>
+            </div>
+            <div id="project-custom-fields" class="custom-field-badges" aria-live="polite"></div>
           </div>
           <div class="progress-shell">
             <div style="display:flex; justify-content: space-between; align-items:center; gap: 8px; flex-wrap: wrap">
@@ -1824,6 +1933,13 @@
             Расширенное описание
             <textarea id="basicFull" rows="4"></textarea>
           </label>
+          <div class="custom-fields-form">
+            <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 8px">
+              <strong>Пользовательские поля</strong>
+              <button type="button" class="ghost" id="basicAddCustomField">➕ Поле</button>
+            </div>
+            <div id="basicCustomFields"></div>
+          </div>
           <div class="modal-actions">
             <button type="button" onclick="closeBasicsModal()">Отмена</button>
             <button class="primary" type="submit">Сохранить</button>
@@ -2053,6 +2169,8 @@
       const projectPromoEl = document.getElementById("project-promo");
       const projectRrpEl = document.getElementById("project-rrp");
       const projectFobEl = document.getElementById("project-fob");
+      const projectCustomFieldsEl = document.getElementById("project-custom-fields");
+      const projectCustomFieldsSummary = document.getElementById("custom-fields-summary");
       const projectShortChip = document.getElementById("project-short-id");
       const copyIdBtn = document.getElementById("copy-id");
       const basicsForm = document.getElementById("projectBasicsForm");
@@ -2071,6 +2189,10 @@
       const basicFob = document.getElementById("basicFob");
       const basicShort = document.getElementById("basicShort");
       const basicFull = document.getElementById("basicFull");
+      const basicCustomFields = document.getElementById("basicCustomFields");
+      const basicAddCustomFieldBtn = document.getElementById("basicAddCustomField");
+      const editCustomFieldsBtn = document.getElementById("edit-custom-fields");
+      const addCustomFieldBtn = document.getElementById("add-custom-field");
       const openCharacteristicsBtn = document.getElementById("open-characteristics");
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
@@ -2126,6 +2248,9 @@
       let draggedTaskId = null;
 
       basicsForm?.addEventListener("submit", saveBasics);
+      basicAddCustomFieldBtn?.addEventListener("click", () => addBasicCustomFieldRow());
+      editCustomFieldsBtn?.addEventListener("click", () => focusCustomFieldsEditor());
+      addCustomFieldBtn?.addEventListener("click", () => focusCustomFieldsEditor(true));
       fileForm?.addEventListener("submit", handleFileSubmit);
       copyIdBtn?.addEventListener("click", copyProjectId);
       editBasicsBtn?.addEventListener("click", () => {
@@ -2324,6 +2449,7 @@
           return;
         }
         project = await res.json();
+        project.custom_fields = project.custom_fields || {};
         await loadGroupInfo();
         renderProject();
       }
@@ -2377,6 +2503,7 @@
         projectPromoEl.textContent = formatMoney(project.promo_price);
         projectRrpEl.textContent = formatMoney(project.rrp_price);
         projectFobEl.textContent = formatMoney(project.fob_price);
+        renderProjectCustomFields();
 
         const badges = [];
         if (project.status === "archived") {
@@ -2396,6 +2523,33 @@
         fillBasicsForm();
       }
 
+      function renderProjectCustomFields() {
+        if (!projectCustomFieldsEl) return;
+        const entries = Object.entries(project?.custom_fields || {});
+        if (!entries.length) {
+          if (projectCustomFieldsSummary) {
+            projectCustomFieldsSummary.textContent = "Нет значений";
+          }
+          projectCustomFieldsEl.innerHTML =
+            '<div class="muted" style="padding: 6px 0">Пользовательские поля не заданы</div>';
+          return;
+        }
+        if (projectCustomFieldsSummary) {
+          projectCustomFieldsSummary.textContent = formatCustomFieldCount(entries.length);
+        }
+        projectCustomFieldsEl.innerHTML = "";
+        entries.forEach(([key, value]) => {
+          const chip = document.createElement("div");
+          chip.className = "custom-field-chip";
+          const title = document.createElement("span");
+          title.textContent = key;
+          const content = document.createElement("strong");
+          content.textContent = value === null || value === undefined || value === "" ? "—" : value;
+          chip.append(title, content);
+          projectCustomFieldsEl.appendChild(chip);
+        });
+      }
+
       function openBasicsModal() {
         if (!basicsModal) return;
         basicsModal.style.display = "flex";
@@ -2404,6 +2558,23 @@
       function closeBasicsModal() {
         if (!basicsModal) return;
         basicsModal.style.display = "none";
+      }
+
+      function focusCustomFieldsEditor(addRow = false) {
+        fillBasicsForm();
+        if (addRow) {
+          addBasicCustomFieldRow();
+        }
+        openBasicsModal();
+        requestAnimationFrame(() => {
+          if (!basicCustomFields) return;
+          const rows = Array.from(basicCustomFields.querySelectorAll(".custom-field-row"));
+          const targetRow = addRow && rows.length ? rows[rows.length - 1] : rows[0];
+          const targetInput = targetRow?.querySelector("input");
+          const scrollTarget = targetRow || basicCustomFields;
+          scrollTarget?.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetInput?.focus();
+        });
       }
 
       function copyProjectId() {
@@ -2436,6 +2607,7 @@
           fob_price: basicFob.value ? parseFloat(basicFob.value) : null,
           short_description: basicShort.value || null,
           full_description: basicFull.value || null,
+          custom_fields: collectBasicCustomFields(),
         };
         const res = await fetch(`/api/projects/${project.id}`, {
           method: "PUT",
@@ -2447,6 +2619,7 @@
           return;
         }
         project = await res.json();
+        project.custom_fields = project.custom_fields || {};
         await loadGroupInfo();
         renderProject();
         closeBasicsModal();
@@ -2467,9 +2640,63 @@
         basicFob.value = project.fob_price ?? "";
         basicShort.value = project.short_description || "";
         basicFull.value = project.full_description || "";
+        populateBasicCustomFields(project.custom_fields || {});
         if (project.group_id) {
           basicGroup.value = project.group_id;
         }
+      }
+
+      function addBasicCustomFieldRow(key = "", value = "") {
+        if (!basicCustomFields) return;
+        const row = document.createElement("div");
+        row.className = "custom-field-row";
+
+        const keyLabel = document.createElement("label");
+        keyLabel.textContent = "Название";
+        const keyInput = document.createElement("input");
+        keyInput.value = key;
+        keyInput.placeholder = "Например: SKU";
+        keyLabel.appendChild(keyInput);
+
+        const valueLabel = document.createElement("label");
+        valueLabel.textContent = "Значение";
+        const valueInput = document.createElement("input");
+        valueInput.value = value ?? "";
+        valueInput.placeholder = "Введите значение";
+        valueLabel.appendChild(valueInput);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "ghost";
+        removeBtn.textContent = "Удалить";
+        removeBtn.addEventListener("click", () => row.remove());
+
+        row.append(keyLabel, valueLabel, removeBtn);
+        basicCustomFields.appendChild(row);
+      }
+
+      function populateBasicCustomFields(fields = {}) {
+        if (!basicCustomFields) return;
+        basicCustomFields.innerHTML = "";
+        const entries = Object.entries(fields);
+        if (!entries.length) {
+          addBasicCustomFieldRow();
+          return;
+        }
+        entries.forEach(([key, value]) => addBasicCustomFieldRow(key, value ?? ""));
+      }
+
+      function collectBasicCustomFields() {
+        if (!basicCustomFields) return {};
+        const result = {};
+        basicCustomFields.querySelectorAll(".custom-field-row").forEach((row) => {
+          const [keyInput, valueInput] = row.querySelectorAll("input");
+          if (!keyInput) return;
+          const key = keyInput.value.trim();
+          if (!key) return;
+          result[key] = valueInput ? valueInput.value || null : null;
+        });
+        return result;
       }
 
       function renderTemplates() {
@@ -2493,6 +2720,15 @@
           done: "Завершён",
           cancelled: "Отменён",
         }[value] || value;
+      }
+
+      function formatCustomFieldCount(count) {
+        if (!count) return "Нет значений";
+        const mod10 = count % 10;
+        const mod100 = count % 100;
+        if (mod10 === 1 && mod100 !== 11) return `${count} поле`;
+        if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return `${count} поля`;
+        return `${count} полей`;
       }
 
       function formatMoney(value) {

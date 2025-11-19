@@ -73,7 +73,7 @@
 - Поле:
   - `id` (UUID)
   - `label_ru`, `label_en`
-  - `value_ru`, `value_en`
+  - `value_ru`, `value_en` — строка, число, булево значение или `null`
   - `field_type` — `text` / `number` / `select` / `checkbox` / `other`.
   - `order`
 

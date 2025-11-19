@@ -241,12 +241,11 @@
         background: var(--surface);
       }
 
-      .inline-input,
-      select,
-      textarea,
-      input[type="text"],
-      input[type="number"] {
-        width: 100%;
+      .inline-input {
+        width: auto;
+        min-width: 140px;
+        max-width: 100%;
+        flex: 1 1 180px;
         border-radius: 10px;
         border: 1px solid var(--border);
         padding: 8px 10px;
@@ -255,8 +254,18 @@
         font: inherit;
       }
 
-      select {
+      .section-card select,
+      .section-card textarea,
+      .section-card input[type="text"],
+      .section-card input[type="number"] {
+        width: auto;
+        min-width: 140px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 8px 10px;
         background: var(--surface);
+        color: var(--text);
+        font: inherit;
       }
 
       .inline-checkbox {
@@ -296,48 +305,39 @@
         color: var(--muted-text);
       }
 
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.45);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1100;
-      }
-
-      .modal-backdrop[data-open="true"] {
-        display: flex;
-      }
-
-      .modal {
+      .inline-editor {
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        padding: 12px;
         background: var(--surface);
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        width: min(800px, 94vw);
-        max-height: 92vh;
-        overflow: auto;
-        padding: 20px;
-        box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
+        margin-bottom: 12px;
       }
 
-      .modal form {
+      .inline-editor-grid {
         display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
       }
 
-      .modal h3 {
+      .inline-editor label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 600;
+      }
+
+      .inline-editor h4 {
         margin: 0;
       }
 
-      .modal-actions {
+      .inline-actions {
         display: flex;
-        justify-content: flex-end;
-        gap: 8px;
         flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
       }
 
       .chips {
@@ -406,7 +406,7 @@
           <div class="stage-header" style="margin-bottom: 8px">
             <h2>Управление характеристиками</h2>
             <div class="toolbar" style="margin: 0">
-              <button class="primary" onclick="openSectionModal()">Добавить секцию</button>
+              <button class="primary" type="button" onclick="focusNewSectionForm()">Добавить секцию</button>
               <select id="characteristicTemplateSelect"></select>
               <button onclick="applyCharacteristicTemplate()">Применить шаблон</button>
               <button onclick="saveCharacteristicTemplate()">Сохранить как шаблон</button>
@@ -416,65 +416,24 @@
               <input type="file" id="characteristicImport" accept=".xlsx" style="display: none" />
             </div>
           </div>
+          <form id="newSectionForm" class="inline-editor" autocomplete="off">
+            <div class="inline-editor-grid">
+              <label>
+                Название секции
+                <input id="newSectionTitle" required placeholder="Например: Основные параметры" />
+              </label>
+              <label>
+                Порядок
+                <input type="number" id="newSectionOrder" min="0" placeholder="Авто" />
+              </label>
+            </div>
+            <div class="inline-actions">
+              <button type="submit" class="primary">➕ Добавить секцию</button>
+              <button type="button" class="ghost" id="resetNewSection">Очистить</button>
+            </div>
+          </form>
           <div id="characteristics"></div>
         </div>
-      </div>
-    </div>
-
-    <div id="sectionModal" class="modal-backdrop" aria-hidden="true">
-      <div class="modal">
-        <h3 id="sectionModalTitle">Новая секция</h3>
-        <form id="sectionForm">
-          <input type="hidden" id="sectionId" />
-          <label>
-            Название секции
-            <input id="sectionTitle" required placeholder="Например: Основные параметры" />
-          </label>
-          <label>
-            Порядок
-            <input type="number" id="sectionOrder" min="0" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" onclick="closeSectionModal()">Отмена</button>
-            <button class="primary" type="submit">Сохранить</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div id="fieldModal" class="modal-backdrop" aria-hidden="true">
-      <div class="modal">
-        <h3 id="fieldModalTitle">Поле характеристики</h3>
-        <form id="fieldForm">
-          <input type="hidden" id="fieldSectionId" />
-          <input type="hidden" id="fieldId" />
-          <label>
-            Label RU
-            <input id="fieldLabelRu" required />
-          </label>
-          <label>
-            Label EN
-            <input id="fieldLabelEn" required />
-          </label>
-          <label>
-            Тип поля
-            <select id="fieldType">
-              <option value="text">Текст</option>
-              <option value="number">Число</option>
-              <option value="select">Список</option>
-              <option value="checkbox">Да/Нет</option>
-              <option value="other">Другое</option>
-            </select>
-          </label>
-          <label>
-            Порядок
-            <input type="number" id="fieldOrder" min="0" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" onclick="closeFieldModal()">Отмена</button>
-            <button class="primary" type="submit">Сохранить</button>
-          </div>
-        </form>
       </div>
     </div>
 
@@ -487,21 +446,10 @@
       const projectNameEl = document.getElementById("project-name");
       const projectMetaEl = document.getElementById("project-meta");
       const backButton = document.getElementById("back-to-project");
-      const sectionModal = document.getElementById("sectionModal");
-      const sectionForm = document.getElementById("sectionForm");
-      const sectionModalTitle = document.getElementById("sectionModalTitle");
-      const sectionIdInput = document.getElementById("sectionId");
-      const sectionTitleInput = document.getElementById("sectionTitle");
-      const sectionOrderInput = document.getElementById("sectionOrder");
-      const fieldModal = document.getElementById("fieldModal");
-      const fieldForm = document.getElementById("fieldForm");
-      const fieldModalTitle = document.getElementById("fieldModalTitle");
-      const fieldSectionIdInput = document.getElementById("fieldSectionId");
-      const fieldIdInput = document.getElementById("fieldId");
-      const fieldLabelRuInput = document.getElementById("fieldLabelRu");
-      const fieldLabelEnInput = document.getElementById("fieldLabelEn");
-      const fieldTypeSelect = document.getElementById("fieldType");
-      const fieldOrderInput = document.getElementById("fieldOrder");
+      const newSectionForm = document.getElementById("newSectionForm");
+      const newSectionTitleInput = document.getElementById("newSectionTitle");
+      const newSectionOrderInput = document.getElementById("newSectionOrder");
+      const resetNewSectionBtn = document.getElementById("resetNewSection");
 
       let characteristicTemplates = [];
       let characteristicSections = [];
@@ -509,20 +457,8 @@
       let project = null;
       let groups = [];
       let editingSectionId = null;
-      let editingFieldId = null;
-
-      sectionModal.addEventListener("click", (event) => {
-        if (event.target === sectionModal) closeSectionModal();
-      });
-      fieldModal.addEventListener("click", (event) => {
-        if (event.target === fieldModal) closeFieldModal();
-      });
-      window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          if (sectionModal.dataset.open === "true") closeSectionModal();
-          if (fieldModal.dataset.open === "true") closeFieldModal();
-        }
-      });
+      let fieldEditor = null;
+      let pendingFieldEditorScroll = null;
 
       if (!projectId) {
         characteristicContainer.innerHTML = "<p>Не передан параметр id</p>";
@@ -530,6 +466,12 @@
         if (backButton) backButton.addEventListener("click", () => (window.location.href = `/project.html?id=${projectId}`));
         loadData();
       }
+
+      newSectionForm?.addEventListener("submit", handleNewSectionSubmit);
+      resetNewSectionBtn?.addEventListener("click", () => {
+        newSectionForm?.reset();
+        newSectionTitleInput?.focus();
+      });
 
       async function loadData() {
         await Promise.all([loadGroups(), loadProject()]);
@@ -562,6 +504,9 @@
       async function loadCharacteristics() {
         const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
         characteristicSections = res.ok ? await res.json() : [];
+        editingSectionId = null;
+        fieldEditor = null;
+        pendingFieldEditorScroll = null;
         renderCharacteristics();
       }
 
@@ -579,116 +524,53 @@
         });
       }
 
-      function openSectionModal(sectionId = null) {
-        const current = characteristicSections.find((s) => s.id === sectionId);
-        editingSectionId = sectionId;
-        sectionModalTitle.textContent = current ? "Редактирование секции" : "Новая секция";
-        sectionIdInput.value = sectionId || "";
-        sectionTitleInput.value = current?.title || "";
-        sectionOrderInput.value = current?.order ?? characteristicSections.length;
-        sectionModal.dataset.open = "true";
-      }
-
-      function closeSectionModal() {
-        editingSectionId = null;
-        sectionForm.reset();
-        sectionIdInput.value = "";
-        sectionModal.dataset.open = "false";
-      }
-
-      sectionForm.addEventListener("submit", async (event) => {
+      async function handleNewSectionSubmit(event) {
         event.preventDefault();
+        if (!newSectionTitleInput) return;
+        const title = newSectionTitleInput.value.trim();
+        if (!title) return;
+        const orderValue = newSectionOrderInput?.value;
+        const desiredOrder = orderValue === "" ? characteristicSections.length : Number(orderValue);
         const payload = {
-          title: sectionTitleInput.value.trim(),
-          order: Number(sectionOrderInput.value ?? 0) || 0,
+          title,
+          order: Number.isFinite(desiredOrder) ? desiredOrder : characteristicSections.length,
         };
-        if (!payload.title) return;
-        if (editingSectionId) {
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${editingSectionId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...payload, id: editingSectionId }),
-          });
-          if (!res.ok) {
-            alert("Не удалось обновить секцию");
-            return;
-          }
-        } else {
-          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert("Не удалось создать секцию");
-            return;
-          }
-        }
-        closeSectionModal();
-        await loadCharacteristics();
-      });
-
-      function openFieldModal(sectionId, fieldId = null) {
-        const section = characteristicSections.find((s) => s.id === sectionId);
-        if (!section) return;
-        const current = section.fields.find((f) => f.id === fieldId);
-        editingFieldId = fieldId;
-        fieldSectionIdInput.value = sectionId;
-        fieldIdInput.value = fieldId || "";
-        fieldModalTitle.textContent = current ? "Редактирование поля" : "Новое поле";
-        fieldLabelRuInput.value = current?.label_ru || "";
-        fieldLabelEnInput.value = current?.label_en || "";
-        fieldTypeSelect.value = current?.field_type || "text";
-        fieldOrderInput.value = current?.order ?? section.fields.length;
-        fieldModal.dataset.open = "true";
-      }
-
-      function closeFieldModal() {
-        editingFieldId = null;
-        fieldForm.reset();
-        fieldSectionIdInput.value = "";
-        fieldModal.dataset.open = "false";
-      }
-
-      fieldForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const sectionId = fieldSectionIdInput.value;
-        if (!sectionId) return;
-        const section = characteristicSections.find((s) => s.id === sectionId);
-        const current = section?.fields.find((f) => f.id === editingFieldId);
-        const payload = {
-          label_ru: fieldLabelRuInput.value.trim(),
-          label_en: fieldLabelEnInput.value.trim(),
-          field_type: fieldTypeSelect.value,
-          order: Number(fieldOrderInput.value ?? 0) || 0,
-        };
-        if (!payload.label_ru || !payload.label_en) return;
-        const url = editingFieldId
-          ? `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${editingFieldId}`
-          : `/api/projects/${projectId}/characteristics/sections/${sectionId}/fields`;
-        const method = editingFieldId ? "PUT" : "POST";
-        const body = editingFieldId
-          ? { ...current, ...payload, id: editingFieldId }
-          : { ...payload, value_ru: null, value_en: null };
-        const res = await fetch(url, {
-          method,
+        const res = await fetch(`/api/projects/${projectId}/characteristics/sections`, {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) {
-          alert("Не удалось сохранить поле");
+          alert("Не удалось создать секцию");
           return;
         }
-        closeFieldModal();
+        newSectionForm?.reset();
         await loadCharacteristics();
-      });
+      }
+
+      function focusNewSectionForm() {
+        if (!newSectionTitleInput) return;
+        newSectionTitleInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => newSectionTitleInput.focus(), 150);
+      }
+
+      function normalizeBooleanValue(value) {
+        if (typeof value === "boolean") return value;
+        if (typeof value === "number") return value !== 0;
+        if (typeof value === "string") {
+          const normalized = value.trim().toLowerCase();
+          if (!normalized) return false;
+          return ["1", "true", "yes", "y", "да", "on", "✓", "checked"].includes(normalized);
+        }
+        return false;
+      }
 
       function buildCharacteristicValueControl(sectionId, field, key) {
         if (field.field_type === "checkbox") {
           const input = document.createElement("input");
           input.type = "checkbox";
           input.className = "inline-checkbox";
-          input.checked = Boolean(field[key]);
+          input.checked = normalizeBooleanValue(field[key]);
           input.addEventListener("change", () => {
             field[key] = input.checked;
             queueCharacteristicSave(sectionId, field.id);
@@ -697,10 +579,24 @@
         }
         const input = document.createElement("input");
         input.className = "inline-input";
-        input.value = field[key] || "";
+        input.type = field.field_type === "number" ? "number" : "text";
+        if (field.field_type === "number") {
+          input.step = "any";
+        }
         input.placeholder = key === "value_ru" ? "Значение RU" : "Значение EN";
+        const rawValue = field[key];
+        input.value = rawValue === null || rawValue === undefined ? "" : String(rawValue);
         input.addEventListener("input", () => {
-          field[key] = input.value;
+          if (field.field_type === "number") {
+            if (input.value === "") {
+              field[key] = null;
+            } else {
+              const parsed = Number(input.value);
+              field[key] = Number.isFinite(parsed) ? parsed : null;
+            }
+          } else {
+            field[key] = input.value === "" ? null : input.value;
+          }
           queueCharacteristicSave(sectionId, field.id);
         });
         return input;
@@ -724,20 +620,63 @@
         sortedSections.forEach((section, sIndex) => {
           const wrapper = document.createElement("div");
           wrapper.className = "section-card";
-          wrapper.innerHTML = `
-            <div class="stage-header" style="margin-bottom:8px">
-              <div>
-                <h3 style="margin:0">${section.title}</h3>
-                <div class="muted">Порядок: ${section.order}</div>
-              </div>
-              <div class="toolbar" style="margin:0">
-                <button class="ghost" onclick="openSectionModal('${section.id}')">Редактировать</button>
-                <button class="ghost" onclick="openFieldModal('${section.id}')">+ Поле</button>
-                <button class="ghost" onclick="moveSection('${section.id}', -1)" ${sIndex === 0 ? "disabled" : ""}>Вверх</button>
-                <button class="ghost" onclick="moveSection('${section.id}', 1)" ${sIndex === sortedSections.length - 1 ? "disabled" : ""}>Вниз</button>
-                <button onclick="deleteSection('${section.id}')">Удалить</button>
-              </div>
-            </div>`;
+
+          const header = document.createElement("div");
+          header.className = "stage-header";
+          header.style.marginBottom = "8px";
+
+          const info = document.createElement("div");
+          const title = document.createElement("h3");
+          title.style.margin = "0";
+          title.textContent = section.title;
+          const orderMeta = document.createElement("div");
+          orderMeta.className = "muted";
+          orderMeta.textContent = `Порядок: ${section.order}`;
+          info.append(title, orderMeta);
+
+          const headerActions = document.createElement("div");
+          headerActions.className = "toolbar";
+          headerActions.style.margin = "0";
+
+          const editSectionBtn = document.createElement("button");
+          editSectionBtn.className = "ghost";
+          editSectionBtn.textContent = editingSectionId === section.id ? "Скрыть форму" : "Редактировать";
+          editSectionBtn.addEventListener("click", () => toggleSectionEditor(section.id));
+
+          const addFieldBtn = document.createElement("button");
+          addFieldBtn.className = "ghost";
+          addFieldBtn.textContent = "➕ Поле";
+          addFieldBtn.addEventListener("click", () => startFieldCreate(section.id));
+
+          const upBtn = document.createElement("button");
+          upBtn.className = "ghost";
+          upBtn.textContent = "Вверх";
+          upBtn.disabled = sIndex === 0;
+          upBtn.addEventListener("click", () => moveSection(section.id, -1));
+
+          const downBtn = document.createElement("button");
+          downBtn.className = "ghost";
+          downBtn.textContent = "Вниз";
+          downBtn.disabled = sIndex === sortedSections.length - 1;
+          downBtn.addEventListener("click", () => moveSection(section.id, 1));
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Удалить";
+          deleteBtn.addEventListener("click", () => deleteSection(section.id));
+
+          headerActions.append(editSectionBtn, addFieldBtn, upBtn, downBtn, deleteBtn);
+          header.append(info, headerActions);
+          wrapper.appendChild(header);
+
+          const sectionEditor = buildSectionEditor(section);
+          if (sectionEditor) {
+            wrapper.appendChild(sectionEditor);
+          }
+
+          const fieldEditorForm = buildFieldEditor(section);
+          if (fieldEditorForm) {
+            wrapper.appendChild(fieldEditorForm);
+          }
 
           const table = document.createElement("table");
           table.innerHTML = `<thead><tr>
@@ -774,40 +713,257 @@
               const typeCell = document.createElement("td");
               typeCell.textContent = field.field_type;
 
-              const actions = document.createElement("td");
+              const actionsCell = document.createElement("td");
               const actionsBar = document.createElement("div");
               actionsBar.className = "toolbar";
               actionsBar.style.margin = "0";
-              const editBtn = document.createElement("button");
-              editBtn.className = "ghost";
-              editBtn.textContent = "Редактировать";
-              editBtn.onclick = () => openFieldModal(section.id, field.id);
-              const upBtn = document.createElement("button");
-              upBtn.className = "ghost";
-              upBtn.textContent = "↑";
-              upBtn.disabled = fIndex === 0;
-              upBtn.onclick = () => moveField(section.id, field.id, -1);
-              const downBtn = document.createElement("button");
-              downBtn.className = "ghost";
-              downBtn.textContent = "↓";
-              downBtn.disabled = fIndex === fields.length - 1;
-              downBtn.onclick = () => moveField(section.id, field.id, 1);
-              const delBtn = document.createElement("button");
-              delBtn.textContent = "Удалить";
-              delBtn.onclick = () => deleteField(section.id, field.id);
-              actionsBar.append(editBtn, upBtn, downBtn, delBtn);
+
+              const editFieldBtn = document.createElement("button");
+              editFieldBtn.className = "ghost";
+              editFieldBtn.textContent = "Редактировать";
+              editFieldBtn.addEventListener("click", () => startFieldEdit(section.id, field.id));
+
+              const moveFieldUp = document.createElement("button");
+              moveFieldUp.className = "ghost";
+              moveFieldUp.textContent = "↑";
+              moveFieldUp.disabled = fIndex === 0;
+              moveFieldUp.addEventListener("click", () => moveField(section.id, field.id, -1));
+
+              const moveFieldDown = document.createElement("button");
+              moveFieldDown.className = "ghost";
+              moveFieldDown.textContent = "↓";
+              moveFieldDown.disabled = fIndex === fields.length - 1;
+              moveFieldDown.addEventListener("click", () => moveField(section.id, field.id, 1));
+
+              const deleteFieldBtn = document.createElement("button");
+              deleteFieldBtn.textContent = "Удалить";
+              deleteFieldBtn.addEventListener("click", () => deleteField(section.id, field.id));
+
+              actionsBar.append(editFieldBtn, moveFieldUp, moveFieldDown, deleteFieldBtn);
               const status = document.createElement("div");
               status.className = "inline-status";
-              actions.append(actionsBar, status);
+              actionsCell.append(actionsBar, status);
 
-              row.append(labelRu, labelEn, valueRu, valueEn, typeCell, actions);
+              row.append(labelRu, labelEn, valueRu, valueEn, typeCell, actionsCell);
               tbody.appendChild(row);
             });
           }
 
           wrapper.appendChild(table);
+
           characteristicContainer.appendChild(wrapper);
         });
+
+        focusPendingFieldEditor();
+      }
+
+      function focusPendingFieldEditor() {
+        if (!pendingFieldEditorScroll) return;
+        const editor = characteristicContainer.querySelector(
+          `[data-field-editor='${pendingFieldEditorScroll}']`
+        );
+        if (editor) {
+          editor.scrollIntoView({ behavior: "smooth", block: "center" });
+          const firstInput = editor.querySelector("input, select, textarea");
+          firstInput?.focus();
+        }
+        pendingFieldEditorScroll = null;
+      }
+
+      function buildSectionEditor(section) {
+        if (editingSectionId !== section.id) return null;
+        const editor = document.createElement("div");
+        editor.className = "inline-editor section-editor";
+        const grid = document.createElement("div");
+        grid.className = "inline-editor-grid";
+        const titleLabel = document.createElement("label");
+        titleLabel.textContent = "Название секции";
+        const titleInput = document.createElement("input");
+        titleInput.value = section.title;
+        titleInput.placeholder = "Название";
+        titleLabel.appendChild(titleInput);
+        const orderLabel = document.createElement("label");
+        orderLabel.textContent = "Порядок";
+        const orderInput = document.createElement("input");
+        orderInput.type = "number";
+        orderInput.min = "0";
+        orderInput.value = section.order ?? 0;
+        orderLabel.appendChild(orderInput);
+        grid.append(titleLabel, orderLabel);
+        const actions = document.createElement("div");
+        actions.className = "inline-actions";
+        const saveBtn = document.createElement("button");
+        saveBtn.type = "button";
+        saveBtn.className = "primary";
+        saveBtn.textContent = "Сохранить секцию";
+        saveBtn.addEventListener("click", async () => {
+          const title = titleInput.value.trim();
+          if (!title) {
+            alert("Введите название секции");
+            return;
+          }
+          const orderValue = Number(orderInput.value);
+          const payload = {
+            ...section,
+            title,
+            order: Number.isFinite(orderValue) ? orderValue : section.order,
+          };
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${section.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось обновить секцию");
+            return;
+          }
+          editingSectionId = null;
+          await loadCharacteristics();
+        });
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "ghost";
+        cancelBtn.textContent = "Отмена";
+        cancelBtn.addEventListener("click", () => {
+          editingSectionId = null;
+          renderCharacteristics();
+        });
+        actions.append(saveBtn, cancelBtn);
+        editor.append(grid, actions);
+        return editor;
+      }
+
+      function toggleSectionEditor(sectionId) {
+        editingSectionId = editingSectionId === sectionId ? null : sectionId;
+        renderCharacteristics();
+      }
+
+      function startFieldCreate(sectionId) {
+        if (fieldEditor && fieldEditor.sectionId === sectionId && fieldEditor.mode === "create") {
+          fieldEditor = null;
+          pendingFieldEditorScroll = null;
+          renderCharacteristics();
+          return;
+        }
+        fieldEditor = { sectionId, fieldId: null, mode: "create" };
+        pendingFieldEditorScroll = sectionId;
+        renderCharacteristics();
+      }
+
+      function startFieldEdit(sectionId, fieldId) {
+        fieldEditor = { sectionId, fieldId, mode: "edit" };
+        pendingFieldEditorScroll = sectionId;
+        renderCharacteristics();
+      }
+
+      function cancelFieldEditor() {
+        fieldEditor = null;
+        pendingFieldEditorScroll = null;
+        renderCharacteristics();
+      }
+
+      function buildFieldEditor(section) {
+        if (!fieldEditor || fieldEditor.sectionId !== section.id) return null;
+        const isNew = fieldEditor.mode === "create" || !fieldEditor.fieldId;
+        const currentField = isNew ? null : section.fields.find((f) => f.id === fieldEditor.fieldId);
+        if (!isNew && !currentField) {
+          fieldEditor = null;
+          pendingFieldEditorScroll = null;
+          return null;
+        }
+        const editor = document.createElement("div");
+        editor.className = "inline-editor field-editor";
+        editor.dataset.fieldEditor = section.id;
+        const heading = document.createElement("h4");
+        heading.textContent = isNew ? "Новое поле" : `Редактирование: ${currentField?.label_ru || "Поле"}`;
+        editor.appendChild(heading);
+        const grid = document.createElement("div");
+        grid.className = "inline-editor-grid";
+
+        const labelRuLabel = document.createElement("label");
+        labelRuLabel.textContent = "Label RU";
+        const labelRuInput = document.createElement("input");
+        labelRuInput.value = currentField?.label_ru || "";
+        labelRuInput.placeholder = "Например: Цвет";
+        labelRuLabel.appendChild(labelRuInput);
+
+        const labelEnLabel = document.createElement("label");
+        labelEnLabel.textContent = "Label EN";
+        const labelEnInput = document.createElement("input");
+        labelEnInput.value = currentField?.label_en || "";
+        labelEnInput.placeholder = "Например: Color";
+        labelEnLabel.appendChild(labelEnInput);
+
+        const typeLabel = document.createElement("label");
+        typeLabel.textContent = "Тип поля";
+        const typeSelect = document.createElement("select");
+        [
+          { value: "text", label: "Текст" },
+          { value: "number", label: "Число" },
+          { value: "select", label: "Список" },
+          { value: "checkbox", label: "Да/Нет" },
+          { value: "other", label: "Другое" },
+        ].forEach((optionData) => {
+          const option = document.createElement("option");
+          option.value = optionData.value;
+          option.textContent = optionData.label;
+          typeSelect.appendChild(option);
+        });
+        typeSelect.value = currentField?.field_type || "text";
+        typeLabel.appendChild(typeSelect);
+
+        grid.append(labelRuLabel, labelEnLabel, typeLabel);
+
+        const actions = document.createElement("div");
+        actions.className = "inline-actions";
+        const saveBtn = document.createElement("button");
+        saveBtn.type = "button";
+        saveBtn.className = "primary";
+        saveBtn.textContent = isNew ? "Создать поле" : "Сохранить поле";
+        saveBtn.addEventListener("click", async () => {
+          const payload = {
+            label_ru: labelRuInput.value.trim(),
+            label_en: labelEnInput.value.trim(),
+            field_type: typeSelect.value,
+          };
+          if (!payload.label_ru || !payload.label_en) {
+            alert("Заполните оба лейбла");
+            return;
+          }
+          if (isNew) {
+            const body = { ...payload, value_ru: null, value_en: null, order: section.fields.length };
+            const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${section.id}/fields`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+              alert("Не удалось создать поле");
+              return;
+            }
+          } else if (currentField) {
+            const body = { ...currentField, ...payload };
+            const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${section.id}/fields/${currentField.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+              alert("Не удалось обновить поле");
+              return;
+            }
+          }
+          fieldEditor = null;
+          await loadCharacteristics();
+        });
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "ghost";
+        cancelBtn.textContent = "Отмена";
+        cancelBtn.addEventListener("click", cancelFieldEditor);
+        actions.append(saveBtn, cancelBtn);
+        editor.append(grid, actions);
+        return editor;
       }
 
       async function persistCharacteristicField(sectionId, fieldId) {
@@ -849,6 +1005,11 @@
           alert("Не удалось удалить секцию");
           return;
         }
+        if (fieldEditor?.sectionId === sectionId) {
+          fieldEditor = null;
+          pendingFieldEditorScroll = null;
+        }
+        if (editingSectionId === sectionId) editingSectionId = null;
         await loadCharacteristics();
       }
 
@@ -869,6 +1030,9 @@
           )
         );
         characteristicSections = sorted;
+        editingSectionId = null;
+        fieldEditor = null;
+        pendingFieldEditorScroll = null;
         renderCharacteristics();
       }
 
@@ -880,6 +1044,10 @@
         if (!res.ok) {
           alert("Не удалось удалить поле");
           return;
+        }
+        if (fieldEditor && fieldEditor.sectionId === sectionId && fieldEditor.fieldId === fieldId) {
+          fieldEditor = null;
+          pendingFieldEditorScroll = null;
         }
         await loadCharacteristics();
       }
@@ -913,6 +1081,8 @@
         });
         if (res.ok) {
           characteristicSections = await res.json();
+          editingSectionId = null;
+          fieldEditor = null;
           renderCharacteristics();
         } else {
           alert("Не удалось применить шаблон");
@@ -945,6 +1115,8 @@
         });
         if (res.ok) {
           characteristicSections = await res.json();
+          editingSectionId = null;
+          fieldEditor = null;
           renderCharacteristics();
           alert("Структура скопирована, значения сброшены");
         } else {
@@ -967,6 +1139,8 @@
         });
         if (res.ok) {
           characteristicSections = await res.json();
+          editingSectionId = null;
+          fieldEditor = null;
           renderCharacteristics();
           alert("Характеристики импортированы");
         } else {

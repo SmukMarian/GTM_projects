@@ -76,8 +76,8 @@ class CharacteristicField(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     label_ru: str
     label_en: str
-    value_ru: str | None = None
-    value_en: str | None = None
+    value_ru: str | int | float | bool | None = None
+    value_en: str | int | float | bool | None = None
     field_type: FieldType = FieldType.TEXT
     order: int = 0
 
