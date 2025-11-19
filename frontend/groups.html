@@ -885,7 +885,9 @@
               </div>
             </div>
           `;
-          card.addEventListener("click", () => openDetails(group.id));
+          card.addEventListener("click", () => {
+            window.location.href = `/projects.html?group_id=${group.id}`;
+          });
           card.addEventListener("contextmenu", (e) => {
             e.preventDefault();
             showGroupMenu(e.clientX, e.clientY, group);

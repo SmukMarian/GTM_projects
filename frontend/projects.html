@@ -182,6 +182,17 @@
         gap: 10px;
       }
 
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .status-row label {
+        white-space: nowrap;
+      }
+
       .filter-buttons {
         display: inline-flex;
         gap: 10px;
@@ -620,7 +631,7 @@
         </label>
         <div class="form-field">
           <span>Статусы</span>
-          <div class="checkbox-list">
+          <div class="checkbox-list status-row">
             <label class="checkbox"><input type="checkbox" value="active" class="status-filter" /> <span>Активные</span></label>
             <label class="checkbox"><input type="checkbox" value="closed" class="status-filter" /> <span>Закрытые</span></label>
             <label class="checkbox"><input type="checkbox" value="archived" class="status-filter" /> <span>Архив</span></label>

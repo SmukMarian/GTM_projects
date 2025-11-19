@@ -948,6 +948,12 @@ class LocalRepository:
         today = date.today()
         now = datetime.now(timezone.utc)
         recent_threshold = now - timedelta(days=30)
+        active_group_ids: set[UUID] | None = None
+        if not include_archived:
+            active_group_ids = {
+                group.id for group in self.store.product_groups if group.status != GroupStatus.ARCHIVED
+            }
+
         filtered_projects = [
             project
             for project in self.store.projects
@@ -957,6 +963,11 @@ class LocalRepository:
                 group_id=group_id,
                 brand=brand,
                 statuses=statuses,
+            )
+            and (
+                include_archived
+                or active_group_ids is None
+                or project.group_id in active_group_ids
             )
         ]
 
@@ -1006,7 +1017,7 @@ class LocalRepository:
         if include_archived:
             groups = list(self.store.product_groups)
         else:
-            groups = [g for g in self.store.product_groups if g.status != g.status.ARCHIVED]
+            groups = [g for g in self.store.product_groups if g.status != GroupStatus.ARCHIVED]
 
         group_cards: list[GroupDashboardCard] = []
         for group in groups:
