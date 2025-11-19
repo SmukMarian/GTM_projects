@@ -1,4 +1,4 @@
-"""Доменные модели Haier Project Tracker.
+"""Доменные модели Projects Tracker.
 
 Файл задаёт Pydantic-модели и перечисления, соответствующие сущностям
 из `Haier_Project_Tracker_TZ.md`. Модели служат единым контрактом между
@@ -39,6 +39,11 @@ class TaskStatus(str, Enum):
     DONE = "done"
 
 
+class TaskUrgency(str, Enum):
+    NORMAL = "normal"
+    HIGH = "high"
+
+
 class PriorityLevel(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -71,8 +76,8 @@ class CharacteristicField(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     label_ru: str
     label_en: str
-    value_ru: str | None = None
-    value_en: str | None = None
+    value_ru: str | int | float | bool | None = None
+    value_en: str | int | float | bool | None = None
     field_type: FieldType = FieldType.TEXT
     order: int = 0
 
@@ -138,9 +143,35 @@ class Task(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     due_date: date | None = None
     important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
     gtm_stage_id: UUID | None = None
     subtasks: list[Subtask] = Field(default_factory=list)
     comments: list["Comment"] = Field(default_factory=list)
+
+
+class SpotlightTask(BaseModel):
+    """Краткая карточка задачи для сводки важности/срочности."""
+
+    task_id: UUID
+    title: str
+    project_id: UUID
+    project_name: str
+    group_id: UUID
+    group_name: str
+    gtm_stage_id: UUID | None = None
+    gtm_stage_title: str | None = None
+    due_date: date | None = None
+    due_in_days: int | None = None
+    important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
+    status: TaskStatus = TaskStatus.TODO
+    overdue: bool = False
+
+
+class TaskSpotlightSummary(BaseModel):
+    urgent_and_important: list[SpotlightTask] = Field(default_factory=list)
+    important_only: list[SpotlightTask] = Field(default_factory=list)
+    urgent_only: list[SpotlightTask] = Field(default_factory=list)
 
 
 class Comment(BaseModel):

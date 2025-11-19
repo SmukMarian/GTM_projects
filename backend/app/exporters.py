@@ -321,6 +321,27 @@ FIELD_TYPE_ALIASES = {
 }
 
 
+def _coerce_value(raw: str | int | float | bool | None, field_type: FieldType) -> str | int | float | bool | None:
+    if raw is None:
+        return None
+
+    if field_type == FieldType.CHECKBOX:
+        return _parse_bool(raw)
+
+    if field_type == FieldType.NUMBER:
+        try:
+            # Excel числа уже приходят числовыми; строки аккуратно конвертируем
+            if isinstance(raw, (int, float)):
+                return raw
+            cleaned = str(raw).strip().replace(",", ".")
+            numeric = float(cleaned)
+            return int(numeric) if numeric.is_integer() else numeric
+        except (ValueError, TypeError):
+            return raw
+
+    return raw
+
+
 def import_characteristics_from_excel(
     content: bytes, project: Project
 ) -> tuple[list[CharacteristicSection], list[str]]:
@@ -349,6 +370,10 @@ def import_characteristics_from_excel(
     errors: list[str] = []
     sections_copy: list[CharacteristicSection] = [section.model_copy(deep=True) for section in project.characteristics]
 
+    # Быстрый доступ к существующим секциям и порядкам, чтобы корректно добавлять новые
+    section_index = {normalize(section.title): section for section in sections_copy}
+    max_section_order = max((section.order for section in sections_copy), default=-1)
+
     def col(key: str, default: int | None = None) -> int | None:
         if key in header_map:
             return header_map[key]
@@ -356,6 +381,15 @@ def import_characteristics_from_excel(
 
     def normalize(value: str | None) -> str:
         return value.strip().lower() if value else ""
+
+    def parse_field_type(raw: str | None, fallback: FieldType) -> FieldType:
+        if raw is None:
+            return fallback
+        normalized = normalize(str(raw))
+        return FIELD_TYPE_ALIASES.get(normalized, fallback)
+
+    section_order_col = col("порядок секции")
+    field_order_col = col("порядок поля")
 
     for row_index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
         if all(cell is None for cell in row):
@@ -372,39 +406,60 @@ def import_characteristics_from_excel(
             errors.append(f"Строка {row_index}: не указаны Label RU/EN")
             continue
 
-        section = next(
-            (s for s in sections_copy if normalize(s.title) == normalize(str(section_title))),
-            None,
-        )
+        normalized_section = normalize(str(section_title))
+        section = section_index.get(normalized_section)
         if section is None:
-            errors.append(f"Строка {row_index}: секция '{section_title}' не найдена в проекте")
-            continue
+            max_section_order += 1
+            order_value = row[section_order_col] if section_order_col is not None else None
+            try:
+                order = int(order_value) if order_value not in (None, "") else max_section_order
+            except (TypeError, ValueError):
+                order = max_section_order
+            section = CharacteristicSection(title=str(section_title), order=order, fields=[])
+            sections_copy.append(section)
+            section_index[normalized_section] = section
 
+        max_field_order = max((fld.order for fld in section.fields), default=-1)
+        normalized_ru = normalize(label_ru or "")
+        normalized_en = normalize(label_en or "")
         field = next(
             (
                 f
                 for f in section.fields
-                if normalize(f.label_ru) == normalize(label_ru or "")
-                and normalize(f.label_en) == normalize(label_en or "")
+                if normalize(f.label_ru) == normalized_ru and normalize(f.label_en) == normalized_en
             ),
             None,
         )
+
+        type_cell_idx = col("тип поля")
+        provided_type = parse_field_type(row[type_cell_idx], FieldType.TEXT) if type_cell_idx is not None else FieldType.TEXT
+
         if field is None:
-            errors.append(
-                f"Строка {row_index}: поле '{label_ru or ''}/{label_en or ''}' не найдено в секции '{section_title}'"
+            order_value = row[field_order_col] if field_order_col is not None else None
+            try:
+                order = int(order_value) if order_value not in (None, "") else max_field_order + 1
+            except (TypeError, ValueError):
+                order = max_field_order + 1
+
+            field = CharacteristicField(
+                label_ru=str(label_ru or label_en or ""),
+                label_en=str(label_en or label_ru or ""),
+                field_type=provided_type,
+                order=order,
             )
-            continue
+            section.fields.append(field)
+        else:
+            field.field_type = parse_field_type(row[type_cell_idx], field.field_type) if type_cell_idx is not None else field.field_type
 
         value_ru_idx = col("value ru")
         value_en_idx = col("value en")
         if value_ru_idx is not None:
-            field.value_ru = row[value_ru_idx]
+            field.value_ru = _coerce_value(row[value_ru_idx], field.field_type)
         if value_en_idx is not None:
-            field.value_en = row[value_en_idx]
+            field.value_en = _coerce_value(row[value_en_idx], field.field_type)
 
-        field_type_cell = col("тип поля")
-        if field_type_cell is not None and row[field_type_cell] is not None:
-            type_raw = normalize(str(row[field_type_cell]))
-            field.field_type = FIELD_TYPE_ALIASES.get(type_raw, field.field_type)
+    sections_copy.sort(key=lambda s: s.order)
+    for section in sections_copy:
+        section.fields.sort(key=lambda f: f.order)
 
     return sections_copy, errors

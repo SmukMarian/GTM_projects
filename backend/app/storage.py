@@ -1,4 +1,4 @@
-"""Локальное файловое хранилище для Haier Project Tracker.
+"""Локальное файловое хранилище для Projects Tracker.
 
 Слой отвечает за загрузку и сохранение доменных моделей в один JSON-файл,
 что соответствует требованию ТЗ о локальной работе и возможности ручного
@@ -39,11 +39,14 @@ from .models import (
     RecentChange,
     GroupDashboardCard,
     RiskProject,
+    SpotlightTask,
     StatusSummary,
+    TaskSpotlightSummary,
     UpcomingItem,
     Subtask,
     Task,
     TaskStatus,
+    TaskUrgency,
     StageStatus,
 )
 
@@ -1143,6 +1146,68 @@ class LocalRepository:
             upcoming=upcoming,
             recent_changes=recent_events,
         )
+
+    def build_priority_task_summary(
+        self, *, include_archived_projects: bool = False
+    ) -> TaskSpotlightSummary:
+        today = date.today()
+        group_names = {group.id: group.name for group in self.store.product_groups}
+        summary = TaskSpotlightSummary()
+
+        def sort_key(item: SpotlightTask) -> tuple[int, int, str]:
+            has_due = item.due_in_days is not None
+            due_value = item.due_in_days or 0
+            return (0 if has_due else 1, due_value, item.title.lower())
+
+        for project in self.store.projects:
+            if not include_archived_projects and project.status == ProjectStatus.ARCHIVED:
+                continue
+
+            stage_titles = {stage.id: stage.title for stage in project.gtm_stages}
+            group_name = group_names.get(project.group_id, "Без группы")
+
+            for task in project.tasks:
+                if task.status == TaskStatus.DONE:
+                    continue
+                is_important = bool(task.important)
+                is_urgent = task.urgency == TaskUrgency.HIGH
+                if not is_important and not is_urgent:
+                    continue
+
+                due_in_days = None
+                overdue = False
+                if task.due_date:
+                    due_in_days = (task.due_date - today).days
+                    overdue = due_in_days < 0
+
+                spotlight = SpotlightTask(
+                    task_id=task.id,
+                    title=task.title,
+                    project_id=project.id,
+                    project_name=project.name,
+                    group_id=project.group_id,
+                    group_name=group_name,
+                    gtm_stage_id=task.gtm_stage_id,
+                    gtm_stage_title=stage_titles.get(task.gtm_stage_id) if task.gtm_stage_id else None,
+                    due_date=task.due_date,
+                    due_in_days=due_in_days,
+                    important=is_important,
+                    urgency=task.urgency,
+                    status=task.status,
+                    overdue=overdue,
+                )
+
+                if is_important and is_urgent:
+                    summary.urgent_and_important.append(spotlight)
+                elif is_important:
+                    summary.important_only.append(spotlight)
+                else:
+                    summary.urgent_only.append(spotlight)
+
+        summary.urgent_and_important.sort(key=sort_key)
+        summary.important_only.sort(key=sort_key)
+        summary.urgent_only.sort(key=sort_key)
+        return summary
 
     # --- Backups ---
     def list_backups(self, backups_dir: Path) -> list[BackupInfo]:
