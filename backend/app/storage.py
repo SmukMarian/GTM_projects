@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID, uuid4
@@ -943,9 +943,11 @@ class LocalRepository:
         brand: str | None = None,
         statuses: set[ProjectStatus] | None = None,
         upcoming_limit: int = 10,
-        changes_limit: int = 20,
+        changes_limit: int = 24,
     ) -> DashboardPayload:
         today = date.today()
+        now = datetime.now(timezone.utc)
+        recent_threshold = now - timedelta(days=30)
         filtered_projects = [
             project
             for project in self.store.projects
@@ -1062,12 +1064,17 @@ class LocalRepository:
         for project in filtered_projects:
             group_name = next((g.name for g in self.store.product_groups if g.id == project.group_id), "")
             for event in project.history:
+                occurred_at = event.occurred_at
+                if occurred_at.tzinfo is None:
+                    occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+                if occurred_at < recent_threshold:
+                    continue
                 recent_events.append(
                     RecentChange(
                         project_id=project.id,
                         project_name=project.name,
                         group_name=group_name,
-                        occurred_at=event.occurred_at,
+                        occurred_at=occurred_at,
                         summary=event.summary,
                         details=event.details,
                     )

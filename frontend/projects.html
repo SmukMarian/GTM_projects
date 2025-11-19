@@ -148,11 +148,11 @@
         margin: 16px 0;
       }
 
-      .filter-panel {
+      .filters-card {
         margin: 18px 0;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 18px;
       }
 
       .filters-grid {
@@ -169,16 +169,16 @@
         flex-wrap: wrap;
       }
 
-      .checkbox-row {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        font-weight: 600;
+      .checkbox-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
       .filter-buttons {
-        display: flex;
+        display: inline-flex;
         gap: 10px;
+        flex-wrap: wrap;
       }
 
       button {
@@ -216,28 +216,22 @@
         border: 1px solid var(--border);
       }
 
-      .grid {
+      .projects-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-      }
-
-      @media (max-width: 1280px) {
-        .grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
       }
 
       @media (max-width: 960px) {
-        .grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .projects-grid {
+          grid-template-columns: 1fr;
         }
       }
 
-      @media (max-width: 640px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
+      .load-more-row {
+        display: none;
+        justify-content: center;
+        margin: 18px 0 0;
       }
 
       .project-card {
@@ -388,6 +382,52 @@
         color: var(--text);
       }
 
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310a37f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 18px;
+        padding-right: 40px;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .checkbox input {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        border: 2px solid var(--border);
+        background: var(--surface);
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+      }
+
+      .checkbox input:checked {
+        border-color: var(--accent);
+        background-color: var(--accent-soft);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310a37f' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 13 10 17 19 7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 14px;
+      }
+
+      .checkbox input:focus {
+        outline: 2px solid var(--accent-soft);
+        outline-offset: 2px;
+      }
+
       textarea {
         resize: vertical;
       }
@@ -433,7 +473,11 @@
         padding: 20px;
         min-width: 580px;
         display: grid;
-        gap: 12px;
+        gap: 16px;
+      }
+
+      .dialog-body.large-form {
+        min-width: min(820px, 90vw);
       }
 
       .context-menu {
@@ -470,8 +514,8 @@
 
       .row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
       }
 
       .table-scroll {
@@ -542,50 +586,48 @@
           <h1>Управление проектами</h1>
           <p class="muted" style="margin: 0">Создание, фильтрация, архивирование и управление статусами проектов.</p>
         </div>
-        <div class="flex" style="gap: 16px">
-          <a href="/" title="К дашборду">⟵ Дашборд</a>
-          <a href="/groups.html" title="К списку групп">Продуктовые группы →</a>
-        </div>
       </div>
 
-    <div class="card filter-panel">
+    <div class="card filters-card">
+      <h2 style="margin: 0">Фильтры</h2>
       <div class="filters-grid">
-        <label>
+        <label class="form-field">
           Фильтр по бренду
           <input id="brandFilter" placeholder="Haier" />
         </label>
-        <label>
+        <label class="form-field">
           Фильтр по группе
           <select id="groupFilter"></select>
         </label>
-        <label>
+        <label class="form-field">
           Текущий GTM-этап
           <select id="stageFilter"></select>
         </label>
-        <label>
-          Статусы
-          <div class="flex" style="gap: 8px; flex-wrap: wrap">
-            <label style="font-weight: 600"><input type="checkbox" value="active" class="status-filter" /> Активные</label>
-            <label style="font-weight: 600"><input type="checkbox" value="closed" class="status-filter" /> Закрытые</label>
-            <label style="font-weight: 600"><input type="checkbox" value="archived" class="status-filter" /> Архив</label>
-          </div>
-        </label>
-        <label>
+        <label class="form-field">
           Плановый запуск c
           <input type="date" id="plannedFrom" />
         </label>
-        <label>
+        <label class="form-field">
           Плановый запуск по
           <input type="date" id="plannedTo" />
         </label>
+        <div class="form-field">
+          <span>Статусы</span>
+          <div class="checkbox-list">
+            <label class="checkbox"><input type="checkbox" value="active" class="status-filter" /> <span>Активные</span></label>
+            <label class="checkbox"><input type="checkbox" value="closed" class="status-filter" /> <span>Закрытые</span></label>
+            <label class="checkbox"><input type="checkbox" value="archived" class="status-filter" /> <span>Архив</span></label>
+          </div>
+        </div>
       </div>
       <div class="filter-actions">
-        <label class="checkbox-row">
-          <input type="checkbox" id="showArchived" /> Показывать архив
+        <label class="checkbox">
+          <input type="checkbox" id="showArchived" />
+          <span>Показывать архив</span>
         </label>
         <div class="filter-buttons">
           <button id="applyFilters" class="primary">Применить фильтры</button>
-          <button id="resetFilters">Сбросить</button>
+          <button id="resetFilters" class="ghost">Сбросить</button>
         </div>
       </div>
     </div>
@@ -598,7 +640,10 @@
 
     <div id="summary" class="card" style="margin-bottom: 12px"></div>
 
-    <div id="cardView" class="grid"></div>
+    <div id="cardView" class="projects-grid"></div>
+    <div id="loadMoreRow" class="load-more-row">
+      <button id="loadMoreProjects" class="ghost">Показать ещё</button>
+    </div>
 
     <div id="tableView" class="card table-scroll" style="display: none">
       <table>
@@ -628,7 +673,7 @@
     </div>
 
     <dialog id="projectDialog">
-      <div class="dialog-body">
+      <div class="dialog-body large-form">
         <div class="flex space-between" style="align-items: start">
           <div>
             <h3 id="dialogTitle" style="margin: 0"></h3>
@@ -714,6 +759,8 @@
       const exportProjectsBtn = document.getElementById("exportProjects");
       const summary = document.getElementById("summary");
       const cardView = document.getElementById("cardView");
+      const loadMoreRow = document.getElementById("loadMoreRow");
+      const loadMoreBtn = document.getElementById("loadMoreProjects");
       const tableView = document.getElementById("tableView");
       const projectRows = document.getElementById("projectRows");
       const detailOverlay = document.getElementById("detailsOverlay");
@@ -757,6 +804,8 @@
       const urlParams = new URLSearchParams(window.location.search);
       const initialGroupId = urlParams.get("group_id");
       let stageOptions = [];
+      const PAGE_SIZE = 30;
+      let visibleProjects = PAGE_SIZE;
 
       closeDetailsBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -888,9 +937,21 @@
         return { percent, label: `${completed}/${stages.length} завершено` };
       }
 
+      function updateLoadMoreState() {
+        const hasMore = projects.length > visibleProjects;
+        if (viewMode === "cards" && hasMore) {
+          loadMoreRow.style.display = "flex";
+          loadMoreBtn.disabled = false;
+        } else {
+          loadMoreRow.style.display = "none";
+          loadMoreBtn.disabled = true;
+        }
+      }
+
       function renderCardView() {
         cardView.innerHTML = "";
-        projects.forEach((project) => {
+        const pagedProjects = projects.slice(0, visibleProjects);
+        pagedProjects.forEach((project) => {
           const card = document.createElement("div");
           card.className = "card project-card";
           card.dataset.id = project.id;
@@ -940,6 +1001,7 @@
           });
           cardView.appendChild(card);
         });
+        updateLoadMoreState();
       }
 
       function renderTableView() {
@@ -1187,6 +1249,7 @@
           tableView.style.display = "block";
           toggleViewBtn.textContent = "Показать плиткой";
         }
+        updateLoadMoreState();
       }
 
       function toggleView() {
@@ -1215,6 +1278,7 @@
           return;
         }
         projects = await res.json();
+        visibleProjects = PAGE_SIZE;
         renderStageFilter();
         renderSummary();
         renderCardView();
@@ -1342,6 +1406,10 @@
       exportProjectsBtn.addEventListener("click", exportProjects);
       projectForm.addEventListener("submit", submitForm);
       addCustomFieldBtn.addEventListener("click", () => addCustomFieldRow());
+      loadMoreBtn.addEventListener("click", () => {
+        visibleProjects = Math.min(visibleProjects + PAGE_SIZE, projects.length);
+        renderCardView();
+      });
       closeDialogBtn.addEventListener("click", () => dialog.close());
       cancelDialogBtn.addEventListener("click", () => dialog.close());
       initContextMenuClosing();

@@ -70,6 +70,14 @@
         padding: 32px 20px 88px;
       }
 
+      .page > header {
+        margin-bottom: 28px;
+      }
+
+      .page > :where(.card, .layout-two, #dashboardError) {
+        margin-top: 20px;
+      }
+
       .app-shell {
         max-width: 1280px;
         margin: 0 auto;
@@ -260,6 +268,56 @@
         border-collapse: collapse;
       }
 
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .recent-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .recent-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .change-card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: var(--surface-muted);
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .change-card header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: center;
+        padding-top: 14px;
+      }
+
+      .card-footer button {
+        min-width: 180px;
+      }
+
       th,
       td {
         padding: 12px 10px;
@@ -376,6 +434,39 @@
         gap: 6px;
         font-weight: 600;
         color: var(--muted);
+      }
+
+      .checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .checkbox input[type="checkbox"] {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid var(--border);
+        background: var(--surface);
+        position: relative;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+      }
+
+      .checkbox input[type="checkbox"]:checked {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .checkbox input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        inset: 3px 5px;
+        border: solid var(--accent);
+        border-width: 0 0 3px 3px;
+        transform: rotate(-45deg);
       }
 
       select,
@@ -501,10 +592,6 @@
           <h1>Haier Project Tracker</h1>
           <p class="lead">Сводка по проектам, рискам и ближайшим дедлайнам</p>
         </div>
-        <div class="actions">
-          <a href="/groups.html" class="badge" title="Перейти к продуктовым группам">Продуктовые группы →</a>
-          <a href="/projects.html" class="badge" title="Перейти к проектам">Проекты →</a>
-        </div>
       </header>
 
       <div class="card" aria-label="Фильтры дашборда">
@@ -529,7 +616,7 @@
               <option value="archived">Архивирован</option>
             </select>
           </label>
-          <label class="field" style="flex-direction: row; gap: 12px; align-items: center">
+          <label class="checkbox">
             <input id="showArchived" type="checkbox" />
             <span>Показывать архивные проекты и группы</span>
           </label>
@@ -575,8 +662,13 @@
       </div>
 
       <div class="card">
-        <h2>Последние изменения</h2>
-        <ul id="recentChanges" class="list"></ul>
+        <div class="card-header">
+          <h2>Последние изменения</h2>
+        </div>
+        <div id="recentChanges" class="recent-grid"></div>
+        <div class="card-footer" id="recentPager" hidden>
+          <button id="showMoreChanges" class="ghost" type="button">Показать ещё</button>
+        </div>
       </div>
     </div>
 
@@ -591,6 +683,8 @@
       const groupGrid = document.getElementById("groupGrid");
       const upcomingTable = document.getElementById("upcomingTable");
       const recentList = document.getElementById("recentChanges");
+      const recentPager = document.getElementById("recentPager");
+      const showMoreChanges = document.getElementById("showMoreChanges");
       const groupFilter = document.getElementById("groupFilter");
       const brandFilter = document.getElementById("brandFilter");
       const statusFilter = document.getElementById("statusFilter");
@@ -604,6 +698,10 @@
       const riskList = document.getElementById("riskList");
       const dashboardError = document.getElementById("dashboardError");
       const filterStorageKey = "hpt-dashboard-filters";
+      const CHANGES_PAGE_SIZE = 8;
+      const CHANGES_MAX = 24;
+      let recentChangesData = [];
+      let recentVisible = 0;
 
       async function loadGroupsForFilter() {
         const res = await fetch("/api/groups?include_archived=true");
@@ -794,32 +892,56 @@
           });
       }
 
-      function renderChanges(items) {
+      function setRecentChanges(items) {
+        recentChangesData = (items || []).slice(0, CHANGES_MAX);
+        recentVisible = Math.min(CHANGES_PAGE_SIZE, recentChangesData.length);
+        renderRecentChanges();
+      }
+
+      function renderRecentChanges() {
         recentList.innerHTML = "";
-        if (!items || !items.length) {
+        if (!recentChangesData.length) {
           recentList.innerHTML = '<p class="empty-state">Нет изменений</p>';
+          if (recentPager) {
+            recentPager.hidden = true;
+          }
           return;
         }
-        items.forEach((item) => {
-          const li = document.createElement("li");
-          li.className = "group-card";
-          const date = new Date(item.occurred_at).toLocaleString();
-          li.innerHTML = `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><span class="muted">${date}</span></div><div>${item.summary}</div>`;
+
+        recentChangesData.slice(0, recentVisible).forEach((item) => {
+          const card = document.createElement("article");
+          card.className = "change-card";
+          card.dataset.projectId = item.project_id;
+          card.dataset.groupId = item.group_id || "";
+
+          const headerEl = document.createElement("header");
+          headerEl.innerHTML = `<div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><span class="muted">${new Date(item.occurred_at).toLocaleString()}</span>`;
+          const summary = document.createElement("div");
+          summary.textContent = item.summary;
+          card.appendChild(headerEl);
+          card.appendChild(summary);
           if (item.details) {
-            li.innerHTML += `<div class="muted">${item.details}</div>`;
+            const details = document.createElement("div");
+            details.className = "muted";
+            details.textContent = item.details;
+            card.appendChild(details);
           }
-          li.dataset.projectId = item.project_id;
-          li.dataset.groupId = item.group_id;
-          li.addEventListener("contextmenu", (event) => {
+
+          card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             openContextMenu(event, "project", {
               id: item.project_id,
-              group_id: item.group_id,
+              group_id: item.group_id || null,
               name: item.project_name,
             });
           });
-          recentList.appendChild(li);
+
+          recentList.appendChild(card);
         });
+
+        if (recentPager) {
+          recentPager.hidden = recentVisible >= recentChangesData.length;
+        }
       }
 
       function renderRisks(items) {
@@ -840,6 +962,16 @@
             });
           });
           riskList.appendChild(li);
+        });
+      }
+
+      if (showMoreChanges) {
+        showMoreChanges.addEventListener("click", () => {
+          recentVisible = Math.min(
+            recentVisible + CHANGES_PAGE_SIZE,
+            recentChangesData.length,
+          );
+          renderRecentChanges();
         });
       }
 
@@ -926,7 +1058,7 @@
           renderGroups(payload.groups || []);
           renderRisks(payload.risk_projects || []);
           renderUpcoming(payload.upcoming || []);
-          renderChanges(payload.recent_changes || []);
+          setRecentChanges(payload.recent_changes || []);
         } catch (err) {
           console.error("Не удалось загрузить дашборд", err);
           dashboardError.textContent = `Не удалось загрузить дашборд: ${err.message || err}`;
@@ -937,7 +1069,7 @@
           renderGroups([]);
           renderRisks([]);
           renderUpcoming([]);
-          renderChanges([]);
+          setRecentChanges([]);
         }
       }
 
