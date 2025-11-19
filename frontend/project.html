@@ -1996,7 +1996,7 @@
       function renderStages() {
         gtmStages.sort((a, b) => a.order - b.order);
         if (!gtmStages.length) {
-          stagesContainer.innerHTML = "<p class="muted">Этапы ещё не добавлены.</p>";
+          stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           return;
         }
 
