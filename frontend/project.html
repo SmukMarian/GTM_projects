@@ -336,6 +336,10 @@
         box-shadow: var(--shadow);
       }
 
+      .modal.modal-wide {
+        width: min(820px, 96vw);
+      }
+
       .modal h3 {
         margin: 0 0 10px;
       }
@@ -871,8 +875,8 @@
 
       .project-hero {
         display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(300px, 360px);
-        gap: 20px;
+        grid-template-columns: minmax(0, 2.4fr) minmax(280px, 1fr);
+        gap: 24px;
         align-items: stretch;
         align-self: stretch;
       }
@@ -880,20 +884,42 @@
       .project-hero-left {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
       }
 
       .project-hero-right {
-        background: var(--surface-muted);
-        border: 1px dashed var(--border);
-        border-radius: 16px;
-        padding: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
+        gap: 12px;
+        align-self: stretch;
+        box-shadow: var(--shadow);
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
         gap: 10px;
-        min-height: 100%;
-        max-width: 360px;
-        justify-self: end;
+        flex-wrap: wrap;
+      }
+
+      .icon-btn {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .icon-btn:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
       }
 
       .cover-frame {
@@ -908,7 +934,7 @@
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        min-height: 280px;
+        min-height: 320px;
       }
 
       .cover-frame img {
@@ -1023,7 +1049,10 @@
           <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap">
             <div>
               <p class="pill">Карточка проекта</p>
-              <h1 id="project-name">Проект</h1>
+              <div class="title-row">
+                <h1 id="project-name" style="margin: 0">Проект</h1>
+                <button id="edit-basics" class="icon-btn" type="button" aria-label="Редактировать основные параметры">✏️</button>
+              </div>
               <div class="flex" style="gap: 8px; align-items: center; flex-wrap: wrap">
                 <span class="chip" id="project-short-id">ID —</span>
                 <button class="ghost" type="button" id="copy-id">Скопировать ID</button>
@@ -1106,56 +1135,7 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="stage-header" style="margin-bottom: 6px">
-        <h2 style="margin: 0">Основные параметры</h2>
-        <span class="chip" id="basics-id">ID —</span>
-      </div>
-      <form id="projectBasicsForm" class="detail-panel">
-        <div class="row">
-          <label>Название <input id="basicName" required /></label>
-          <label>
-            Продуктовая группа
-            <select id="basicGroup" required></select>
-          </label>
-          <label>Бренд <input id="basicBrand" required /></label>
-          <label>Рынок/регион <input id="basicMarket" /></label>
-        </div>
-        <div class="row">
-          <label>
-            Статус
-            <select id="basicStatus">
-              <option value="active">Активный</option>
-              <option value="closed">Закрыт</option>
-              <option value="archived">Архивирован</option>
-            </select>
-          </label>
-          <label>
-            Приоритет
-            <select id="basicPriority">
-              <option value="">Не задан</option>
-              <option value="low">Низкий</option>
-              <option value="medium">Средний</option>
-              <option value="high">Высокий</option>
-            </select>
-          </label>
-          <label>Плановая дата запуска <input type="date" id="basicPlanned" /></label>
-          <label>Фактическая дата запуска <input type="date" id="basicActual" /></label>
-        </div>
-        <div class="row">
-          <label>MOQ <input type="number" step="0.01" id="basicMoq" /></label>
-          <label>Promo (Price) <input type="number" step="0.01" id="basicPromo" /></label>
-          <label>RRP (Price) <input type="number" step="0.01" id="basicRrp" /></label>
-          <label>FOB цена <input type="number" step="0.01" id="basicFob" /></label>
-        </div>
-        <label>Краткое описание <textarea id="basicShort" rows="2"></textarea></label>
-        <label>Расширенное описание <textarea id="basicFull" rows="4"></textarea></label>
-        <div class="flex" style="justify-content: flex-end; gap: 8px">
-          <button type="button" class="ghost" id="copy-id-secondary">Скопировать ID</button>
-          <button class="primary" type="submit">Сохранить</button>
-        </div>
-      </form>
-    </div>
+    
 
     <div class="card">
       <div class="stage-header" style="margin-bottom: 8px">
@@ -1171,14 +1151,6 @@
         </div>
       </div>
       <div id="stages"></div>
-    </div>
-
-    <div class="card">
-      <div class="stage-header" style="margin-bottom: 8px">
-        <h2>Характеристики</h2>
-      </div>
-      <p class="muted" style="margin-bottom: 12px">Подробные характеристики теперь доступны на отдельной странице.</p>
-      <button class="primary" type="button" onclick="window.location.href = `/characteristics.html?id=${projectId}`;">Открыть характеристики</button>
     </div>
 
     <div class="card">
@@ -1316,6 +1288,95 @@
       <ul id="contextMenuList"></ul>
     </div>
 
+    <div id="basicsModal" class="modal-backdrop">
+      <div class="modal modal-wide">
+        <h3>Основные параметры проекта</h3>
+        <form id="projectBasicsForm">
+          <div class="grid-two">
+            <label>
+              Название
+              <input id="basicName" required />
+            </label>
+            <label>
+              Продуктовая группа
+              <select id="basicGroup" required></select>
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              Бренд
+              <input id="basicBrand" required />
+            </label>
+            <label>
+              Рынок/регион
+              <input id="basicMarket" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              Статус
+              <select id="basicStatus">
+                <option value="active">Активный</option>
+                <option value="closed">Закрыт</option>
+                <option value="archived">Архивирован</option>
+              </select>
+            </label>
+            <label>
+              Приоритет
+              <select id="basicPriority">
+                <option value="">Не задан</option>
+                <option value="low">Низкий</option>
+                <option value="medium">Средний</option>
+                <option value="high">Высокий</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              Плановая дата запуска
+              <input type="date" id="basicPlanned" />
+            </label>
+            <label>
+              Фактическая дата запуска
+              <input type="date" id="basicActual" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              MOQ
+              <input type="number" step="0.01" id="basicMoq" />
+            </label>
+            <label>
+              Promo (Price)
+              <input type="number" step="0.01" id="basicPromo" />
+            </label>
+          </div>
+          <div class="grid-two">
+            <label>
+              RRP (Price)
+              <input type="number" step="0.01" id="basicRrp" />
+            </label>
+            <label>
+              FOB цена
+              <input type="number" step="0.01" id="basicFob" />
+            </label>
+          </div>
+          <label>
+            Краткое описание
+            <textarea id="basicShort" rows="2"></textarea>
+          </label>
+          <label>
+            Расширенное описание
+            <textarea id="basicFull" rows="4"></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" onclick="closeBasicsModal()">Отмена</button>
+            <button class="primary" type="submit">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div id="modal" class="modal-backdrop">
       <div class="modal">
         <h3 id="modalTitle">Этап</h3>
@@ -1372,7 +1433,7 @@
     </div>
 
       <div id="taskModal" class="modal-backdrop">
-        <div class="modal">
+        <div class="modal modal-wide">
           <h3 id="taskModalTitle">Задача</h3>
           <form id="taskForm">
           <input type="hidden" id="taskId" />
@@ -1426,6 +1487,8 @@
       const characteristicContainer = document.getElementById("characteristics");
       const characteristicTemplateSelect = document.getElementById("characteristicTemplateSelect");
       const characteristicImport = document.getElementById("characteristicImport");
+      const editBasicsBtn = document.getElementById("edit-basics");
+      const basicsModal = document.getElementById("basicsModal");
       const tasksContainer = document.getElementById("tasks");
       const taskStatusFilter = document.getElementById("taskStatusFilter");
       const taskDueFilter = document.getElementById("taskDueFilter");
@@ -1466,7 +1529,6 @@
       const projectFobEl = document.getElementById("project-fob");
       const projectShortChip = document.getElementById("project-short-id");
       const copyIdBtn = document.getElementById("copy-id");
-      const basicsId = document.getElementById("basics-id");
       const basicsForm = document.getElementById("projectBasicsForm");
       const basicName = document.getElementById("basicName");
       const basicGroup = document.getElementById("basicGroup");
@@ -1482,7 +1544,6 @@
       const basicFob = document.getElementById("basicFob");
       const basicShort = document.getElementById("basicShort");
       const basicFull = document.getElementById("basicFull");
-      const copyIdSecondary = document.getElementById("copy-id-secondary");
       const openCharacteristicsBtn = document.getElementById("open-characteristics");
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
@@ -1509,7 +1570,10 @@
 
       basicsForm?.addEventListener("submit", saveBasics);
       copyIdBtn?.addEventListener("click", copyProjectId);
-      copyIdSecondary?.addEventListener("click", copyProjectId);
+      editBasicsBtn?.addEventListener("click", () => {
+        fillBasicsForm();
+        openBasicsModal();
+      });
       openCharacteristicsBtn?.addEventListener("click", () => {
         window.location.href = `/characteristics.html?id=${projectId}`;
       });
@@ -1718,7 +1782,6 @@
         document.getElementById("project-desc").textContent = project.short_description || "Описание отсутствует";
         const idLabel = project.short_id ? `ID ${project.short_id}` : "ID —";
         projectShortChip.textContent = idLabel;
-        basicsId.textContent = idLabel;
         const metaParts = [];
         if (groupInfo?.name) metaParts.push(`Группа: ${groupInfo.name}`);
         if (project.brand) metaParts.push(`Бренд: ${project.brand}`);
@@ -1754,14 +1817,23 @@
         fillBasicsForm();
       }
 
+      function openBasicsModal() {
+        if (!basicsModal) return;
+        basicsModal.style.display = "flex";
+      }
+
+      function closeBasicsModal() {
+        if (!basicsModal) return;
+        basicsModal.style.display = "none";
+      }
+
       function copyProjectId() {
-        if (!project?.short_id) return;
+        if (!project?.short_id || !copyIdBtn) return;
+        const original = copyIdBtn.textContent;
         navigator.clipboard?.writeText(String(project.short_id)).then(() => {
-          if (copyIdBtn) copyIdBtn.textContent = "ID скопирован";
-          if (copyIdSecondary) copyIdSecondary.textContent = "ID скопирован";
+          copyIdBtn.textContent = "ID скопирован";
           setTimeout(() => {
-            if (copyIdBtn) copyIdBtn.textContent = "Скопировать ID";
-            if (copyIdSecondary) copyIdSecondary.textContent = "Скопировать ID";
+            copyIdBtn.textContent = original;
           }, 1200);
         });
       }
@@ -1798,6 +1870,7 @@
         project = await res.json();
         await loadGroupInfo();
         renderProject();
+        closeBasicsModal();
       }
 
       function fillBasicsForm() {
