@@ -85,42 +85,71 @@
         color: var(--text);
       }
 
-      .theme-toggle-group {
-        position: fixed;
-        top: 14px;
-        right: 20px;
-        z-index: 950;
+      .theme-menu {
+        position: relative;
+      }
+
+      .theme-menu summary {
+        list-style: none;
         display: inline-flex;
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 999px;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 12px;
         border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        transform: none;
-      }
-
-      [data-theme="dark"] .theme-toggle-group {
-        background: rgba(15, 23, 42, 0.7);
-      }
-
-      .theme-toggle-group button {
-        background: transparent;
-        border: none;
-        padding: 6px 10px;
+        background: color-mix(in srgb, var(--surface-muted) 90%, var(--surface) 10%);
         cursor: pointer;
-        font-size: 1rem;
-        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        user-select: none;
+        font-weight: 700;
       }
 
-      .theme-toggle-group button[data-active="true"] {
+      .theme-menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .theme-menu[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .theme-menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 200px;
+        z-index: 950;
+      }
+
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .theme-menu-dropdown button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .theme-menu-dropdown button:hover,
+      .theme-menu-dropdown button[data-active="true"] {
         background: var(--accent-soft);
         color: var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      }
-
-      .theme-toggle-group button:hover {
-        transform: translateY(-2px);
-        background-color: var(--surface-muted);
       }
 
       .app-shell {
@@ -426,11 +455,6 @@
     </style>
   </head>
   <body>
-    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
-      <button type="button" data-theme-select="light" aria-label="Включить светлую тему">☀️</button>
-      <button type="button" data-theme-select="system" aria-label="Следовать системным настройкам">🖥️</button>
-      <button type="button" data-theme-select="dark" aria-label="Включить тёмную тему">🌙</button>
-    </div>
     <div class="app-shell">
       <div class="topbar">
         <a class="logo" href="/index.html" aria-label="Projects Tracker">
@@ -443,6 +467,17 @@
           <a href="/projects.html">Проекты</a>
           <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <details class="theme-menu">
+            <summary aria-label="Сменить тему">
+              <span aria-hidden="true">🌗</span>
+              <span class="theme-menu-label" data-theme-state>Тема</span>
+            </summary>
+            <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
+              <button type="button" role="menuitem" data-theme-select="light">☀️ Светлая</button>
+              <button type="button" role="menuitem" data-theme-select="system">🖥️ Системная</button>
+              <button type="button" role="menuitem" data-theme-select="dark">🌙 Тёмная</button>
+            </div>
+          </details>
         </nav>
       </div>
     </div>
