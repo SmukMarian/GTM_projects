@@ -19,7 +19,7 @@ Haier Project Tracker — локальное веб-приложение для 
 
 Источник истины по функционалу: **`Haier_Project_Tracker_TZ.md`** в корне репозитория.
 
-Источник истины по правкам: **`fixes_and_improvements2.md`** в корне репозитория.
+Источник истины по правкам: **`fixes_and_improvements3.md`** в корне репозитория.
 
 ---
 
@@ -342,7 +342,7 @@ Haier Project Tracker — локальное веб-приложение для 
    - убедиться, что контекст репозитория загружен;
    - освежить в памяти структуру `Haier_Project_Tracker_TZ.md`;
    - при необходимости просмотреть `project-plan.md` и `dev_tasks.md`.
-   - для правок используй `fixes_and_improvements.md` и `fixes_and_improvements2.md`
+   - для правок используй `fixes_and_improvements.md` и `fixes_and_improvements2.md` и `fixes_and_improvements3.md`
 
 2. Перед изменением кода:
    - кратко сформулировать план действий для текущего шага.
