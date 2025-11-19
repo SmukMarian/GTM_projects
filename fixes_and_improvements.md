@@ -1,4 +1,4 @@
-# Haier Project Tracker — Backlog доработок
+# Projects Tracker — Backlog доработок
 
 Отмечай выполненные пункты, заменяя `[ ]` на `[x]`.
 
