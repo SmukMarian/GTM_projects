@@ -566,16 +566,16 @@
 
       .theme-menu summary {
         list-style: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
+        display: grid;
+        place-items: center;
+        padding: 6px;
+        min-width: 38px;
+        min-height: 38px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--surface-muted);
         cursor: pointer;
         user-select: none;
-        font-weight: 700;
       }
 
       .theme-menu summary::-webkit-details-marker {
@@ -599,7 +599,8 @@
         display: none;
         flex-direction: column;
         gap: 4px;
-        min-width: 200px;
+        min-width: 120px;
+        width: max-content;
         z-index: 1200;
       }
 
@@ -618,7 +619,9 @@
         font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        justify-content: center;
+        min-width: 0;
       }
 
       .theme-menu-dropdown button:hover,

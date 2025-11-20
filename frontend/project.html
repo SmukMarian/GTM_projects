@@ -1313,8 +1313,8 @@
         list-style: none;
         display: grid;
         place-items: center;
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 38px;
+        min-height: 38px;
         padding: 6px;
         border-radius: 12px;
         border: 1px solid var(--border);
@@ -1344,7 +1344,8 @@
         display: none;
         flex-direction: column;
         gap: 4px;
-        min-width: 140px;
+        min-width: 120px;
+        width: max-content;
         z-index: 1200;
       }
 
@@ -1364,7 +1365,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
+        min-width: 0;
       }
 
       .theme-menu-dropdown button:hover,
@@ -1391,6 +1393,7 @@
         display: flex;
         justify-content: center;
         align-items: flex-start;
+        flex: 0 0 auto;
       }
 
       .cover-card {
@@ -1403,8 +1406,10 @@
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
-        width: 100%;
         max-width: 420px;
+        flex: 0 0 auto;
+        align-self: flex-start;
+        width: auto;
       }
 
       .title-row {
@@ -1441,17 +1446,18 @@
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        padding: 10px;
-        min-height: 200px;
+        padding: 0;
+        min-height: 0;
       }
 
       .cover-frame img {
-        width: 100%;
+        display: block;
+        max-width: 100%;
         height: auto;
-        max-height: 460px;
+        max-height: 520px;
         object-fit: contain;
         background: var(--surface-muted);
-        padding: 4px;
+        margin: 0 auto;
       }
 
       .cover-placeholder {
@@ -1462,13 +1468,14 @@
         gap: 8px;
         color: var(--muted-text);
         text-align: center;
-        padding: 12px;
+        padding: 20px 16px;
+        min-height: 160px;
       }
 
       .cover-actions {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
 
       .cover-actions-row {
@@ -1476,10 +1483,20 @@
         gap: 10px;
         flex-wrap: wrap;
         justify-content: space-between;
+        align-items: stretch;
+      }
+
+      .cover-actions-row > button {
+        flex: 1;
       }
 
       .cover-actions-row.single {
-        justify-content: flex-start;
+        justify-content: center;
+      }
+
+      .cover-actions-row.single button {
+        width: 100%;
+        justify-content: center;
       }
 
       .meta-grid {

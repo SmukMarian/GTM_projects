@@ -57,8 +57,8 @@
 
       .theme-menu summary {
         padding: 6px;
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 38px;
+        min-height: 38px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--surface-muted);
@@ -85,7 +85,8 @@
         display: none;
         flex-direction: column;
         gap: 4px;
-        min-width: 140px;
+        min-width: 120px;
+        width: max-content;
         z-index: 1000;
       }
 
@@ -105,7 +106,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
+        min-width: 0;
       }
 
       .theme-menu-dropdown button:hover,
@@ -360,10 +362,11 @@
         border-radius: 10px;
         border: 1px solid var(--border);
         padding: 10px 12px;
-        background: var(--surface-muted);
+        background: var(--surface);
         color: var(--text);
         font: inherit;
         box-sizing: border-box;
+        min-height: 42px;
       }
 
       .inline-input::placeholder {
@@ -422,8 +425,9 @@
 
       .inline-editor-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: minmax(280px, 1fr) minmax(140px, 0.6fr);
         gap: 12px;
+        align-items: end;
       }
 
       .inline-editor label {
@@ -431,6 +435,12 @@
         flex-direction: column;
         gap: 6px;
         font-weight: 600;
+      }
+
+      #characteristics {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       }
 
       .inline-editor h4 {
@@ -709,10 +719,15 @@
       }
 
       async function loadData() {
-        await loadGroups();
-        await loadProject();
-        await loadCharacteristicTemplates();
-        await loadCharacteristics();
+        try {
+          await loadGroups();
+          await loadProject();
+        } catch (err) {
+          showToast("Не удалось загрузить проект", "error");
+        } finally {
+          await loadCharacteristicTemplates();
+          await loadCharacteristics();
+        }
       }
 
       async function loadGroups() {
