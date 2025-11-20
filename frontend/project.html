@@ -295,23 +295,63 @@
         font-weight: 600;
       }
 
-      .stage-card {
+      .gtm-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 100%);
         border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .gtm-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .gtm-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        background: var(--surface);
+        border: 1px dashed var(--divider);
         border-radius: 12px;
         padding: 12px;
+      }
+
+      .gtm-meta-tile {
+        display: grid;
+        gap: 4px;
+      }
+
+      .gtm-meta-tile strong {
+        font-size: 1.05rem;
+      }
+
+      .stage-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
         margin-bottom: 12px;
-        background: var(--surface);
+        background: radial-gradient(circle at 12% 20%, var(--surface-muted) 0, var(--surface) 35%);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
       }
 
       .stage-card.collapsed {
-        padding-bottom: 6px;
+        padding-bottom: 8px;
       }
 
       .stage-card.collapsed .stage-description,
       .stage-card.collapsed .stage-progress,
       .stage-card.collapsed .stage-meta-grid,
       .stage-card.collapsed .stage-controls,
-      .stage-card.collapsed .stage-task-list {
+      .stage-card.collapsed .stage-task-list,
+      .stage-card.collapsed .stage-info-row {
         display: none;
       }
 
@@ -329,6 +369,37 @@
         flex-wrap: wrap;
       }
 
+      .stage-rank {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 800;
+        border: 1px solid var(--accent);
+        box-shadow: inset 0 0 0 2px rgba(16, 163, 127, 0.12);
+      }
+
+      .stage-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .stage-heading .muted {
+        font-size: 0.92rem;
+      }
+
+      .stage-info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+      }
+
       .chip {
         display: inline-flex;
         align-items: center;
@@ -338,6 +409,42 @@
         border-radius: 8px;
         font-size: 0.85rem;
         border: 1px solid transparent;
+      }
+
+      .chip.pill {
+        border-radius: 999px;
+        background: var(--surface);
+        border-color: var(--border);
+        padding: 6px 12px;
+        font-weight: 600;
+      }
+
+      .stage-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 140px;
+        padding: 6px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--divider);
+      }
+
+      .stage-stat strong {
+        font-size: 1rem;
+      }
+
+      .stage-dates {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .stage-dates .chip {
+        border-style: dashed;
+        font-weight: 600;
+        background: var(--surface);
       }
 
       .chip.warn {
@@ -1872,23 +1979,50 @@
     
 
     <div class="card">
-      <div class="stage-header" style="margin-bottom: 8px">
-        <h2>GTM-этапы</h2>
-        <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
-          <button type="button" data-stage-view="cards">Карточки</button>
-          <button type="button" data-stage-view="table">Таблица</button>
+      <div class="gtm-shell">
+        <div class="stage-header" style="margin-bottom: 8px">
+          <div class="stage-title-line">
+            <div class="stage-rank" aria-hidden="true">G</div>
+            <div class="stage-heading">
+              <h2 style="margin: 0">GTM-этапы</h2>
+              <span class="muted">Рабочий план вывода продукта, этапы и задачи</span>
+            </div>
+          </div>
+          <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
+            <button type="button" data-stage-view="cards">Карточки</button>
+            <button type="button" data-stage-view="table">Таблица</button>
+          </div>
         </div>
+
+        <div class="gtm-meta" aria-live="polite">
+          <div class="gtm-meta-tile">
+            <span class="muted">Этапов в плане</span>
+            <strong id="gtm-stage-count">—</strong>
+          </div>
+          <div class="gtm-meta-tile">
+            <span class="muted">Задачи по этапам</span>
+            <strong id="gtm-task-count">—</strong>
+          </div>
+          <div class="gtm-meta-tile">
+            <span class="muted">Готово</span>
+            <strong id="gtm-done-count">—</strong>
+          </div>
+        </div>
+
+        <div class="gtm-toolbar">
+          <div class="toolbar stage-toolbar" style="margin: 0">
+            <button class="primary" onclick="openStageForm()">Добавить этап</button>
+            <select id="templateSelect"></select>
+            <button onclick="applyTemplate()">Применить шаблон</button>
+            <button onclick="saveTemplate()">Сохранить как шаблон</button>
+            <button onclick="triggerImport()">Импорт Excel</button>
+            <button onclick="exportStages()">Экспорт Excel</button>
+            <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+          </div>
+        </div>
+
+        <div id="stages"></div>
       </div>
-      <div class="toolbar stage-toolbar">
-        <button class="primary" onclick="openStageForm()">Добавить этап</button>
-        <select id="templateSelect"></select>
-        <button onclick="applyTemplate()">Применить шаблон</button>
-        <button onclick="saveTemplate()">Сохранить как шаблон</button>
-        <button onclick="triggerImport()">Импорт Excel</button>
-        <button onclick="exportStages()">Экспорт Excel</button>
-        <input type="file" id="importInput" accept=".xlsx" style="display: none" />
-      </div>
-      <div id="stages"></div>
     </div>
 
     <div class="card">
@@ -2273,6 +2407,9 @@
       const discussionComposer = document.getElementById("discussionComposer");
       const closeDiscussionButton = document.getElementById("closeDiscussionButton");
       const stageViewSwitch = document.getElementById("stageViewSwitch");
+      const gtmStageCount = document.getElementById("gtm-stage-count");
+      const gtmTaskCount = document.getElementById("gtm-task-count");
+      const gtmDoneCount = document.getElementById("gtm-done-count");
       const taskViewSwitch = document.getElementById("taskViewSwitch");
       const taskCompactContent = document.getElementById("taskCompactContent");
 
@@ -3000,6 +3137,14 @@
         return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
       }
 
+      function pluralize(count, one, few, many) {
+        const mod10 = Math.abs(count) % 10;
+        const mod100 = Math.abs(count) % 100;
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return few;
+        return many;
+      }
+
       function updateStageViewSwitch() {
         stageViewSwitch?.querySelectorAll("[data-stage-view]").forEach((btn) => {
           const isActive = btn.dataset.stageView === stageViewMode;
@@ -3038,6 +3183,20 @@
       function renderStages() {
         gtmStages.sort((a, b) => a.order - b.order);
         updateStageViewSwitch();
+        const stageIds = new Set(gtmStages.map((stage) => stage.id));
+        const stageTasks = tasks.filter((task) => stageIds.has(task.gtm_stage_id));
+        const doneTasks = stageTasks.filter((task) => task.status === "done").length;
+        if (gtmStageCount) {
+          const count = gtmStages.length;
+          gtmStageCount.textContent = count ? `${count} ${pluralize(count, "этап", "этапа", "этапов")}` : "Нет этапов";
+        }
+        if (gtmTaskCount) {
+          const count = stageTasks.length;
+          gtmTaskCount.textContent = count ? `${count} ${pluralize(count, "задача", "задачи", "задач")}` : "—";
+        }
+        if (gtmDoneCount) {
+          gtmDoneCount.textContent = doneTasks ? `${doneTasks} готово` : "Ничего не завершено";
+        }
         if (!gtmStages.length) {
           stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           return;
@@ -3052,37 +3211,58 @@
         gtmStages.forEach((stage, index) => {
           const collapsed = isStageCollapsed(stage.id);
           const card = document.createElement("div");
+          const stageTasks = tasks.filter((task) => task.gtm_stage_id === stage.id);
+          const doneTasks = stageTasks.filter((task) => task.status === "done").length;
           card.className = `stage-card${collapsed ? " collapsed" : ""}`;
           card.dataset.stageId = stage.id;
           const percent = Math.round(stageProgressScore(stage) * 100);
+          const commentsCount = stage.comments?.length || 0;
           card.innerHTML = `
             <div class="stage-header">
-              <div>
-                <div class="stage-title-line">
-                  <strong>${index + 1}. ${stage.title}</strong>
-                  <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
-                    💬 <span class="count">${stage.comments?.length || 0}</span>
-                  </button>
-                  <button class="icon-button" data-stage-collapse="${stage.id}" aria-label="Свернуть этап">
-                    ${collapsed ? "▾" : "▴"}
-                  </button>
+              <div class="stage-title-line">
+                <div class="stage-rank">${index + 1}</div>
+                <div class="stage-heading">
+                  <div class="stage-info-row">
+                    <strong>${stage.title}</strong>
+                    <span class="chip pill">${statusLabel(stage.status)}</span>
+                    ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
+                  </div>
+                  <div class="stage-description" id="stage-desc-${stage.id}"></div>
                 </div>
-                <div class="stage-description" id="stage-desc-${stage.id}"></div>
               </div>
               <div class="stage-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-                <span class="chip">${statusLabel(stage.status)}</span>
-                ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
+                <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
+                  💬 <span class="count">${commentsCount}</span>
+                </button>
                 <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
                 <button class="ghost" onclick="moveStage('${stage.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
                 <button class="ghost" onclick="moveStage('${stage.id}', 1)" ${index === gtmStages.length - 1 ? "disabled" : ""}>↓</button>
                 <button class="ghost" onclick="deleteStage('${stage.id}')">🗑️</button>
+                <button class="icon-button" data-stage-collapse="${stage.id}" aria-label="Свернуть этап">
+                  ${collapsed ? "▾" : "▴"}
+                </button>
+              </div>
+            </div>
+            <div class="stage-info-row">
+              <div class="stage-stat">
+                <span class="muted">Прогресс этапа</span>
+                <strong>${percent}%</strong>
+              </div>
+              <div class="stage-stat">
+                <span class="muted">Задачи</span>
+                <strong>${stageTasks.length || "—"}</strong>
+                <span class="muted">Готово: ${doneTasks}</span>
+              </div>
+              <div class="stage-stat">
+                <span class="muted">Комментарии</span>
+                <strong>${commentsCount}</strong>
               </div>
             </div>
             <div class="stage-progress">
               <div class="progress-line"><div class="fill" style="width:${percent}%"></div></div>
-              <div class="muted">Прогресс этапа: ${percent}%</div>
+              <div class="muted">Идём по плану? Проверьте статусы задач и сроки.</div>
             </div>
-            <div class="stage-meta-grid">
+            <div class="stage-dates">
               <div class="chip">План: ${stage.planned_start || "—"} → ${stage.planned_end || "—"}</div>
               <div class="chip">Факт: ${stage.actual_end || "—"}</div>
             </div>
