@@ -594,6 +594,37 @@
         flex-wrap: wrap;
       }
 
+      .stage-rank {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 800;
+        border: 1px solid var(--accent);
+        box-shadow: inset 0 0 0 2px rgba(16, 163, 127, 0.12);
+      }
+
+      .stage-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .stage-heading .muted {
+        font-size: 0.92rem;
+      }
+
+      .stage-info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+      }
+
       .chip {
         display: inline-flex;
         align-items: center;
@@ -604,6 +635,42 @@
         font-size: 0.85rem;
         border: 1px solid var(--border);
         font-weight: 600;
+      }
+
+      .chip.pill {
+        border-radius: 999px;
+        background: var(--surface);
+        border-color: var(--border);
+        padding: 6px 12px;
+        font-weight: 600;
+      }
+
+      .stage-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 140px;
+        padding: 6px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--divider);
+      }
+
+      .stage-stat strong {
+        font-size: 1rem;
+      }
+
+      .stage-dates {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .stage-dates .chip {
+        border-style: dashed;
+        font-weight: 600;
+        background: var(--surface);
       }
 
       .chip.warn {
@@ -4129,7 +4196,7 @@
           return wrapper;
         }
 
-        stageTasks.forEach((task) => {
+        stageTasks.forEach((task, idx) => {
           const collapsed = isTaskCollapsed(task.id);
           const totalSubs = task.subtasks?.length || 0;
           const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
@@ -4593,7 +4660,46 @@
                 e.preventDefault();
                 title.blur();
               }
+              title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.innerText));
+              title.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  title.blur();
+                }
+              });
+
+              const actions = document.createElement("div");
+              actions.className = "subtask-actions";
+              const editBtn = document.createElement("button");
+              editBtn.className = "ghost";
+              editBtn.textContent = "✏️";
+              editBtn.title = "Редактировать";
+              editBtn.addEventListener("click", () => title.focus());
+              const delBtn = document.createElement("button");
+              delBtn.className = "ghost";
+              delBtn.textContent = "🗑️";
+              delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
+              actions.appendChild(editBtn);
+              actions.appendChild(delBtn);
+
+              li.appendChild(checkbox);
+              li.appendChild(title);
+              li.appendChild(actions);
+              li.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                const itemsMenu = [
+                  { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
+                  { label: "Переименовать", action: () => title.focus() },
+                  { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
+                ];
+                openContextMenu(event, itemsMenu);
+              });
+              list.appendChild(li);
             });
+          }
+          block.appendChild(list);
+          return block;
+        };
 
             const actions = document.createElement("div");
             actions.className = "subtask-actions";
