@@ -542,8 +542,12 @@
         box-shadow: var(--shadow);
         background: var(--surface);
         color: var(--text);
-        width: auto;
+        width: 100%;
         max-width: min(920px, 95vw);
+      }
+
+      dialog.form-dialog {
+        width: auto;
       }
 
       dialog::backdrop {
@@ -791,7 +795,7 @@
       <div class="detail-panel" id="detailContent"></div>
     </div>
 
-    <dialog id="groupDialog">
+    <dialog id="groupDialog" class="form-dialog">
       <div class="dialog-body">
         <div class="flex space-between" style="align-items: start">
           <div>
