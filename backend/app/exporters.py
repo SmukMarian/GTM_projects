@@ -384,6 +384,10 @@ def import_characteristics_from_excel(
     section_index = {normalize(section.title): section for section in sections_copy}
     max_section_order = max((section.order for section in sections_copy), default=-1)
 
+    # Быстрый доступ к существующим секциям и порядкам, чтобы корректно добавлять новые
+    section_index = {normalize(section.title): section for section in sections_copy}
+    max_section_order = max((section.order for section in sections_copy), default=-1)
+
     def col(key: str, default: int | None = None) -> int | None:
         if key in header_map:
             return header_map[key]
