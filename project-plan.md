@@ -1,8 +1,8 @@
-# Haier Project Tracker — Project Plan
+# Projects Tracker — Project Plan
 
 ## 1. Цели релиза v1
 
-Цель релиза v1 — полнофункциональная рабочая версия локального веб-приложения Haier Project Tracker, реализующая все требования из `Haier_Project_Tracker_TZ.md`:
+Цель релиза v1 — полнофункциональная рабочая версия локального веб-приложения Projects Tracker, реализующая все требования из `Haier_Project_Tracker_TZ.md`:
 
 - полноценный дашборд;
 - продуктовые группы и проекты;
