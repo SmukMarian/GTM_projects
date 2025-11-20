@@ -1311,16 +1311,16 @@
 
       .theme-menu summary {
         list-style: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
+        display: grid;
+        place-items: center;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 6px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--surface-muted);
         cursor: pointer;
         user-select: none;
-        font-weight: 700;
       }
 
       .theme-menu summary::-webkit-details-marker {
@@ -1335,7 +1335,7 @@
       .theme-menu-dropdown {
         position: absolute;
         right: 0;
-        top: calc(100% + 8px);
+        top: calc(100% + 6px);
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -1344,7 +1344,7 @@
         display: none;
         flex-direction: column;
         gap: 4px;
-        min-width: 200px;
+        min-width: 140px;
         z-index: 1200;
       }
 
@@ -1356,13 +1356,14 @@
         border: none;
         background: transparent;
         color: var(--text);
-        text-align: left;
-        padding: 10px 12px;
+        text-align: center;
+        padding: 8px 10px;
         border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
       }
 
@@ -1374,9 +1375,9 @@
 
       .project-hero {
         display: grid;
-        grid-template-columns: minmax(0, 2.4fr) minmax(280px, 1fr);
+        grid-template-columns: minmax(0, 2.4fr) minmax(300px, 1fr);
         gap: 24px;
-        align-items: stretch;
+        align-items: start;
         align-self: stretch;
       }
 
@@ -1387,15 +1388,23 @@
       }
 
       .project-hero-right {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .cover-card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 18px;
         padding: 14px;
+        box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
         gap: 12px;
-        align-self: stretch;
-        box-shadow: var(--shadow);
+        align-items: stretch;
+        width: 100%;
+        max-width: 420px;
       }
 
       .title-row {
@@ -1425,24 +1434,24 @@
         position: relative;
         border-radius: 14px;
         overflow: hidden;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08));
+        background: var(--surface-muted);
         border: 1px solid var(--border);
-        aspect-ratio: 3 / 4;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        max-width: 460px;
-        min-height: 360px;
+        padding: 10px;
+        min-height: 200px;
       }
 
       .cover-frame img {
         width: 100%;
-        height: 100%;
+        height: auto;
+        max-height: 460px;
         object-fit: contain;
         background: var(--surface-muted);
-        padding: 6px;
+        padding: 4px;
       }
 
       .cover-placeholder {
@@ -1458,8 +1467,19 @@
 
       .cover-actions {
         display: flex;
-        gap: 8px;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .cover-actions-row {
+        display: flex;
+        gap: 10px;
         flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      .cover-actions-row.single {
+        justify-content: flex-start;
       }
 
       .meta-grid {
@@ -1648,13 +1668,12 @@
           <a href="/templates.html">Шаблоны</a>
           <details class="theme-menu">
             <summary aria-label="Сменить тему">
-              <span aria-hidden="true">🌗</span>
-              <span class="theme-menu-label" data-theme-state>Тема</span>
+              <span aria-hidden="true" data-theme-state>🌗</span>
             </summary>
             <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
-              <button type="button" role="menuitem" data-theme-select="light">☀️ Светлая</button>
-              <button type="button" role="menuitem" data-theme-select="system">🖥️ Системная</button>
-              <button type="button" role="menuitem" data-theme-select="dark">🌙 Тёмная</button>
+              <button type="button" role="menuitem" data-theme-select="light" title="Светлая тема">☀️</button>
+              <button type="button" role="menuitem" data-theme-select="system" title="Системная тема">🖥️</button>
+              <button type="button" role="menuitem" data-theme-select="dark" title="Тёмная тема">🌙</button>
             </div>
           </details>
         </nav>
@@ -1749,19 +1768,25 @@
           </div>
         </div>
         <div class="project-hero-right">
-          <div class="cover-frame" id="cover-frame">
-            <div id="cover-placeholder" class="cover-placeholder">
-              <div style="font-size: 28px">🖼️</div>
-              <div>Добавьте обложку проекта</div>
+          <div class="cover-card">
+            <div class="cover-frame" id="cover-frame">
+              <div id="cover-placeholder" class="cover-placeholder">
+                <div style="font-size: 28px">🖼️</div>
+                <div>Добавьте обложку проекта</div>
+              </div>
+              <img id="cover-image" alt="Обложка проекта" style="display: none" />
             </div>
-            <img id="cover-image" alt="Обложка проекта" style="display: none" />
+            <div class="cover-actions">
+              <div class="cover-actions-row">
+                <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
+                <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
+              </div>
+              <div class="cover-actions-row single">
+                <button class="ghost" onclick="scrollToGallery()">Галерея</button>
+              </div>
+            </div>
+            <input type="file" id="coverUpload" accept="image/*" style="display: none" />
           </div>
-          <div class="cover-actions">
-            <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
-            <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
-            <button class="ghost" onclick="scrollToGallery()">Галерея</button>
-          </div>
-          <input type="file" id="coverUpload" accept="image/*" style="display: none" />
         </div>
       </div>
     </div>

@@ -56,7 +56,9 @@
       }
 
       .theme-menu summary {
-        padding: 8px;
+        padding: 6px;
+        min-width: 40px;
+        min-height: 40px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--surface-muted);
@@ -74,7 +76,7 @@
       .theme-menu-dropdown {
         position: absolute;
         right: 0;
-        top: calc(100% + 8px);
+        top: calc(100% + 6px);
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -83,7 +85,7 @@
         display: none;
         flex-direction: column;
         gap: 4px;
-        min-width: 180px;
+        min-width: 140px;
         z-index: 1000;
       }
 
@@ -95,13 +97,14 @@
         border: none;
         background: transparent;
         color: var(--text);
-        text-align: left;
-        padding: 10px 12px;
+        text-align: center;
+        padding: 8px 10px;
         border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
       }
 
@@ -167,6 +170,24 @@
         box-shadow: var(--shadow);
       }
 
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .template-select {
+        min-width: 210px;
+        max-width: 280px;
+        background: var(--surface);
+      }
+
       .page {
         max-width: 1200px;
         margin: 0 auto;
@@ -182,6 +203,12 @@
         border-radius: 16px;
         padding: 18px;
         box-shadow: var(--shadow);
+      }
+
+      #characteristics {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       }
 
       .pill {
@@ -278,6 +305,7 @@
         border-radius: 12px;
         overflow: hidden;
         background: var(--surface-muted);
+        table-layout: fixed;
       }
 
       th,
@@ -286,6 +314,32 @@
         padding: 10px 12px;
         text-align: left;
         vertical-align: middle;
+        word-break: break-word;
+        overflow: hidden;
+      }
+
+      th:nth-child(1),
+      td:nth-child(1),
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 18%;
+      }
+
+      th:nth-child(3),
+      td:nth-child(3),
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 20%;
+      }
+
+      th:nth-child(5),
+      td:nth-child(5) {
+        width: 14%;
+      }
+
+      th:nth-child(6),
+      td:nth-child(6) {
+        width: 18%;
       }
 
       th {
@@ -293,6 +347,10 @@
       }
 
       .inline-input,
+      .inline-editor select,
+      .inline-editor textarea,
+      .inline-editor input[type="text"],
+      .inline-editor input[type="number"],
       .section-card select,
       .section-card textarea,
       .section-card input[type="text"],
@@ -302,15 +360,22 @@
         border-radius: 10px;
         border: 1px solid var(--border);
         padding: 10px 12px;
-        background: var(--surface);
+        background: var(--surface-muted);
         color: var(--text);
         font: inherit;
+        box-sizing: border-box;
+      }
+
+      .inline-input::placeholder {
+        color: var(--muted-text);
       }
 
       .inline-checkbox {
         width: 18px;
         height: 18px;
         accent-color: var(--accent);
+        display: block;
+        margin: 0 auto;
       }
 
       .inline-input:focus,
@@ -381,7 +446,7 @@
 
       .toast-stack {
         position: fixed;
-        top: 16px;
+        bottom: 16px;
         right: 16px;
         display: flex;
         flex-direction: column;
@@ -486,7 +551,7 @@
                 </button>
               </div>
               <div class="cluster">
-                <select id="characteristicTemplateSelect" aria-label="Выберите шаблон"></select>
+                <select id="characteristicTemplateSelect" class="template-select" aria-label="Выберите шаблон"></select>
                 <button id="applyTemplateBtn">Применить шаблон</button>
                 <button id="saveTemplateBtn">Сохранить как шаблон</button>
                 <button id="copyStructureBtn">Копировать структуру</button>
@@ -580,13 +645,11 @@
 
       let characteristicTemplates = [];
       let characteristicSections = [];
-      let characteristicSaveTimers = new Map();
       let project = null;
       let groups = [];
       let editingSectionId = null;
       let fieldEditor = null;
       let pendingFieldEditorScroll = null;
-      let editingRow = null;
       const loadingState = {
         applyTemplate: false,
         saveTemplate: false,
@@ -646,8 +709,10 @@
       }
 
       async function loadData() {
-        await Promise.all([loadGroups(), loadProject()]);
-        await Promise.all([loadCharacteristicTemplates(), loadCharacteristics()]);
+        await loadGroups();
+        await loadProject();
+        await loadCharacteristicTemplates();
+        await loadCharacteristics();
       }
 
       async function loadGroups() {
@@ -675,12 +740,17 @@
       }
 
       async function loadCharacteristics() {
-        const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
-        characteristicSections = res.ok ? await res.json() : [];
+        try {
+          const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
+          if (!res.ok) throw new Error();
+          characteristicSections = await res.json();
+        } catch (err) {
+          characteristicSections = [];
+          showToast("Не удалось загрузить секции", "error");
+        }
         editingSectionId = null;
         fieldEditor = null;
         pendingFieldEditorScroll = null;
-        editingRow = null;
         renderCharacteristics();
       }
 
@@ -747,56 +817,11 @@
         return false;
       }
 
-      function buildCharacteristicValueControl(sectionId, field, key) {
-        if (field.field_type === "checkbox") {
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.className = "inline-checkbox";
-          input.checked = normalizeBooleanValue(field[key]);
-          input.addEventListener("change", () => {
-            field[key] = input.checked;
-            queueCharacteristicSave(sectionId, field.id);
-          });
-          return input;
-        }
-        const input = document.createElement("input");
-        input.className = "inline-input";
-        input.type = field.field_type === "number" ? "number" : "text";
-        if (field.field_type === "number") {
-          input.step = "any";
-        }
-        input.placeholder = key === "value_ru" ? "Значение RU" : "Значение EN";
-        const rawValue = field[key];
-        input.value = rawValue === null || rawValue === undefined ? "" : String(rawValue);
-        input.addEventListener("input", () => {
-          if (field.field_type === "number") {
-            if (input.value === "") {
-              field[key] = null;
-            } else {
-              const parsed = Number(input.value);
-              field[key] = Number.isFinite(parsed) ? parsed : null;
-            }
-          } else {
-            field[key] = input.value === "" ? null : input.value;
-          }
-          queueCharacteristicSave(sectionId, field.id);
-        });
-        return input;
-      }
-
-      function setCharacteristicRowState(sectionId, fieldId, text, state = "") {
-        const row = characteristicContainer.querySelector(`tr[data-section-id='${sectionId}'][data-field-id='${fieldId}']`);
-        if (!row) return;
-        const status = row.querySelector(".inline-status");
-        status.textContent = text;
-        status.className = `inline-status ${state}`;
-      }
-
       function renderCharacteristics() {
         characteristicContainer.innerHTML = "";
         const sortedSections = [...characteristicSections].sort((a, b) => a.order - b.order);
         if (!sortedSections.length) {
-          characteristicContainer.innerHTML = "<div class='empty-state'>Секции характеристик пока не добавлены.</div>";
+          characteristicContainer.innerHTML = "<div class='empty-state'>Секции пока не созданы.</div>";
           return;
         }
         sortedSections.forEach((section, sIndex) => {
@@ -889,77 +914,38 @@
       }
 
       function buildFieldRow(section, field, index, total) {
-        const isEditing = editingRow && editingRow.sectionId === section.id && editingRow.fieldId === field.id;
         const row = document.createElement("tr");
         row.dataset.sectionId = section.id;
         row.dataset.fieldId = field.id;
 
-        if (!isEditing) {
-          const labelRu = document.createElement("td");
-          labelRu.textContent = field.label_ru || "—";
-          const labelEn = document.createElement("td");
-          labelEn.textContent = field.label_en || "—";
-
-          const valueRu = document.createElement("td");
-          valueRu.textContent = formatFieldValue(field.field_type, field.value_ru);
-          const valueEn = document.createElement("td");
-          valueEn.textContent = formatFieldValue(field.field_type, field.value_en);
-
-          const typeCell = document.createElement("td");
-          typeCell.textContent = TYPE_LABELS[field.field_type] || field.field_type;
-
-          const actionsCell = document.createElement("td");
-          const actionsBar = document.createElement("div");
-          actionsBar.className = "toolbar";
-          actionsBar.style.margin = "0";
-
-          const editFieldBtn = document.createElement("button");
-          editFieldBtn.className = "ghost";
-          editFieldBtn.textContent = "Редактировать";
-          editFieldBtn.addEventListener("click", () => startFieldEdit(section.id, field.id));
-
-          const moveFieldUp = document.createElement("button");
-          moveFieldUp.className = "ghost";
-          moveFieldUp.textContent = "↑";
-          moveFieldUp.disabled = index === 0;
-          moveFieldUp.addEventListener("click", () => moveField(section.id, field.id, -1));
-
-          const moveFieldDown = document.createElement("button");
-          moveFieldDown.className = "ghost";
-          moveFieldDown.textContent = "↓";
-          moveFieldDown.disabled = index === total - 1;
-          moveFieldDown.addEventListener("click", () => moveField(section.id, field.id, 1));
-
-          const deleteFieldBtn = document.createElement("button");
-          deleteFieldBtn.textContent = "Удалить";
-          deleteFieldBtn.addEventListener("click", () => deleteField(section.id, field.id));
-
-          actionsBar.append(editFieldBtn, moveFieldUp, moveFieldDown, deleteFieldBtn);
-          actionsCell.append(actionsBar);
-
-          row.append(labelRu, labelEn, valueRu, valueEn, typeCell, actionsCell);
-          return row;
-        }
+        const draft = {
+          label_ru: field.label_ru || "",
+          label_en: field.label_en || "",
+          value_ru: field.value_ru ?? "",
+          value_en: field.value_en ?? "",
+          field_type: field.field_type,
+        };
+        const original = { ...draft };
 
         const labelRuCell = document.createElement("td");
         const labelRuInput = document.createElement("input");
-        labelRuInput.value = field.label_ru || "";
         labelRuInput.className = "inline-input";
-        labelRuCell.appendChild(labelRuInput);
+        labelRuInput.placeholder = "Label RU";
+        labelRuInput.value = draft.label_ru;
+        labelRuInput.addEventListener("input", () => updateDraft("label_ru", labelRuInput.value.trim()));
 
         const labelEnCell = document.createElement("td");
         const labelEnInput = document.createElement("input");
-        labelEnInput.value = field.label_en || "";
         labelEnInput.className = "inline-input";
+        labelEnInput.placeholder = "Label EN";
+        labelEnInput.value = draft.label_en;
+        labelEnInput.addEventListener("input", () => updateDraft("label_en", labelEnInput.value.trim()));
+
+        labelRuCell.appendChild(labelRuInput);
         labelEnCell.appendChild(labelEnInput);
 
         const valueRuCell = document.createElement("td");
-        const valueRuInput = buildValueInput(field.field_type, field.value_ru);
-        valueRuCell.appendChild(valueRuInput);
-
         const valueEnCell = document.createElement("td");
-        const valueEnInput = buildValueInput(field.field_type, field.value_en);
-        valueEnCell.appendChild(valueEnInput);
 
         const typeCell = document.createElement("td");
         const typeSelect = document.createElement("select");
@@ -969,7 +955,11 @@
           option.textContent = optionData.label;
           typeSelect.appendChild(option);
         });
-        typeSelect.value = field.field_type;
+        typeSelect.value = draft.field_type;
+        typeSelect.addEventListener("change", () => {
+          updateDraft("field_type", typeSelect.value);
+          refreshValueInputs();
+        });
         typeCell.appendChild(typeSelect);
 
         const actionsCell = document.createElement("td");
@@ -980,23 +970,12 @@
         const saveBtn = document.createElement("button");
         saveBtn.className = "primary";
         saveBtn.textContent = "Сохранить";
-        saveBtn.addEventListener("click", () =>
-          saveFieldEdit(section.id, field.id, {
-            label_ru: labelRuInput.value.trim(),
-            label_en: labelEnInput.value.trim(),
-            value_ru: readValue(typeSelect.value, valueRuInput),
-            value_en: readValue(typeSelect.value, valueEnInput),
-            field_type: typeSelect.value,
-          })
-        );
+        saveBtn.hidden = true;
 
         const cancelBtn = document.createElement("button");
         cancelBtn.className = "ghost";
         cancelBtn.textContent = "Отмена";
-        cancelBtn.addEventListener("click", () => {
-          editingRow = null;
-          renderCharacteristics();
-        });
+        cancelBtn.hidden = true;
 
         const moveFieldUp = document.createElement("button");
         moveFieldUp.className = "ghost";
@@ -1017,27 +996,117 @@
         actionsBar.append(saveBtn, cancelBtn, moveFieldUp, moveFieldDown, deleteFieldBtn);
         actionsCell.append(actionsBar);
 
+        function addEnterHandler(control) {
+          control.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              attemptSave();
+            }
+          });
+        }
+
+        function buildValueControl(value, key) {
+          if (draft.field_type === "checkbox") {
+            const wrapper = document.createElement("div");
+            wrapper.style.display = "flex";
+            wrapper.style.justifyContent = "center";
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.className = "inline-checkbox";
+            input.checked = normalizeBooleanValue(value);
+            input.addEventListener("change", () => updateDraft(key, input.checked));
+            wrapper.appendChild(input);
+            return wrapper;
+          }
+          const input = document.createElement("input");
+          input.className = "inline-input";
+          input.type = draft.field_type === "number" ? "number" : "text";
+          if (input.type === "number") input.step = "any";
+          input.value = value ?? "";
+          input.placeholder = key === "value_ru" ? "Value RU" : "Value EN";
+          input.addEventListener("input", () => {
+            if (input.type === "number") {
+              if (input.value === "") {
+                updateDraft(key, "");
+              } else {
+                const parsed = Number(input.value);
+                updateDraft(key, Number.isFinite(parsed) ? parsed : "");
+              }
+            } else {
+              updateDraft(key, input.value === "" ? "" : input.value);
+            }
+          });
+          addEnterHandler(input);
+          return input;
+        }
+
+        function refreshValueInputs() {
+          valueRuCell.innerHTML = "";
+          valueEnCell.innerHTML = "";
+          valueRuCell.appendChild(buildValueControl(draft.value_ru, "value_ru"));
+          valueEnCell.appendChild(buildValueControl(draft.value_en, "value_en"));
+        }
+
+        function resetRow() {
+          Object.assign(draft, original);
+          labelRuInput.value = draft.label_ru;
+          labelEnInput.value = draft.label_en;
+          typeSelect.value = draft.field_type;
+          refreshValueInputs();
+          updateDirtyState();
+        }
+
+        function updateDraft(key, value) {
+          draft[key] = value;
+          updateDirtyState();
+        }
+
+        function updateDirtyState() {
+          const dirty = isDirty();
+          row.classList.toggle("dirty", dirty);
+          saveBtn.hidden = !dirty;
+          cancelBtn.hidden = !dirty;
+        }
+
+        function isDirty() {
+          return (
+            normalize(draft.label_ru) !== normalize(original.label_ru) ||
+            normalize(draft.label_en) !== normalize(original.label_en) ||
+            draft.field_type !== original.field_type ||
+            normalizeValue(draft.value_ru) !== normalizeValue(original.value_ru) ||
+            normalizeValue(draft.value_en) !== normalizeValue(original.value_en)
+          );
+        }
+
+        function normalizeValue(value) {
+          if (value === null || value === undefined) return "";
+          return String(value);
+        }
+
+        async function attemptSave() {
+          if (!isDirty()) return;
+          saveBtn.disabled = true;
+          cancelBtn.disabled = true;
+          const payload = buildFieldPayloadFromDraft(draft, field);
+          const saved = await saveFieldEdit(section.id, field.id, payload, { refresh: true });
+          saveBtn.disabled = false;
+          cancelBtn.disabled = false;
+          if (saved) {
+            Object.assign(original, payload);
+            updateDirtyState();
+          }
+        }
+
+        addEnterHandler(labelRuInput);
+        addEnterHandler(labelEnInput);
+        refreshValueInputs();
+        updateDirtyState();
+
+        saveBtn.addEventListener("click", attemptSave);
+        cancelBtn.addEventListener("click", resetRow);
+
         row.append(labelRuCell, labelEnCell, valueRuCell, valueEnCell, typeCell, actionsCell);
         return row;
-      }
-
-      function buildValueInput(fieldType, value) {
-        if (fieldType === "checkbox") {
-          const wrapper = document.createElement("div");
-          wrapper.style.display = "flex";
-          wrapper.style.justifyContent = "center";
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.className = "inline-checkbox";
-          input.checked = normalizeBooleanValue(value);
-          wrapper.appendChild(input);
-          return wrapper;
-        }
-        const input = document.createElement("input");
-        input.className = "inline-input";
-        input.type = fieldType === "number" ? "number" : "text";
-        input.value = value ?? "";
-        return input;
       }
 
       function readValue(fieldType, input) {
@@ -1060,23 +1129,24 @@
         return value;
       }
 
-      async function saveFieldEdit(sectionId, fieldId, payload) {
+      async function saveFieldEdit(sectionId, fieldId, payload, options = {}) {
+        const { refresh = true } = options;
         if (!payload.label_ru) {
           showToast(locale.errors.labelRu, "error");
-          return;
+          return false;
         }
         if (payload.label_en && payload.label_en.length < 2) {
           showToast(locale.errors.labelEn, "error");
-          return;
+          return false;
         }
         if (!payload.field_type) {
           showToast(locale.errors.fieldType, "error");
-          return;
+          return false;
         }
         const section = characteristicSections.find((s) => s.id === sectionId);
-        if (!section) return;
+        if (!section) return false;
         const currentField = section.fields.find((f) => f.id === fieldId);
-        if (!currentField) return;
+        if (!currentField) return false;
         const body = { ...currentField, ...payload };
         const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`, {
           method: "PUT",
@@ -1085,11 +1155,34 @@
         });
         if (!res.ok) {
           showToast("Не удалось сохранить поле", "error");
-          return;
+          return false;
         }
-        editingRow = null;
-        await loadCharacteristics();
+        if (refresh) {
+          await loadCharacteristics();
+        }
         showToast(locale.success.fieldSaved);
+        return true;
+      }
+
+      function buildFieldPayloadFromDraft(draft, currentField) {
+        const normalizeTypedValue = (value) => {
+          if (draft.field_type === "checkbox") return Boolean(value);
+          if (draft.field_type === "number") {
+            if (value === "" || value === null || value === undefined) return null;
+            const numeric = Number(value);
+            return Number.isFinite(numeric) ? numeric : null;
+          }
+          if (value === "" || value === null || value === undefined) return null;
+          return value;
+        };
+        return {
+          ...currentField,
+          label_ru: draft.label_ru.trim(),
+          label_en: draft.label_en.trim(),
+          value_ru: normalizeTypedValue(draft.value_ru),
+          value_en: normalizeTypedValue(draft.value_en),
+          field_type: draft.field_type,
+        };
       }
 
       function focusPendingFieldEditor() {
@@ -1178,7 +1271,6 @@
 
       function toggleSectionEditor(sectionId) {
         editingSectionId = editingSectionId === sectionId ? null : sectionId;
-        editingRow = null;
         renderCharacteristics();
       }
 
@@ -1191,20 +1283,12 @@
         }
         fieldEditor = { sectionId, fieldId: null, mode: "create" };
         pendingFieldEditorScroll = sectionId;
-        editingRow = null;
-        renderCharacteristics();
-      }
-
-      function startFieldEdit(sectionId, fieldId) {
-        editingRow = { sectionId, fieldId };
-        pendingFieldEditorScroll = sectionId;
         renderCharacteristics();
       }
 
       function cancelFieldEditor() {
         fieldEditor = null;
         pendingFieldEditorScroll = null;
-        editingRow = null;
         renderCharacteristics();
       }
 
@@ -1302,38 +1386,6 @@
         return editor;
       }
 
-      async function persistCharacteristicField(sectionId, fieldId) {
-        const key = `${sectionId}:${fieldId}`;
-        characteristicSaveTimers.delete(key);
-        const section = characteristicSections.find((s) => s.id === sectionId);
-        if (!section) return;
-        const field = section.fields.find((f) => f.id === fieldId);
-        if (!field) return;
-        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
-        const payload = { ...field };
-        if (payload.value_ru === "") payload.value_ru = null;
-        if (payload.value_en === "") payload.value_en = null;
-        const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}/fields/${fieldId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          setCharacteristicRowState(sectionId, fieldId, "Ошибка сохранения", "error");
-          return;
-        }
-        setCharacteristicRowState(sectionId, fieldId, "Сохранено");
-        setTimeout(() => setCharacteristicRowState(sectionId, fieldId, ""), 1800);
-      }
-
-      function queueCharacteristicSave(sectionId, fieldId) {
-        const key = `${sectionId}:${fieldId}`;
-        if (characteristicSaveTimers.has(key)) clearTimeout(characteristicSaveTimers.get(key));
-        setCharacteristicRowState(sectionId, fieldId, "Сохраняем...", "saving");
-        const timer = setTimeout(() => persistCharacteristicField(sectionId, fieldId), 500);
-        characteristicSaveTimers.set(key, timer);
-      }
-
       async function deleteSection(sectionId) {
         if (!confirm("Удалить секцию и все её поля?")) return;
         const res = await fetch(`/api/projects/${projectId}/characteristics/sections/${sectionId}`, { method: "DELETE" });
@@ -1425,7 +1477,6 @@
           characteristicSections = await res.json();
           editingSectionId = null;
           fieldEditor = null;
-          editingRow = null;
           renderCharacteristics();
           showToast(locale.success.templateApplied);
         } else {
@@ -1469,7 +1520,6 @@
           characteristicSections = await res.json();
           editingSectionId = null;
           fieldEditor = null;
-          editingRow = null;
           renderCharacteristics();
           showToast(locale.success.structureCopied);
         } else {
@@ -1499,7 +1549,6 @@
           characteristicSections = payload.sections || payload;
           editingSectionId = null;
           fieldEditor = null;
-          editingRow = null;
           renderCharacteristics();
           const summary = payload.report
             ? `Создано секций: ${payload.report.sections_created}, полей: ${payload.report.fields_created}, обновлено полей: ${payload.report.fields_updated}`
