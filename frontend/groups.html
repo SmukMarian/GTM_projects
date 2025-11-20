@@ -222,10 +222,100 @@
         gap: 12px;
       }
 
+      .filter-actions .filter-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .badge-dot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--text);
+        font-size: 12px;
+        border: 1px solid var(--border);
+        font-weight: 700;
+      }
+
       .filter-buttons {
         display: inline-flex;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .filter-panel {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        place-items: stretch;
+        z-index: 1100;
+      }
+
+      .filter-panel[hidden] {
+        display: none;
+      }
+
+      .filter-panel .backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+      }
+
+      .filter-card {
+        position: relative;
+        margin: auto 0 auto auto;
+        width: min(420px, 92vw);
+        max-height: 100vh;
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .filter-card header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--divider);
+      }
+
+      .filter-card .body {
+        padding: 14px 16px 8px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .filter-card .footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--divider);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .filter-field label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .filter-field .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
       }
 
       .group-grid {
@@ -663,6 +753,10 @@
             <input id="showArchived" type="checkbox" />
             <span>Показывать архивные</span>
           </label>
+          <div class="filter-trigger">
+            <button id="openCustomFilters" class="ghost">Фильтры</button>
+            <span id="customFiltersBadge" class="badge-dot" hidden>0</span>
+          </div>
           <div class="filter-buttons">
             <button id="applyFilters" class="primary">Применить фильтры</button>
             <button id="resetFilters" class="ghost">Сбросить</button>
@@ -747,6 +841,24 @@
       <ul id="contextMenuList"></ul>
     </div>
 
+    <div id="customFilterPanel" class="filter-panel" hidden>
+      <div class="backdrop" aria-hidden="true"></div>
+      <div class="filter-card">
+        <header>
+          <div>
+            <p class="pill" style="margin: 0 0 4px">Расширенные фильтры</p>
+            <strong>Фильтры по кастомным полям</strong>
+          </div>
+          <button id="closeCustomFilters" class="ghost" aria-label="Закрыть фильтры">✕</button>
+        </header>
+        <div class="body" id="customFilterFields"></div>
+        <div class="footer">
+          <button id="resetCustomFilters" class="ghost">Сбросить</button>
+          <button id="applyCustomFilters" class="primary">Применить</button>
+        </div>
+      </div>
+    </div>
+
     </div>
 
     <script src="/theme.js" defer></script>
@@ -771,6 +883,13 @@
       const closeQuickViewBtn = document.getElementById("closeQuickView");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const openCustomFiltersBtn = document.getElementById("openCustomFilters");
+      const closeCustomFiltersBtn = document.getElementById("closeCustomFilters");
+      const applyCustomFiltersBtn = document.getElementById("applyCustomFilters");
+      const resetCustomFiltersBtn = document.getElementById("resetCustomFilters");
+      const customFilterPanel = document.getElementById("customFilterPanel");
+      const customFilterFields = document.getElementById("customFilterFields");
+      const customFiltersBadge = document.getElementById("customFiltersBadge");
       const filterStorageKey = "hpt-groups-filters";
 
       const dialog = document.getElementById("groupDialog");
@@ -788,6 +907,8 @@
       const urlParams = new URLSearchParams(window.location.search);
       const initialGroupId = urlParams.get("group");
       let editingGroupId = null;
+      let groupFilterMeta = [];
+      let customFieldFilters = [];
       const coverPlaceholder =
         "data:image/svg+xml;utf8," +
         encodeURIComponent(
@@ -1252,6 +1373,8 @@
         extraKeyFilter.value = "";
         extraValueFilter.value = "";
         showArchived.checked = false;
+        customFieldFilters = [];
+        updateCustomFiltersBadge();
       }
 
       function persistFilters() {
@@ -1262,6 +1385,7 @@
           extraValue: extraValueFilter.value.trim(),
           includeArchived: showArchived.checked,
           viewMode,
+          customFilters: customFieldFilters,
         };
         localStorage.setItem(filterStorageKey, JSON.stringify(state));
       }
@@ -1277,10 +1401,165 @@
           extraValueFilter.value = state.extraValue || "";
           showArchived.checked = !!state.includeArchived;
           applyViewMode(state.viewMode === "table" ? "table" : "cards");
+          if (Array.isArray(state.customFilters)) {
+            customFieldFilters = state.customFilters;
+            updateCustomFiltersBadge();
+          }
         } catch (e) {
           console.warn("Не удалось прочитать сохранённые фильтры групп", e);
           localStorage.removeItem(filterStorageKey);
         }
+      }
+
+      function updateCustomFiltersBadge() {
+        const count = customFieldFilters.length;
+        if (count > 0) {
+          customFiltersBadge.hidden = false;
+          customFiltersBadge.textContent = count;
+        } else {
+          customFiltersBadge.hidden = true;
+        }
+      }
+
+      async function loadGroupFilterMeta() {
+        if (groupFilterMeta.length) return;
+        const res = await fetch("/api/groups/custom-fields/filters");
+        if (!res.ok) throw new Error("Не удалось загрузить кастомные поля групп");
+        groupFilterMeta = await res.json();
+      }
+
+      function renderGroupCustomFilters() {
+        customFilterFields.innerHTML = "";
+        groupFilterMeta.forEach((meta) => {
+          const wrap = document.createElement("div");
+          wrap.className = "filter-field";
+          wrap.dataset.fieldId = meta.field_id;
+          const preset = customFieldFilters.find((f) => f.field_id === meta.field_id) || {};
+          const label = document.createElement("label");
+          label.textContent = meta.label_ru || meta.field_id;
+          wrap.appendChild(label);
+
+          if (meta.type === "number") {
+            const row = document.createElement("div");
+            row.className = "row";
+            const from = document.createElement("input");
+            from.type = "number";
+            from.className = "inline-input";
+            from.placeholder = "От";
+            from.value = preset.value_from ?? "";
+            const to = document.createElement("input");
+            to.type = "number";
+            to.className = "inline-input";
+            to.placeholder = "До";
+            to.value = preset.value_to ?? "";
+            row.append(from, to);
+            wrap.appendChild(row);
+          } else if (meta.type === "select" || meta.type === "enum") {
+            const select = document.createElement("select");
+            select.multiple = true;
+            select.size = Math.min(6, (meta.options || []).length || 4);
+            select.className = "inline-input";
+            (meta.options || []).forEach((opt) => {
+              const option = document.createElement("option");
+              option.value = opt.value;
+              option.textContent = `${opt.value} (${opt.count})`;
+              if ((preset.values || []).includes(opt.value)) option.selected = true;
+              select.appendChild(option);
+            });
+            wrap.appendChild(select);
+          } else if (meta.type === "checkbox" || meta.type === "boolean") {
+            const select = document.createElement("select");
+            select.className = "inline-input";
+            [
+              { value: "", label: "Любое" },
+              { value: "true", label: "Да" },
+              { value: "false", label: "Нет" },
+            ].forEach((opt) => {
+              const option = document.createElement("option");
+              option.value = opt.value;
+              option.textContent = opt.label;
+              if (
+                (preset.bool === true && opt.value === "true") ||
+                (preset.bool === false && opt.value === "false") ||
+                (preset.bool === undefined && opt.value === "")
+              ) {
+                option.selected = true;
+              }
+              select.appendChild(option);
+            });
+            wrap.appendChild(select);
+          } else if (meta.type === "date") {
+            const row = document.createElement("div");
+            row.className = "row";
+            const from = document.createElement("input");
+            from.type = "date";
+            from.className = "inline-input";
+            from.placeholder = "От";
+            from.value = preset.date_from ?? "";
+            const to = document.createElement("input");
+            to.type = "date";
+            to.className = "inline-input";
+            to.placeholder = "До";
+            to.value = preset.date_to ?? "";
+            row.append(from, to);
+            wrap.appendChild(row);
+          } else {
+            const input = document.createElement("input");
+            input.className = "inline-input";
+            input.placeholder = "Содержит…";
+            input.value = preset.value || "";
+            wrap.appendChild(input);
+          }
+
+          customFilterFields.appendChild(wrap);
+        });
+      }
+
+      function collectGroupFiltersFromUi() {
+        const filters = [];
+        groupFilterMeta.forEach((meta) => {
+          const block = customFilterFields.querySelector(`[data-field-id="${meta.field_id}"]`);
+          if (!block) return;
+          if (meta.type === "number") {
+            const [from, to] = block.querySelectorAll("input");
+            const value_from = from.value ? Number(from.value) : null;
+            const value_to = to.value ? Number(to.value) : null;
+            if (value_from !== null || value_to !== null) {
+              filters.push({ field_id: meta.field_id, type: "number", value_from, value_to });
+            }
+          } else if (meta.type === "select" || meta.type === "enum") {
+            const select = block.querySelector("select");
+            const values = Array.from(select.selectedOptions).map((o) => o.value);
+            if (values.length) filters.push({ field_id: meta.field_id, type: "select", values });
+          } else if (meta.type === "checkbox" || meta.type === "boolean") {
+            const select = block.querySelector("select");
+            if (select.value === "true") filters.push({ field_id: meta.field_id, type: "checkbox", bool: true });
+            else if (select.value === "false") filters.push({ field_id: meta.field_id, type: "checkbox", bool: false });
+          } else if (meta.type === "date") {
+            const [from, to] = block.querySelectorAll("input");
+            const date_from = from.value || null;
+            const date_to = to.value || null;
+            if (date_from || date_to) filters.push({ field_id: meta.field_id, type: "date", date_from, date_to });
+          } else {
+            const input = block.querySelector("input");
+            if (input.value.trim()) filters.push({ field_id: meta.field_id, type: "text", value: input.value.trim() });
+          }
+        });
+        return filters;
+      }
+
+      async function openCustomFilters() {
+        try {
+          await loadGroupFilterMeta();
+          renderGroupCustomFilters();
+          customFilterPanel.hidden = false;
+        } catch (err) {
+          alert(err.message || "Не удалось открыть фильтры");
+        }
+      }
+
+      function closeCustomFilters() {
+        customFilterPanel.hidden = true;
       }
 
       async function loadProjectsForStats() {
@@ -1294,13 +1573,19 @@
 
       async function loadGroups() {
         await loadProjectsForStats();
-        const params = new URLSearchParams();
-        params.set("include_archived", showArchived.checked);
-        if (statusFilter.value) params.append("status", statusFilter.value);
-        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
-        if (extraKeyFilter.value) params.set("extra_key", extraKeyFilter.value.trim());
-        if (extraValueFilter.value) params.set("extra_value", extraValueFilter.value.trim());
-        const res = await fetch(`/api/groups?${params.toString()}`);
+        const payload = {
+          include_archived: showArchived.checked,
+          statuses: statusFilter.value ? [statusFilter.value] : [],
+          brand: brandFilter.value.trim() || null,
+          extra_key: extraKeyFilter.value.trim() || null,
+          extra_value: extraValueFilter.value.trim() || null,
+          filters: customFieldFilters,
+        };
+        const res = await fetch(`/api/groups/search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
         if (!res.ok) {
           alert("Не удалось загрузить группы");
           return;
@@ -1324,6 +1609,22 @@
         applyViewMode("cards");
         localStorage.removeItem(filterStorageKey);
         loadGroups();
+      });
+      openCustomFiltersBtn.addEventListener("click", openCustomFilters);
+      closeCustomFiltersBtn.addEventListener("click", closeCustomFilters);
+      customFilterPanel.querySelector(".backdrop").addEventListener("click", closeCustomFilters);
+      applyCustomFiltersBtn.addEventListener("click", () => {
+        customFieldFilters = collectGroupFiltersFromUi();
+        updateCustomFiltersBadge();
+        persistFilters();
+        closeCustomFilters();
+        loadGroups();
+      });
+      resetCustomFiltersBtn.addEventListener("click", () => {
+        customFieldFilters = [];
+        renderGroupCustomFilters();
+        updateCustomFiltersBadge();
+        persistFilters();
       });
       toggleViewBtn.addEventListener("click", toggleView);
       newGroupBtn.addEventListener("click", openCreate);

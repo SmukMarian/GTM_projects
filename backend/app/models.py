@@ -58,6 +58,33 @@ class FieldType(str, Enum):
     OTHER = "other"
 
 
+class CustomFieldOption(BaseModel):
+    value: str
+    count: int = 0
+
+
+class CustomFieldFilterMeta(BaseModel):
+    field_id: str
+    label_ru: str
+    label_en: str
+    type: str
+    projects_count: int | None = None
+    groups_count: int | None = None
+    options: list[CustomFieldOption] | None = None
+
+
+class CustomFieldFilterRequest(BaseModel):
+    field_id: str
+    type: str
+    value: str | None = None
+    value_from: float | None = None
+    value_to: float | None = None
+    values: list[str] | None = None
+    bool: bool | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+
+
 class Timestamped(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime | None = None
@@ -70,6 +97,15 @@ class ProductGroup(Timestamped):
     status: GroupStatus = GroupStatus.ACTIVE
     brands: list[str] = Field(default_factory=list)
     extra_fields: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+
+
+class GroupSearchRequest(BaseModel):
+    include_archived: bool = True
+    statuses: list[GroupStatus] | None = None
+    brand: str | None = None
+    extra_key: str | None = None
+    extra_value: str | None = None
+    filters: list[CustomFieldFilterRequest] = Field(default_factory=list)
 
 
 class CharacteristicField(BaseModel):
@@ -258,6 +294,17 @@ class Project(Timestamped):
     images: list[ImageAttachment] = Field(default_factory=list)
     comments: list[Comment] = Field(default_factory=list)
     history: list[HistoryEvent] = Field(default_factory=list)
+
+
+class ProjectSearchRequest(BaseModel):
+    include_archived: bool = True
+    group_id: UUID | None = None
+    statuses: list[ProjectStatus] | None = None
+    brand: str | None = None
+    current_stage_id: UUID | None = None
+    planned_from: date | None = None
+    planned_to: date | None = None
+    filters: list[CustomFieldFilterRequest] = Field(default_factory=list)
 
 
 class ProjectExport(BaseModel):

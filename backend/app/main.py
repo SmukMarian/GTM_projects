@@ -33,6 +33,8 @@ from .models import (
     CharacteristicSection,
     CharacteristicImportResponse,
     CharacteristicTemplate,
+    CustomFieldFilterMeta,
+    GroupSearchRequest,
     Comment,
     DashboardPayload,
     FileAttachment,
@@ -43,6 +45,7 @@ from .models import (
     ImageAttachment,
     ProductGroup,
     Project,
+    ProjectSearchRequest,
     ProjectStatus,
     TemplateFromProjectRequest,
     Subtask,
@@ -180,6 +183,28 @@ def list_groups(
     )
 
 
+@app.get("/api/groups/custom-fields/filters", response_model=list[CustomFieldFilterMeta])
+def list_group_field_filters(repo: LocalRepository = Depends(get_repository)) -> list[CustomFieldFilterMeta]:
+    """Вернуть набор пользовательских полей, подходящих для фильтрации групп."""
+
+    return repo.list_group_filter_meta()
+
+
+@app.post("/api/groups/search", response_model=list[ProductGroup])
+def search_groups(payload: GroupSearchRequest, repo: LocalRepository = Depends(get_repository)) -> list[ProductGroup]:
+    """Вернуть список групп с фильтрацией по пользовательским полям и статусам."""
+
+    status_set = set(payload.statuses) if payload.statuses else None
+    return repo.list_groups(
+        include_archived=payload.include_archived,
+        brand=payload.brand,
+        statuses=status_set,
+        extra_key=payload.extra_key,
+        extra_value=payload.extra_value,
+        filters=payload.filters,
+    )
+
+
 @app.get("/api/groups/{group_id}", response_model=ProductGroup)
 def get_group(group_id: UUID, repo: LocalRepository = Depends(get_repository)) -> ProductGroup:
     group = repo.get_group(group_id)
@@ -238,6 +263,30 @@ def list_projects(
         current_stage_id=current_stage_id,
         planned_from=planned_from,
         planned_to=planned_to,
+    )
+
+
+@app.get("/api/projects/custom-fields/filters", response_model=list[CustomFieldFilterMeta])
+def list_project_field_filters(repo: LocalRepository = Depends(get_repository)) -> list[CustomFieldFilterMeta]:
+    """Вернуть набор пользовательских полей, используемых в нескольких проектах."""
+
+    return repo.list_project_filter_meta()
+
+
+@app.post("/api/projects/search", response_model=list[Project])
+def search_projects(payload: ProjectSearchRequest, repo: LocalRepository = Depends(get_repository)) -> list[Project]:
+    """Вернуть список проектов с фильтрацией по пользовательским полям."""
+
+    statuses = set(payload.statuses) if payload.statuses else None
+    return repo.list_projects(
+        include_archived=payload.include_archived,
+        group_id=payload.group_id,
+        statuses=statuses,
+        brand=payload.brand,
+        current_stage_id=payload.current_stage_id,
+        planned_from=payload.planned_from,
+        planned_to=payload.planned_to,
+        filters=payload.filters,
     )
 
 
