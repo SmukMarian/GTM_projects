@@ -546,10 +546,6 @@
         max-width: min(920px, 95vw);
       }
 
-      dialog.form-dialog {
-        width: auto;
-      }
-
       dialog::backdrop {
         background: rgba(15, 23, 42, 0.45);
       }
@@ -1429,9 +1425,14 @@
 
       async function loadGroupFilterMeta(force = false) {
         if (groupFilterMeta.length && !force) return;
-        const res = await fetch("/api/groups/custom-fields/filters");
-        if (!res.ok) throw new Error("Не удалось загрузить кастомные поля групп");
-        groupFilterMeta = await res.json();
+        try {
+          const res = await fetch("/api/groups/custom-fields/filters");
+          if (!res.ok) throw new Error("Не удалось загрузить кастомные поля групп");
+          groupFilterMeta = await res.json();
+        } catch (err) {
+          console.warn(err);
+          groupFilterMeta = [];
+        }
         customFieldFilters = customFieldFilters.filter((f) =>
           groupFilterMeta.some((m) => m.field_id === f.field_id)
         );
@@ -1582,33 +1583,38 @@
       }
 
       async function loadGroups() {
-        await loadGroupFilterMeta();
-        await loadProjectsForStats();
-        const payload = {
-          include_archived: showArchived.checked,
-          statuses: statusFilter.value ? [statusFilter.value] : [],
-          brand: brandFilter.value.trim() || null,
-          extra_key: extraKeyFilter.value.trim() || null,
-          extra_value: extraValueFilter.value.trim() || null,
-          filters: customFieldFilters,
-        };
-        const res = await fetch(`/api/groups/search`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
+        try {
+          await loadGroupFilterMeta();
+          await loadProjectsForStats();
+          const payload = {
+            include_archived: showArchived.checked,
+            statuses: statusFilter.value ? [statusFilter.value] : [],
+            brand: brandFilter.value.trim() || null,
+            extra_key: extraKeyFilter.value.trim() || null,
+            extra_value: extraValueFilter.value.trim() || null,
+            filters: customFieldFilters,
+          };
+          const res = await fetch(`/api/groups/search`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            alert("Не удалось загрузить группы");
+            return;
+          }
+          groups = await res.json();
+          renderSummary();
+          renderCardView();
+          renderTableView();
+          if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
+            selectedGroupId = initialGroupId;
+          }
+          if (selectedGroupId) openDetails(selectedGroupId);
+        } catch (err) {
+          console.error(err);
           alert("Не удалось загрузить группы");
-          return;
         }
-        groups = await res.json();
-        renderSummary();
-        renderCardView();
-        renderTableView();
-        if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
-          selectedGroupId = initialGroupId;
-        }
-        if (selectedGroupId) openDetails(selectedGroupId);
       }
 
       applyFilters.addEventListener("click", () => {
