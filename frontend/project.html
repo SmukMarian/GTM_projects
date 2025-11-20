@@ -1640,6 +1640,17 @@
         height: 40px;
       }
 
+      .custom-field-row-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .custom-field-row .icon-only {
+        min-width: 0;
+        padding: 8px 10px;
+      }
+
       .progress-shell {
         background: var(--surface-muted);
         border: 1px solid var(--border);
@@ -2550,7 +2561,7 @@
       }
 
       async function loadProject() {
-        const res = await fetch(`/api/projects/${projectId}`);
+        const res = await fetch(`/api/projects/${projectId}`, { cache: "no-store" });
         if (!res.ok) {
           stagesContainer.innerHTML = "<p>Проект не найден</p>";
           return;
@@ -2563,12 +2574,12 @@
 
       async function loadGroupInfo() {
         if (!project?.group_id) return;
-        const res = await fetch(`/api/groups/${project.group_id}`);
+        const res = await fetch(`/api/groups/${project.group_id}`, { cache: "no-store" });
         groupInfo = res.ok ? await res.json() : null;
       }
 
       async function loadGroupList() {
-        const res = await fetch("/api/groups?include_archived=true");
+        const res = await fetch("/api/groups?include_archived=true", { cache: "no-store" });
         groups = res.ok ? await res.json() : [];
         basicGroup.innerHTML = groups
           .map((g) => `<option value="${g.id}">${g.name}</option>`)
@@ -2576,13 +2587,13 @@
       }
 
       async function loadTemplates() {
-        const res = await fetch("/api/gtm-templates");
+        const res = await fetch("/api/gtm-templates", { cache: "no-store" });
         gtmTemplates = res.ok ? await res.json() : [];
         renderTemplates();
       }
 
       async function loadStages() {
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages`);
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages`, { cache: "no-store" });
         gtmStages = res.ok ? await res.json() : [];
         renderStages();
         renderTaskFilters();
@@ -2772,14 +2783,50 @@
         valueInput.placeholder = "Введите значение";
         valueLabel.appendChild(valueInput);
 
+        const actions = document.createElement("div");
+        actions.className = "custom-field-row-actions";
+
+        const moveUpBtn = document.createElement("button");
+        moveUpBtn.type = "button";
+        moveUpBtn.className = "ghost icon-only btn-move-up";
+        moveUpBtn.title = "Вверх";
+        moveUpBtn.textContent = "↑";
+        moveUpBtn.addEventListener("click", () => {
+          const prev = row.previousElementSibling;
+          if (prev) {
+            basicCustomFields.insertBefore(row, prev);
+            updateCustomFieldReorderControls();
+          }
+        });
+
+        const moveDownBtn = document.createElement("button");
+        moveDownBtn.type = "button";
+        moveDownBtn.className = "ghost icon-only btn-move-down";
+        moveDownBtn.title = "Вниз";
+        moveDownBtn.textContent = "↓";
+        moveDownBtn.addEventListener("click", () => {
+          const next = row.nextElementSibling?.nextElementSibling;
+          const sibling = row.nextElementSibling;
+          if (sibling) {
+            basicCustomFields.insertBefore(row, next || null);
+            updateCustomFieldReorderControls();
+          }
+        });
+
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.className = "ghost";
-        removeBtn.textContent = "Удалить";
-        removeBtn.addEventListener("click", () => row.remove());
+        removeBtn.className = "ghost icon-only";
+        removeBtn.title = "Удалить поле";
+        removeBtn.textContent = "✕";
+        removeBtn.addEventListener("click", () => {
+          row.remove();
+          updateCustomFieldReorderControls();
+        });
 
-        row.append(keyLabel, valueLabel, removeBtn);
+        actions.append(moveUpBtn, moveDownBtn, removeBtn);
+        row.append(keyLabel, valueLabel, actions);
         basicCustomFields.appendChild(row);
+        updateCustomFieldReorderControls();
       }
 
       function populateBasicCustomFields(fields = {}) {
@@ -2791,6 +2838,17 @@
           return;
         }
         entries.forEach(([key, value]) => addBasicCustomFieldRow(key, value ?? ""));
+      }
+
+      function updateCustomFieldReorderControls() {
+        if (!basicCustomFields) return;
+        const rows = Array.from(basicCustomFields.querySelectorAll(".custom-field-row"));
+        rows.forEach((row, index) => {
+          const up = row.querySelector(".btn-move-up");
+          const down = row.querySelector(".btn-move-down");
+          if (up) up.disabled = index === 0;
+          if (down) down.disabled = index === rows.length - 1;
+        });
       }
 
       function collectBasicCustomFields() {
@@ -3280,11 +3338,12 @@
             <td>${task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—"}</td>
             <td><span class="${due.className}">${due.text}</span></td>
             <td>${progress.label}</td>
-            <td>
+              <td>
               <div class="table-actions">
                 <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
                 <button class="ghost" onclick="openTaskDiscussion('${task.id}')">💬</button>
                 <button class="ghost" title="${toggleTitle}" onclick="changeTaskStatus('${task.id}', '${toggleStatus}')">${toggleIcon}</button>
+                <button class="ghost" title="Удалить" onclick="deleteTask('${task.id}')">🗑️</button>
               </div>
             </td>
           `;
@@ -3694,7 +3753,7 @@
       }
 
       async function loadTasks() {
-        const res = await fetch(`/api/projects/${projectId}/tasks`);
+        const res = await fetch(`/api/projects/${projectId}/tasks`, { cache: "no-store" });
         tasks = res.ok ? await res.json() : [];
         renderStages();
         renderGtmProgress();
@@ -4286,12 +4345,18 @@
       }
 
       async function loadImages() {
-        const res = await fetch(`/api/projects/${projectId}/images`);
+        const res = await fetch(`/api/projects/${projectId}/images`, { cache: "no-store" });
         if (res.ok) {
           images = await res.json();
           renderGallery();
           renderCoverPanel();
         }
+      }
+
+      function imageDownloadUrl(image) {
+        if (!image) return "";
+        const cacheKey = encodeURIComponent(image.updated_at || image.uploaded_at || image.id || "0");
+        return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
       }
 
       function renderGallery() {
@@ -4308,7 +4373,7 @@
           card.className = "image-card";
           card.innerHTML = `
             ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
-            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" onclick="openImage('${img.id}')" />
+            <img class="image-thumb" src="${imageDownloadUrl(img)}" alt="${img.filename}" onclick="openImage('${img.id}')" />
             <div class="image-meta">
               <div style="display:flex; flex-direction:column; gap:2px">
                 <strong>${img.filename}</strong>
@@ -4343,7 +4408,7 @@
       function renderCoverPanel() {
         const cover = getCoverImage();
         if (cover) {
-          coverImage.src = `/api/projects/${projectId}/images/${cover.id}/download`;
+          coverImage.src = imageDownloadUrl(cover);
           coverImage.style.display = "block";
           coverPlaceholder.style.display = "none";
           clearCoverButton.disabled = false;
@@ -4445,7 +4510,7 @@
       function showLightbox() {
         const current = lightboxOrder[lightboxIndex];
         if (!current) return;
-        lightboxImage.src = `/api/projects/${projectId}/images/${current.id}/download`;
+        lightboxImage.src = imageDownloadUrl(current);
         lightboxTitle.textContent = current.filename;
         lightboxCaption.textContent = current.caption || "";
         lightbox.dataset.open = "true";
