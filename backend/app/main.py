@@ -523,11 +523,11 @@ async def import_gtm_stages(
         raise HTTPException(status_code=404, detail="Проект не найден")
 
     content = await file.read()
-    stages, errors = import_gtm_stages_from_excel(content)
+    stages, imported_tasks, errors = import_gtm_stages_from_excel(content)
     if errors:
         raise HTTPException(status_code=400, detail={"message": "Ошибка импорта GTM", "errors": errors})
 
-    stages = repo.replace_gtm_stages(project_id, stages)
+    stages = repo.replace_gtm_stages(project_id, stages, imported_tasks)
     log_event(repo, project_id, "Импортированы GTM-этапы (Excel)")
     return stages
 
@@ -811,7 +811,13 @@ def update_task(project_id: UUID, task_id: UUID, task: Task, repo: LocalReposito
     if existing is None:
         raise HTTPException(status_code=404, detail="Задача не найдена")
 
-    aligned = task.model_copy(update={"id": task_id})
+    aligned = task.model_copy(
+        update={
+            "id": task_id,
+            "subtasks": existing.subtasks,
+            "comments": existing.comments,
+        }
+    )
     try:
         updated = repo.update_task(project_id, task_id, aligned)
         if existing.status != updated.status:

@@ -18,6 +18,10 @@ from .models import (
     ProjectStatus,
     ProductGroup,
     StageStatus,
+    Subtask,
+    Task,
+    TaskStatus,
+    TaskUrgency,
 )
 
 
@@ -107,7 +111,7 @@ def export_projects_to_excel(
 
 
 def export_gtm_stages_to_excel(project: Project) -> bytes:
-    """Сформировать Excel-файл со структурой GTM-этапов проекта."""
+    """Сформировать Excel-файл со структурой GTM-этапов проекта и задачами."""
 
     workbook = Workbook()
     sheet = workbook.active
@@ -126,7 +130,8 @@ def export_gtm_stages_to_excel(project: Project) -> bytes:
     ]
     sheet.append(headers)
 
-    for stage in sorted(project.gtm_stages, key=lambda s: s.order):
+    ordered_stages = sorted(project.gtm_stages, key=lambda s: s.order)
+    for stage in ordered_stages:
         checklist_serialized = "; ".join(
             f"{'[x]' if item.done else '[ ]'} {item.title}" for item in sorted(stage.checklist, key=lambda c: c.order)
         )
@@ -143,6 +148,73 @@ def export_gtm_stages_to_excel(project: Project) -> bytes:
                 checklist_serialized,
             ]
         )
+
+    tasks_sheet = workbook.create_sheet("Задачи")
+    tasks_sheet.append(
+        [
+            "Этап",
+            "Порядок задачи",
+            "Название задачи",
+            "Описание",
+            "Статус",
+            "Срок",
+            "Важная",
+            "Срочность",
+            "Комментариев",
+        ]
+    )
+
+    stage_order_map = {stage.id: stage.order for stage in ordered_stages}
+    ordered_tasks = sorted(
+        project.tasks,
+        key=lambda t: (
+            stage_order_map.get(t.gtm_stage_id, 9999),
+            (t.due_date or date.max),
+            t.title.lower(),
+        ),
+    )
+
+    for order_idx, task in enumerate(ordered_tasks, start=1):
+        stage_title = next((s.title for s in ordered_stages if s.id == task.gtm_stage_id), "")
+        tasks_sheet.append(
+            [
+                stage_title,
+                order_idx,
+                task.title,
+                task.description,
+                task.status.value,
+                task.due_date,
+                "да" if task.important else "нет",
+                task.urgency.value,
+                len(task.comments or []),
+            ]
+        )
+
+    subtasks_sheet = workbook.create_sheet("Подзадачи")
+    subtasks_sheet.append(
+        [
+            "Этап",
+            "Порядок задачи",
+            "Название задачи",
+            "Название подзадачи",
+            "Выполнена",
+            "Порядок подзадачи",
+        ]
+    )
+
+    for order_idx, task in enumerate(ordered_tasks, start=1):
+        stage_title = next((s.title for s in ordered_stages if s.id == task.gtm_stage_id), "")
+        for sub in sorted(task.subtasks or [], key=lambda s: s.order):
+            subtasks_sheet.append(
+                [
+                    stage_title,
+                    order_idx,
+                    task.title,
+                    sub.title,
+                    "да" if sub.done else "нет",
+                    sub.order,
+                ]
+            )
 
     buffer = BytesIO()
     workbook.save(buffer)
@@ -212,31 +284,55 @@ STATUS_ALIASES = {
     "cancelled": StageStatus.CANCELLED,
 }
 
+TASK_STATUS_ALIASES = {
+    "todo": TaskStatus.TODO,
+    "to do": TaskStatus.TODO,
+    "в работе": TaskStatus.IN_PROGRESS,
+    "in progress": TaskStatus.IN_PROGRESS,
+    "делается": TaskStatus.IN_PROGRESS,
+    "done": TaskStatus.DONE,
+    "сделано": TaskStatus.DONE,
+    "готово": TaskStatus.DONE,
+}
 
-def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[str]]:
-    """Распарсить Excel с этапами GTM и вернуть список этапов и список ошибок."""
+URGENCY_ALIASES = {
+    "normal": TaskUrgency.NORMAL,
+    "обычная": TaskUrgency.NORMAL,
+    "нормальная": TaskUrgency.NORMAL,
+    "high": TaskUrgency.HIGH,
+    "срочно": TaskUrgency.HIGH,
+    "высокая": TaskUrgency.HIGH,
+}
+
+
+def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[Task], list[str]]:
+    """Распарсить Excel с этапами GTM, задачами и подзадачами."""
 
     try:
         workbook = load_workbook(filename=BytesIO(content))
     except Exception as exc:  # noqa: BLE001
-        return [], [f"Не удалось прочитать Excel: {exc}"]
+        return [], [], [f"Не удалось прочитать Excel: {exc}"]
 
     sheet = workbook.active
 
     try:
         first_row = next(sheet.iter_rows(max_row=1))
     except StopIteration:
-        return [], ["Файл Excel пуст"]
+        return [], [], ["Файл Excel пуст"]
     header_row = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
     header_map = {title.lower(): idx for idx, title in enumerate(header_row) if title}
 
     required_columns = {"название этапа"}
     missing = required_columns - set(header_map)
     if missing:
-        return [], [f"Отсутствуют обязательные столбцы: {', '.join(sorted(missing))}"]
+        return [], [], [f"Отсутствуют обязательные столбцы: {', '.join(sorted(missing))}"]
 
     stages: list[GTMStage] = []
+    tasks_raw: list[tuple[int, GTMStage, Task]] = []
     errors: list[str] = []
+
+    def normalize(value: str | None) -> str:
+        return value.strip().lower() if value else ""
 
     def col(key: str, default: int | None = None) -> int | None:
         if key in header_map:
@@ -306,7 +402,137 @@ def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[s
         stages.append(stage)
 
     stages.sort(key=lambda s: s.order)
-    return stages, errors
+
+    stage_index = {normalize(str(stage.title)): stage for stage in stages}
+    stage_order_map = {stage.id: idx for idx, stage in enumerate(stages)}
+
+    if "Задачи" in workbook.sheetnames:
+        task_sheet = workbook["Задачи"]
+        try:
+            first_task_row = next(task_sheet.iter_rows(max_row=1))
+        except StopIteration:
+            first_task_row = []
+        task_header = [str(cell.value).strip() if cell.value is not None else "" for cell in first_task_row]
+        task_header_map = {title.lower(): idx for idx, title in enumerate(task_header) if title}
+
+        def task_col(key: str, default: int | None = None) -> int | None:
+            if key in task_header_map:
+                return task_header_map[key]
+            return default
+
+        task_order_col = task_col("порядок задачи")
+        for row_index, row in enumerate(task_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+
+            stage_title = row[task_col("этап")]
+            normalized_stage = normalize(stage_title if stage_title is not None else "")
+            stage = stage_index.get(normalized_stage)
+            if stage is None:
+                errors.append(f"Строка {row_index} (Задачи): этап '{stage_title}' не найден среди импортируемых этапов")
+                continue
+
+            order_value = row[task_order_col] if task_order_col is not None else None
+            task_order = 0
+            try:
+                task_order = int(order_value) if order_value not in (None, "") else 0
+            except (TypeError, ValueError):
+                errors.append(f"Строка {row_index} (Задачи): неверный порядок задачи '{order_value}'")
+                continue
+
+            title = row[task_col("название задачи")]
+            if not title:
+                errors.append(f"Строка {row_index} (Задачи): пустое название задачи")
+                continue
+
+            status_raw = row[task_col("статус")]
+            status = TaskStatus.TODO
+            if status_raw:
+                status = TASK_STATUS_ALIASES.get(str(status_raw).strip().lower(), None) or TaskStatus.__members__.get(
+                    str(status_raw).strip().upper(), TaskStatus.TODO
+                )
+
+            urgency_raw = row[task_col("срочность")]
+            urgency = TaskUrgency.NORMAL
+            if urgency_raw:
+                urgency = URGENCY_ALIASES.get(str(urgency_raw).strip().lower(), TaskUrgency.NORMAL)
+
+            important_raw = row[task_col("важная")]
+            important = _parse_bool(important_raw) if important_raw is not None else False
+
+            task_obj = Task(
+                title=str(title).strip(),
+                description=row[task_col("описание")],
+                status=status,
+                due_date=row[task_col("срок")],
+                important=important,
+                urgency=urgency,
+                gtm_stage_id=stage.id,
+                subtasks=[],
+                comments=[],
+            )
+            tasks_raw.append((task_order, stage, task_obj))
+
+    subtasks_map: dict[tuple[UUID, int], list[Subtask]] = {}
+    if "Подзадачи" in workbook.sheetnames:
+        sub_sheet = workbook["Подзадачи"]
+        try:
+            first_sub_row = next(sub_sheet.iter_rows(max_row=1))
+        except StopIteration:
+            first_sub_row = []
+        sub_header = [str(cell.value).strip() if cell.value is not None else "" for cell in first_sub_row]
+        sub_header_map = {title.lower(): idx for idx, title in enumerate(sub_header) if title}
+
+        def sub_col(key: str, default: int | None = None) -> int | None:
+            if key in sub_header_map:
+                return sub_header_map[key]
+            return default
+
+        for row_index, row in enumerate(sub_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+
+            stage_title = row[sub_col("этап")]
+            normalized_stage = normalize(stage_title if stage_title is not None else "")
+            stage = stage_index.get(normalized_stage)
+            if stage is None:
+                errors.append(f"Строка {row_index} (Подзадачи): этап '{stage_title}' не найден")
+                continue
+
+            task_order_raw = row[sub_col("порядок задачи")]
+            try:
+                task_order_value = int(task_order_raw) if task_order_raw not in (None, "") else 0
+            except (TypeError, ValueError):
+                errors.append(f"Строка {row_index} (Подзадачи): неверный порядок задачи '{task_order_raw}'")
+                continue
+
+            title = row[sub_col("название подзадачи")]
+            if not title:
+                errors.append(f"Строка {row_index} (Подзадачи): пустое название подзадачи")
+                continue
+
+            done_raw = row[sub_col("выполнена")]
+            done = _parse_bool(done_raw)
+            order_raw = row[sub_col("порядок подзадачи")]
+            try:
+                order_val = int(order_raw) if order_raw not in (None, "") else 0
+            except (TypeError, ValueError):
+                order_val = 0
+
+            key = (stage.id, task_order_value)
+            subtasks_map.setdefault(key, []).append(
+                Subtask(title=str(title).strip(), done=done, order=order_val)
+            )
+
+    # Связываем подзадачи с задачами и сортируем по порядку этапов
+    ordered_tasks: list[Task] = []
+    for task_order, stage, task_obj in sorted(tasks_raw, key=lambda t: (stage_order_map.get(t[1].id, 999), t[0])):
+        key = (stage.id, task_order)
+        subs = sorted(subtasks_map.get(key, []), key=lambda s: s.order)
+        task_obj.subtasks = subs
+        ordered_tasks.append(task_obj)
+
+    return stages, ordered_tasks, errors
 
 
 FIELD_TYPE_ALIASES = {

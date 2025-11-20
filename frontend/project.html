@@ -29,16 +29,19 @@
         --bg-alt: #eef1f6;
         --surface: #ffffff;
         --surface-muted: #f7f8fc;
+        --surface-2: #f6f7fb;
+        --surface-hover: #eef1f7;
         --text: #0f172a;
-        --muted: #475569;
-        --border: #d9e0ea;
+        --muted: #6b7280;
+        --border: #d9deea;
         --divider: rgba(148, 163, 184, 0.35);
         --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
-        --accent: #10a37f;
+        --accent: #15a37a;
         --accent-strong: #19b88f;
-        --accent-soft: rgba(16, 163, 127, 0.12);
+        --accent-soft: rgba(21, 163, 122, 0.12);
         --danger: #ef4444;
         --warning: #f59e0b;
+        --risk: #f59e0b;
         --flag-important-bg: #ffe6ef;
         --flag-important-text: #a80738;
         --flag-important-border: #ffb3c9;
@@ -48,6 +51,9 @@
         --flag-risk-bg: #fff7d6;
         --flag-risk-text: #92400e;
         --flag-risk-border: #f4ce6a;
+        --radius-lg: 16px;
+        --radius-md: 10px;
+        --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
       }
 
       [data-theme="dark"] {
@@ -56,6 +62,8 @@
         --bg-alt: #0b1017;
         --surface: #111827;
         --surface-muted: #161f30;
+        --surface-2: #141c2b;
+        --surface-hover: #1a2333;
         --text: #e6edf3;
         --muted: #9aa6b6;
         --border: #1f2937;
@@ -66,6 +74,7 @@
         --accent-soft: rgba(16, 163, 127, 0.2);
         --danger: #f87171;
         --warning: #fbbf24;
+        --risk: #fbbf24;
         --flag-important-bg: rgba(255, 99, 150, 0.16);
         --flag-important-text: #ff9cbf;
         --flag-important-border: rgba(255, 99, 150, 0.5);
@@ -295,24 +304,280 @@
         font-weight: 600;
       }
 
-      .stage-card {
+      .gtm-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 100%);
         border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .gtm-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .gtm-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        background: var(--surface);
+        border: 1px dashed var(--divider);
         border-radius: 12px;
         padding: 12px;
-        margin-bottom: 12px;
+      }
+
+      .gtm-meta-tile {
+        display: grid;
+        gap: 4px;
+      }
+
+      .gtm-meta-tile strong {
+        font-size: 1.05rem;
+      }
+
+      .stage-card {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        margin: 12px 0 4px;
+        background: linear-gradient(135deg, var(--surface), var(--surface-2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-soft);
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .stage-card:hover {
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .stage-index {
+        display: inline-flex;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        color: var(--text);
+        font-weight: 700;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+      }
+
+      .stage-main {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .stage-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: space-between;
+        min-width: 0;
+      }
+
+      .stage-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .stage-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .stage-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        min-height: 30px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: var(--surface-2);
+        color: var(--text);
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid var(--border);
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .pill.small {
+        font-size: 0.78rem;
+        padding: 4px 8px;
+      }
+
+      .pill.muted {
+        color: var(--muted);
+      }
+
+      .pill.risk {
+        background: rgba(245, 158, 11, 0.12);
+        color: #92400e;
+      }
+
+      .pill.due-overdue {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+      }
+
+      .pill.due-soon {
+        background: #fffbeb;
+        color: #92400e;
+        border-color: #fcd34d;
+      }
+
+      .pill.optional {
+        opacity: 0;
+        max-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        overflow: hidden;
+        transition: opacity 0.15s ease, max-width 0.15s ease, padding 0.15s ease;
+      }
+
+      .stage-card:hover .pill.optional,
+      .stage-card:focus-within .pill.optional {
+        opacity: 1;
+        max-width: 240px;
+        padding-left: 6px;
+        padding-right: 10px;
+      }
+
+      .stage-actions,
+      .task-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
         background: var(--surface);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
       }
 
-      .stage-card.collapsed {
-        padding-bottom: 6px;
+      .icon-btn:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
       }
 
-      .stage-card.collapsed .stage-description,
-      .stage-card.collapsed .stage-progress,
-      .stage-card.collapsed .stage-meta-grid,
-      .stage-card.collapsed .stage-controls,
-      .stage-card.collapsed .stage-task-list {
-        display: none;
+      .icon-btn.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .icon-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: var(--danger);
+      }
+
+      .stage-life-line {
+        grid-column: 1 / -1;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        overflow: hidden;
+        margin: 2px 0 0;
+      }
+
+      .stage-life-line .fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+        transition: width 0.25s ease;
+      }
+
+      .stage-life-line.muted .fill {
+        background: var(--border);
+      }
+
+      .stage-body {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 10px 12px 8px;
+        background: var(--surface-2);
+        margin: 0 0 16px 44px;
+        box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.04);
+        transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease, padding 0.2s ease;
+        max-height: 2000px;
+        opacity: 1;
+      }
+
+      .stage-body[hidden] {
+        display: block !important;
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+        margin-bottom: 0;
+        pointer-events: none;
+      }
+
+      .focus-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-md);
+        margin: 8px 0 0;
+      }
+
+      .focus-banner strong {
+        font-weight: 700;
+      }
+
+      .focus-banner button {
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
       }
 
       .stage-header {
@@ -334,30 +599,29 @@
         align-items: center;
         gap: 6px;
         padding: 4px 8px;
-        background: var(--surface-muted);
+        background: var(--surface-2);
         border-radius: 8px;
         font-size: 0.85rem;
-        border: 1px solid transparent;
+        border: 1px solid var(--border);
+        font-weight: 600;
       }
 
       .chip.warn {
         background: var(--flag-risk-bg);
         color: var(--flag-risk-text);
         border-color: var(--flag-risk-border);
-        font-weight: 600;
       }
 
       .flag-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 3px 10px;
+        padding: 4px 10px;
         border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
+        font-size: 0.82rem;
+        font-weight: 700;
         border: 1px solid transparent;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.02em;
       }
 
       .flag-important {
@@ -379,41 +643,244 @@
       }
 
       .stage-description {
-        margin-top: 4px;
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 0.92rem;
       }
 
       .stage-description.empty {
         font-style: italic;
       }
 
-      .stage-progress {
-        margin-top: 10px;
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      .stage-meta-grid {
+      .task-row {
+        display: grid;
+        grid-template-columns: 32px 1fr auto;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .task-row:hover {
+        background: var(--surface-hover);
+      }
+
+      .task-status {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+      }
+
+      .task-status:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .task-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .task-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .task-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .task-actions .icon-btn {
+        width: 30px;
+        height: 30px;
+      }
+
+      .task-body {
+        margin: -2px 0 10px 42px;
+        padding: 8px 10px 4px;
+        border-left: 2px solid var(--border);
+        transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease, padding 0.2s ease;
+        max-height: 1200px;
+        opacity: 1;
+      }
+
+      .task-body[hidden] {
+        display: block !important;
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        pointer-events: none;
+      }
+
+      .subtasks {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .subtask-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid transparent;
+        transition: background 0.12s ease, border-color 0.12s ease;
+      }
+
+      .subtask-row:hover {
+        background: var(--surface-hover);
+        border-color: var(--border);
+      }
+
+      .subtask-input {
+        border: none;
+        background: transparent;
+        padding: 4px 0;
+        font-size: 0.95rem;
+        width: 100%;
+      }
+
+      .subtask-row.done {
+        background: var(--surface-2);
+      }
+
+      .subtask-row.done .subtask-input {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      .subtask-input:focus {
+        outline: none;
+      }
+
+      .subtask-actions {
+        display: none;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .subtask-row:hover .subtask-actions {
+        display: inline-flex;
+      }
+
+      .subtask-add {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+
+      .inline-input {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .task-filters {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-top: 10px;
+        margin-bottom: 12px;
       }
 
-      .stage-controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 12px;
+      .filter-chip {
+        display: inline-flex;
         align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.12s ease, border-color 0.12s ease;
       }
 
-      .stage-task-list {
-        margin-top: 16px;
-        padding-top: 12px;
-        border-top: 1px solid var(--divider);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      .filter-chip.active {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .filter-chip .count {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .life-bar {
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+
+      .life-bar .fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+        transition: width 0.2s ease;
+      }
+
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: var(--surface-2);
+        border-radius: 12px;
+        min-height: 48px;
+      }
+
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 1.4s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
       }
 
       .compact-table {
@@ -424,7 +891,7 @@
 
       .compact-table th,
       .compact-table td {
-        padding: 10px 12px;
+        padding: 8px 10px;
         border-bottom: 1px solid var(--border);
         text-align: left;
         vertical-align: top;
@@ -442,6 +909,15 @@
         background: rgba(148, 163, 184, 0.08);
       }
 
+      .compact-table tbody tr:hover {
+        background: var(--surface-hover);
+      }
+
+      .stage-table-row {
+        position: relative;
+        height: 44px;
+      }
+
       .compact-table .chip {
         margin-right: 4px;
       }
@@ -450,6 +926,25 @@
         display: inline-flex;
         gap: 6px;
         flex-wrap: initial;
+      }
+
+      .inline-save-bar {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 4px 6px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      tr.inline-dirty .inline-save-bar {
+        display: inline-flex;
       }
 
       .icon-button {
@@ -875,36 +1370,76 @@
       }
 
       .task-card {
+        position: relative;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        background: var(--surface);
-        margin-bottom: 12px;
+        border-radius: 14px;
+        padding: 14px 14px 12px;
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 90%);
+        margin-bottom: 14px;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+
+      .task-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(120deg, rgba(16, 163, 127, 0.28), rgba(59, 130, 246, 0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+
+      .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
       }
 
       .task-card.task-highlight {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2);
+        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2), 0 16px 32px rgba(15, 23, 42, 0.18);
       }
 
       .task-card.collapsed .task-details,
       .task-card.collapsed .task-inline-actions,
       .task-card.collapsed .task-description,
       .task-card.collapsed .subtasks,
-      .task-card.collapsed .subtask-inline {
+      .task-card.collapsed .subtask-inline,
+      .task-card.collapsed .task-meta-grid {
         display: none;
       }
 
-      .task-top-row {
+      .task-head {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
+      }
+
+      .task-title-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .task-rank {
+        min-width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px dashed var(--border);
+        font-weight: 700;
       }
 
       .task-top-actions {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         align-items: center;
       }
 
@@ -917,21 +1452,33 @@
 
       .task-description {
         color: var(--muted);
-        font-size: 0.92rem;
-        margin-bottom: 8px;
+        font-size: 0.94rem;
+        margin-bottom: 4px;
       }
 
       .task-details {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-top: 6px;
       }
 
-      .task-meta {
-        display: flex;
+      .task-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 8px;
+        margin: 8px 0;
+      }
+
+      .task-meta-chip {
+        display: flex;
         align-items: center;
-        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 0.92rem;
       }
 
       .status-chip {
@@ -993,56 +1540,25 @@
       }
 
       .subtasks {
-        margin-top: 10px;
-        padding-left: 0;
+        margin: 0;
+        padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .subtasks li {
         list-style: none;
         margin: 0;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: var(--surface-muted);
-        border: 1px solid var(--border);
-      }
-
-      .subtasks li input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--accent);
-      }
-
-      .subtask-title {
-        flex: 1;
-        padding: 4px 6px;
-        border-radius: 6px;
-        min-height: 20px;
-      }
-
-      .subtask-actions {
-        display: flex;
-        gap: 6px;
-      }
-
-      .subtask-inline {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 6px;
+        padding: 0;
       }
 
       .inline-input,
       .inline-textarea,
       .inline-select {
         width: 100%;
-        padding: 6px 8px;
-        border-radius: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
         border: 1px solid var(--border);
         background: var(--surface);
         color: var(--text);
@@ -1872,23 +2388,59 @@
     
 
     <div class="card">
-      <div class="stage-header" style="margin-bottom: 8px">
-        <h2>GTM-этапы</h2>
-        <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
-          <button type="button" data-stage-view="cards">Карточки</button>
-          <button type="button" data-stage-view="table">Таблица</button>
+      <div class="gtm-shell">
+        <div class="stage-header" style="margin-bottom: 8px">
+          <div class="stage-title-line">
+            <div class="stage-rank" aria-hidden="true">G</div>
+            <div class="stage-heading">
+              <h2 style="margin: 0">GTM-этапы</h2>
+              <span class="muted">Рабочий план вывода продукта, этапы и задачи</span>
+            </div>
+          </div>
+          <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
+            <button type="button" data-stage-view="cards">Карточки</button>
+            <button type="button" data-stage-view="table">Таблица</button>
+          </div>
         </div>
+
+        <div class="gtm-meta" aria-live="polite">
+          <div class="gtm-meta-tile">
+            <span class="muted">Этапов в плане</span>
+            <strong id="gtm-stage-count">—</strong>
+          </div>
+          <div class="gtm-meta-tile">
+            <span class="muted">Задачи по этапам</span>
+            <strong id="gtm-task-count">—</strong>
+          </div>
+          <div class="gtm-meta-tile">
+            <span class="muted">Готово</span>
+            <strong id="gtm-done-count">—</strong>
+          </div>
+        </div>
+
+        <div class="gtm-toolbar">
+          <div class="toolbar stage-toolbar" style="margin: 0">
+            <button class="primary" onclick="openStageForm()">Добавить этап</button>
+            <select id="templateSelect"></select>
+            <button onclick="applyTemplate()">Применить шаблон</button>
+            <button onclick="saveTemplate()">Сохранить как шаблон</button>
+            <button onclick="triggerImport()">Импорт Excel</button>
+            <button onclick="exportStages()">Экспорт Excel</button>
+            <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+          </div>
+        </div>
+
+        <div id="stageFocusBanner" class="focus-banner" hidden>
+          <span aria-hidden="true">🎯</span>
+          <div>
+            <div class="muted" style="font-size: 0.86rem">Фокус-режим</div>
+            <strong id="focusStageTitle"></strong>
+          </div>
+          <button type="button" id="exitFocus">Назад ко всем этапам</button>
+        </div>
+
+        <div id="stages"></div>
       </div>
-      <div class="toolbar stage-toolbar">
-        <button class="primary" onclick="openStageForm()">Добавить этап</button>
-        <select id="templateSelect"></select>
-        <button onclick="applyTemplate()">Применить шаблон</button>
-        <button onclick="saveTemplate()">Сохранить как шаблон</button>
-        <button onclick="triggerImport()">Импорт Excel</button>
-        <button onclick="exportStages()">Экспорт Excel</button>
-        <input type="file" id="importInput" accept=".xlsx" style="display: none" />
-      </div>
-      <div id="stages"></div>
     </div>
 
     <div class="card">
@@ -1902,6 +2454,7 @@
       <p class="muted" style="margin-top: 0">
         Переключайте таблицу и канбан, чтобы быстро приоритизировать задачи вне карточек этапов.
       </p>
+      <div id="taskFilters" class="task-filters"></div>
       <div id="taskCompactContent" class="table-scroll"></div>
     </div>
 
@@ -2273,8 +2826,15 @@
       const discussionComposer = document.getElementById("discussionComposer");
       const closeDiscussionButton = document.getElementById("closeDiscussionButton");
       const stageViewSwitch = document.getElementById("stageViewSwitch");
+      const gtmStageCount = document.getElementById("gtm-stage-count");
+      const gtmTaskCount = document.getElementById("gtm-task-count");
+      const gtmDoneCount = document.getElementById("gtm-done-count");
+      const stageFocusBanner = document.getElementById("stageFocusBanner");
+      const focusStageTitle = document.getElementById("focusStageTitle");
+      const exitFocusBtn = document.getElementById("exitFocus");
       const taskViewSwitch = document.getElementById("taskViewSwitch");
       const taskCompactContent = document.getElementById("taskCompactContent");
+      const taskFilters = document.getElementById("taskFilters");
 
       const galleryContainer = document.getElementById("gallery");
       const imageUploadInput = document.getElementById("imageUploadInput");
@@ -2436,13 +2996,23 @@
       const taskViewKey = "hpt_task_view_mode";
       const collapsedStagesKey = "hpt_collapsed_stages";
       const collapsedTasksKey = "hpt_collapsed_tasks";
+      const stageFocusKey = "hpt_stage_focus_id";
       let stageViewMode = localStorage.getItem(stageViewKey) === "table" ? "table" : "cards";
       let taskViewMode = localStorage.getItem(taskViewKey) === "kanban" ? "kanban" : "table";
+      let taskFilterStatus = "all";
+      let taskFilterRisk = false;
+      let taskFilterNoDue = false;
       let collapsedStages = new Set();
       let collapsedTasks = new Set();
+      let collapsedStagesStored = false;
+      let collapsedTasksStored = false;
+      let stageFocusId = localStorage.getItem(stageFocusKey) || null;
+      let stagesLoaded = false;
+      let tasksLoaded = false;
       try {
         const storedStages = JSON.parse(localStorage.getItem(collapsedStagesKey) || "[]");
-        if (Array.isArray(storedStages)) {
+        if (Array.isArray(storedStages) && storedStages.length) {
+          collapsedStagesStored = true;
           collapsedStages = new Set(storedStages);
         }
       } catch (error) {
@@ -2451,7 +3021,8 @@
       }
       try {
         const storedCollapsed = JSON.parse(localStorage.getItem(collapsedTasksKey) || "[]");
-        if (Array.isArray(storedCollapsed)) {
+        if (Array.isArray(storedCollapsed) && storedCollapsed.length) {
+          collapsedTasksStored = true;
           collapsedTasks = new Set(storedCollapsed);
         }
       } catch (error) {
@@ -2485,6 +3056,7 @@
           renderStages();
         }
       });
+      exitFocusBtn?.addEventListener("click", clearStageFocus);
       taskViewSwitch?.addEventListener("click", (event) => {
         const target = event.target.closest("[data-task-view]");
         if (!target) return;
@@ -2598,12 +3170,15 @@
       }
 
       function persistCollapsedTasks() {
+        collapsedTasksStored = true;
         localStorage.setItem(collapsedTasksKey, JSON.stringify(Array.from(collapsedTasks)));
       }
 
       function isTaskCollapsed(taskId) {
-        if (!taskId) return false;
-        return collapsedTasks.has(String(taskId));
+        if (!taskId) return true;
+        const normalized = String(taskId);
+        if (collapsedTasks.has(normalized)) return true;
+        return !collapsedTasksStored;
       }
 
       function setTaskCollapsed(taskId, collapsed) {
@@ -2619,21 +3194,23 @@
 
       function focusTaskIfNeeded() {
         if (!focusTaskId || focusTaskHandled) return;
-        const card = document.querySelector(`.task-card[data-task-id='${focusTaskId}']`);
-        if (!card) return;
+        const row = document.querySelector(`.task-row[data-task-id='${focusTaskId}']`);
+        if (!row) return;
         focusTaskHandled = true;
-        if (card.classList.contains("collapsed")) {
-          card.classList.remove("collapsed");
-          setTaskCollapsed(focusTaskId, false);
-          const collapseBtn = document.querySelector(`[data-task-collapse='${focusTaskId}']`);
-          if (collapseBtn) {
-            collapseBtn.textContent = "▴";
-            collapseBtn.title = "Свернуть задачу";
-          }
+        const stageBody = row.closest(".stage-body");
+        const stageId = stageBody?.dataset.stageBody;
+        if (stageBody) {
+          stageBody.hidden = false;
+          if (stageId) setStageCollapsed(stageId, false);
         }
-        card.classList.add("task-highlight");
-        card.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => card.classList.remove("task-highlight"), 4000);
+        const taskBody = document.querySelector(`[data-task-body='${focusTaskId}']`);
+        if (taskBody) {
+          taskBody.hidden = false;
+          setTaskCollapsed(focusTaskId, false);
+        }
+        row.classList.add("task-highlight");
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => row.classList.remove("task-highlight"), 4000);
       }
 
       async function loadData() {
@@ -2689,12 +3266,50 @@
         renderTemplates();
       }
 
+      function showStageSkeleton() {
+        if (!stagesContainer) return;
+        stagesContainer.innerHTML = "";
+        for (let i = 0; i < 3; i += 1) {
+          const skeleton = document.createElement("div");
+          skeleton.className = "stage-card skeleton";
+          skeleton.style.minHeight = "76px";
+          stagesContainer.appendChild(skeleton);
+        }
+      }
+
+      function showTaskSkeleton() {
+        if (!taskCompactContent) return;
+        taskCompactContent.classList.remove("table-scroll");
+        taskCompactContent.innerHTML = "";
+        for (let i = 0; i < 4; i += 1) {
+          const skeleton = document.createElement("div");
+          skeleton.className = "task-row skeleton";
+          skeleton.style.minHeight = "52px";
+          taskCompactContent.appendChild(skeleton);
+        }
+      }
+
       async function loadStages() {
+        stagesLoaded = false;
+        showStageSkeleton();
         const res = await fetch(`/api/projects/${projectId}/gtm-stages`, { cache: "no-store" });
         gtmStages = res.ok ? await res.json() : [];
+        stagesLoaded = true;
         renderStages();
-        renderTaskFilters();
         renderGtmProgress();
+      }
+
+      async function loadTasks() {
+        tasksLoaded = false;
+        showTaskSkeleton();
+        const res = await fetch(`/api/projects/${projectId}/tasks`, { cache: "no-store" });
+        tasks = res.ok ? await res.json() : [];
+        tasksLoaded = true;
+        renderTaskFilterChips();
+        renderCompactTaskView();
+        renderStages();
+        focusTaskHandled = false;
+        focusTaskIfNeeded();
       }
 
       function renderProject() {
@@ -3000,6 +3615,14 @@
         return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
       }
 
+      function pluralize(count, one, few, many) {
+        const mod10 = Math.abs(count) % 10;
+        const mod100 = Math.abs(count) % 100;
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return few;
+        return many;
+      }
+
       function updateStageViewSwitch() {
         stageViewSwitch?.querySelectorAll("[data-stage-view]").forEach((btn) => {
           const isActive = btn.dataset.stageView === stageViewMode;
@@ -3017,7 +3640,9 @@
       }
 
       function isStageCollapsed(stageId) {
-        return collapsedStages.has(String(stageId));
+        const normalized = String(stageId);
+        if (collapsedStages.has(normalized)) return true;
+        return !collapsedStagesStored;
       }
 
       function setStageCollapsed(stageId, collapsed) {
@@ -3028,9 +3653,45 @@
           collapsedStages.delete(normalizedId);
         }
         try {
+          collapsedStagesStored = true;
           localStorage.setItem(collapsedStagesKey, JSON.stringify(Array.from(collapsedStages)));
         } catch (error) {
           console.warn("Не удалось сохранить состояние этапов", error);
+        }
+      }
+
+      function setStageFocus(stageId) {
+        stageFocusId = String(stageId);
+        try {
+          localStorage.setItem(stageFocusKey, stageFocusId);
+        } catch (error) {
+          console.warn("Не удалось сохранить фокус этапа", error);
+        }
+        renderStages();
+      }
+
+      function clearStageFocus(skipRender = false) {
+        stageFocusId = null;
+        try {
+          localStorage.removeItem(stageFocusKey);
+        } catch (error) {
+          console.warn("Не удалось очистить фокус этапа", error);
+        }
+        if (stageFocusBanner) {
+          stageFocusBanner.hidden = true;
+        }
+        if (!skipRender) {
+          renderStages();
+        }
+      }
+
+      function renderFocusBanner(visibleStages) {
+        if (!stageFocusBanner) return;
+        if (stageFocusId && visibleStages.length) {
+          stageFocusBanner.hidden = false;
+          focusStageTitle.textContent = visibleStages[0]?.title || "Выбран этап";
+        } else {
+          stageFocusBanner.hidden = true;
         }
       }
 
@@ -3038,113 +3699,204 @@
       function renderStages() {
         gtmStages.sort((a, b) => a.order - b.order);
         updateStageViewSwitch();
+        const stageIds = new Set(gtmStages.map((stage) => stage.id));
+        const stageTasks = tasks.filter((task) => stageIds.has(task.gtm_stage_id));
+        const doneTasks = stageTasks.filter((task) => task.status === "done").length;
+        if (gtmStageCount) {
+          const count = gtmStages.length;
+          gtmStageCount.textContent = count ? `${count} ${pluralize(count, "этап", "этапа", "этапов")}` : "Нет этапов";
+        }
+        if (gtmTaskCount) {
+          const count = stageTasks.length;
+          gtmTaskCount.textContent = count ? `${count} ${pluralize(count, "задача", "задачи", "задач")}` : "—";
+        }
+        if (gtmDoneCount) {
+          gtmDoneCount.textContent = doneTasks ? `${doneTasks} готово` : "Ничего не завершено";
+        }
+
+        let visibleStages = stageFocusId ? gtmStages.filter((s) => String(s.id) === String(stageFocusId)) : [...gtmStages];
+        if (stageFocusId && !visibleStages.length) {
+          clearStageFocus(true);
+          visibleStages = [...gtmStages];
+        }
+        renderFocusBanner(visibleStages);
+
         if (!gtmStages.length) {
           stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           return;
         }
 
         if (stageViewMode === "table") {
-          renderStageTable();
+          renderStageTable(visibleStages);
           return;
         }
 
         stagesContainer.innerHTML = "";
-        gtmStages.forEach((stage, index) => {
+        visibleStages.forEach((stage, index) => {
           const collapsed = isStageCollapsed(stage.id);
-          const card = document.createElement("div");
-          card.className = `stage-card${collapsed ? " collapsed" : ""}`;
-          card.dataset.stageId = stage.id;
+          const stageTasks = tasks
+            .filter((task) => task.gtm_stage_id === stage.id)
+            .sort((a, b) => (a.status === "done" && b.status !== "done" ? 1 : -1));
+          const doneStageTasks = stageTasks.filter((task) => task.status === "done").length;
           const percent = Math.round(stageProgressScore(stage) * 100);
-          card.innerHTML = `
-            <div class="stage-header">
-              <div>
-                <div class="stage-title-line">
-                  <strong>${index + 1}. ${stage.title}</strong>
-                  <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
-                    💬 <span class="count">${stage.comments?.length || 0}</span>
-                  </button>
-                  <button class="icon-button" data-stage-collapse="${stage.id}" aria-label="Свернуть этап">
-                    ${collapsed ? "▾" : "▴"}
-                  </button>
-                </div>
-                <div class="stage-description" id="stage-desc-${stage.id}"></div>
-              </div>
-              <div class="stage-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-                <span class="chip">${statusLabel(stage.status)}</span>
-                ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
-                <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
-                <button class="ghost" onclick="moveStage('${stage.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
-                <button class="ghost" onclick="moveStage('${stage.id}', 1)" ${index === gtmStages.length - 1 ? "disabled" : ""}>↓</button>
-                <button class="ghost" onclick="deleteStage('${stage.id}')">🗑️</button>
-              </div>
-            </div>
-            <div class="stage-progress">
-              <div class="progress-line"><div class="fill" style="width:${percent}%"></div></div>
-              <div class="muted">Прогресс этапа: ${percent}%</div>
-            </div>
-            <div class="stage-meta-grid">
-              <div class="chip">План: ${stage.planned_start || "—"} → ${stage.planned_end || "—"}</div>
-              <div class="chip">Факт: ${stage.actual_end || "—"}</div>
-            </div>
-            <div class="stage-controls">
-              <label style="display:flex; align-items:center; gap:6px; font-weight:500">
-                Статус
-                <select onchange="changeStatus('${stage.id}', this.value)">
-                  <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
-                  <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
-                  <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
-                  <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
-                </select>
-              </label>
-              <label class="checkbox-lite" style="font-weight:500">
-                <input type="checkbox" ${stage.risk_flag ? "checked" : ""} onchange="toggleRisk('${stage.id}', this.checked)" /> Риск
-              </label>
-              <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
-            </div>
-            <div id="stage-tasks-${stage.id}"></div>
-          `;
+          const commentsCount = stage.comments?.length || 0;
+          const card = document.createElement("div");
+          card.className = "stage-card";
+          card.dataset.stageId = stage.id;
+
+          const indexBtn = document.createElement("button");
+          indexBtn.type = "button";
+          indexBtn.className = "stage-index";
+          indexBtn.textContent = stage.order || index + 1;
+          indexBtn.title = collapsed ? "Развернуть этап" : "Свернуть этап";
+
+          const main = document.createElement("div");
+          main.className = "stage-main";
+          const titleRow = document.createElement("div");
+          titleRow.className = "stage-title-row";
+          const title = document.createElement("h3");
+          title.className = "stage-title";
+          title.textContent = stage.title;
+          const statusChip = document.createElement("span");
+          statusChip.className = "stage-status-chip";
+          statusChip.textContent = statusLabel(stage.status);
+          titleRow.append(title, statusChip);
+          main.appendChild(titleRow);
+
+          const meta = document.createElement("div");
+          meta.className = "stage-meta";
+          const planPill = document.createElement("span");
+          planPill.className = "pill";
+          planPill.textContent = stage.planned_start || stage.planned_end
+            ? `План: ${stage.planned_start || "—"} → ${stage.planned_end || "—"}`
+            : "План не задан";
+          meta.appendChild(planPill);
+
+          const progressPill = document.createElement("span");
+          progressPill.className = "pill";
+          progressPill.textContent = `Прогресс: ${percent}%`;
+          meta.appendChild(progressPill);
+
+          const tasksPill = document.createElement("span");
+          tasksPill.className = "pill";
+          tasksPill.textContent = `Задачи: ${doneStageTasks}/${stageTasks.length || 0}`;
+          meta.appendChild(tasksPill);
+
+          const commentsPill = document.createElement("span");
+          commentsPill.className = "pill muted optional";
+          commentsPill.textContent = `Комменты: ${commentsCount}`;
+          meta.appendChild(commentsPill);
+
+          if (stage.risk_flag) {
+            const riskPill = document.createElement("span");
+            riskPill.className = "pill risk optional";
+            riskPill.textContent = "Риск";
+            meta.appendChild(riskPill);
+          }
+          main.appendChild(meta);
+
+          const actions = document.createElement("div");
+          actions.className = "stage-actions";
+          const makeBtn = (label, title, handler, extra = []) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = `icon-btn ${extra.join(" ")}`.trim();
+            btn.title = title;
+            btn.textContent = label;
+            btn.addEventListener("click", handler);
+            return btn;
+          };
+
+          const commentBtn = makeBtn("💬", "Комментарии", () => openStageDiscussion(stage.id));
+          if (commentsCount > 0) {
+            const count = document.createElement("span");
+            count.className = "count";
+            count.textContent = commentsCount;
+            commentBtn.appendChild(count);
+          }
+
+          const editBtn = makeBtn("✏️", "Редактировать этап", () => openStageForm(stage.id));
+          const addTaskBtn = makeBtn("➕", "Добавить задачу", () => openTaskForm(null, stage.id));
+          const riskBtn = makeBtn("⚠️", "Переключить риск", () => toggleRisk(stage.id, !stage.risk_flag), [
+            stage.risk_flag ? "active" : "",
+          ]);
+          const stageIndex = gtmStages.findIndex((s) => s.id === stage.id);
+          const moveUpBtn = makeBtn("↑", "Вверх", () => moveStage(stage.id, -1));
+          moveUpBtn.disabled = stageIndex === 0;
+          const moveDownBtn = makeBtn("↓", "Вниз", () => moveStage(stage.id, 1));
+          moveDownBtn.disabled = stageIndex === gtmStages.length - 1;
+          const focusBtn = makeBtn("🎯", "Фокус на этап", () => {
+            if (String(stageFocusId) === String(stage.id)) {
+              clearStageFocus();
+            } else {
+              setStageFocus(stage.id);
+            }
+          }, [String(stageFocusId) === String(stage.id) ? "active" : ""]);
+          const deleteBtn = makeBtn("🗑️", "Удалить", () => deleteStage(stage.id), ["danger"]);
+          const collapseBtn = makeBtn(collapsed ? "▾" : "▴", collapsed ? "Развернуть этап" : "Свернуть этап", () => {
+            body.hidden = !body.hidden;
+            const next = body.hidden;
+            collapseBtn.textContent = next ? "▾" : "▴";
+            collapseBtn.title = next ? "Развернуть этап" : "Свернуть этап";
+            indexBtn.title = collapseBtn.title;
+            setStageCollapsed(stage.id, next);
+          });
+
+          [commentBtn, editBtn, addTaskBtn, riskBtn, moveUpBtn, moveDownBtn, focusBtn, deleteBtn, collapseBtn].forEach((btn) =>
+            actions.appendChild(btn)
+          );
+
+          card.appendChild(indexBtn);
+          card.appendChild(main);
+          card.appendChild(actions);
+
+          const lifeLine = document.createElement("div");
+          lifeLine.className = `stage-life-line${percent === 100 ? " muted" : ""}`;
+          if (percent <= 0) {
+            lifeLine.style.display = "none";
+          } else {
+            const fill = document.createElement("div");
+            fill.className = "fill";
+            fill.style.width = `${percent}%`;
+            lifeLine.appendChild(fill);
+          }
+          card.appendChild(lifeLine);
+
+          const body = document.createElement("div");
+          body.className = "stage-body";
+          body.dataset.stageBody = stage.id;
+          body.hidden = collapsed;
+
+          const desc = document.createElement("div");
+          desc.className = stage.description ? "stage-description" : "stage-description empty";
+          desc.innerHTML = stage.description || '<span class="muted">Описание не заполнено</span>';
+          body.appendChild(desc);
+
+          const tasksBlock = renderStageTasks(stage);
+          body.appendChild(tasksBlock);
+
+          const toggleCollapse = () => {
+            body.hidden = !body.hidden;
+            const next = body.hidden;
+            collapseBtn.textContent = next ? "▾" : "▴";
+            collapseBtn.title = next ? "Развернуть этап" : "Свернуть этап";
+            indexBtn.title = collapseBtn.title;
+            setStageCollapsed(stage.id, next);
+          };
+
+          indexBtn.addEventListener("click", toggleCollapse);
 
           card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             openStageContextMenu(event, stage, index);
           });
 
-          const desc = card.querySelector(`#stage-desc-${stage.id}`);
-          if (desc) {
-            if (stage.description) {
-              desc.innerHTML = stage.description;
-              desc.classList.remove("empty");
-            } else {
-              desc.innerHTML = '<span class="muted">Описание не заполнено</span>';
-              desc.classList.add("empty");
-            }
-          }
-          const taskSlot = card.querySelector(`#stage-tasks-${stage.id}`);
-          if (taskSlot) {
-            taskSlot.replaceWith(renderStageTasks(stage));
-          }
-          const stageCommentBtn = card.querySelector(`[data-stage-comments='${stage.id}']`);
-          stageCommentBtn?.addEventListener("click", () => openStageDiscussion(stage.id));
-          const collapseBtn = card.querySelector(`[data-stage-collapse='${stage.id}']`);
-          if (collapseBtn) {
-            collapseBtn.title = collapsed ? "Развернуть этап" : "Свернуть этап";
-            collapseBtn.setAttribute("aria-label", collapsed ? "Развернуть этап" : "Свернуть этап");
-            collapseBtn.addEventListener("click", () => {
-              const nextCollapsed = !card.classList.contains("collapsed");
-              card.classList.toggle("collapsed", nextCollapsed);
-              collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
-              const label = nextCollapsed ? "Развернуть этап" : "Свернуть этап";
-              collapseBtn.title = label;
-              collapseBtn.setAttribute("aria-label", label);
-              setStageCollapsed(stage.id, nextCollapsed);
-            });
-          }
-
           stagesContainer.appendChild(card);
+          stagesContainer.appendChild(body);
         });
       }
 
-      function renderStageTable() {
+      function renderStageTable(stageList = gtmStages) {
         stagesContainer.innerHTML = "";
         const wrapper = document.createElement("div");
         wrapper.className = "table-scroll";
@@ -3170,37 +3922,189 @@
           acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {});
-        gtmStages.forEach((stage, index) => {
+        stageList.forEach((stage, index) => {
           const row = document.createElement("tr");
-          const planned = `${stage.planned_start || "—"} → ${stage.planned_end || "—"}`;
-          const fact = stage.actual_end || "—";
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${stage.title}</td>
-            <td><div>${planned}</div><div class="muted">Факт: ${fact}</div></td>
-            <td><span class="chip">${statusLabel(stage.status)}</span></td>
-            <td>${taskCount[stage.id] || 0}</td>
-            <td>${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : "—"}</td>
-            <td>${stage.comments?.length || 0}</td>
-            <td>
-              <div class="table-actions">
-                <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
-                <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬</button>
-                <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
-              </div>
-            </td>
-          `;
+          row.className = "stage-table-row";
+          row.style.position = "relative";
+          const plannedStart = stage.planned_start || "";
+          const plannedEnd = stage.planned_end || "";
+          const factDate = stage.actual_end || "";
+          const commentsCount = stage.comments?.length || 0;
+          const change = {
+            status: stage.status,
+            planned_start: plannedStart,
+            planned_end: plannedEnd,
+            actual_end: factDate,
+            risk_flag: stage.risk_flag,
+          };
+
+          const markDirty = () => {
+            row.classList.add("inline-dirty");
+          };
+
+          const resetRow = () => {
+            statusSelect.value = stage.status;
+            startInput.value = plannedStart;
+            endInput.value = plannedEnd;
+            factInput.value = factDate;
+            change.status = stage.status;
+            change.planned_start = plannedStart;
+            change.planned_end = plannedEnd;
+            change.actual_end = factDate;
+            change.risk_flag = stage.risk_flag;
+            riskToggle.classList.toggle("active", stage.risk_flag);
+            row.classList.remove("inline-dirty");
+          };
+
+          const indexCell = document.createElement("td");
+          indexCell.textContent = index + 1;
+          const titleCell = document.createElement("td");
+          titleCell.innerHTML = `<div style="font-weight:700">${stage.title}</div><div class="muted">${taskCount[stage.id] || 0} задач</div>`;
+
+          const planCell = document.createElement("td");
+          const planWrap = document.createElement("div");
+          planWrap.style.display = "grid";
+          planWrap.style.gap = "4px";
+          const planLabel = document.createElement("div");
+          planLabel.className = "muted";
+          planLabel.textContent = "План";
+          const planDates = document.createElement("div");
+          planDates.style.display = "grid";
+          planDates.style.gridTemplateColumns = "repeat(2, minmax(120px, 1fr))";
+          planDates.style.gap = "6px";
+          const startInput = document.createElement("input");
+          startInput.type = "date";
+          startInput.value = plannedStart;
+          startInput.addEventListener("change", (e) => {
+            change.planned_start = e.target.value;
+            markDirty();
+          });
+          const endInput = document.createElement("input");
+          endInput.type = "date";
+          endInput.value = plannedEnd;
+          endInput.addEventListener("change", (e) => {
+            change.planned_end = e.target.value;
+            markDirty();
+          });
+          planDates.append(startInput, endInput);
+          const factLabel = document.createElement("div");
+          factLabel.className = "muted";
+          factLabel.textContent = "Факт";
+          const factInput = document.createElement("input");
+          factInput.type = "date";
+          factInput.value = factDate;
+          factInput.addEventListener("change", (e) => {
+            change.actual_end = e.target.value;
+            markDirty();
+          });
+          planWrap.append(planLabel, planDates, factLabel, factInput);
+          planCell.appendChild(planWrap);
+
+          const statusCell = document.createElement("td");
+          const statusSelect = document.createElement("select");
+          [
+            { value: "not_started", label: "Не начат" },
+            { value: "in_progress", label: "В работе" },
+            { value: "done", label: "Завершён" },
+            { value: "cancelled", label: "Отменён" },
+          ].forEach((opt) => {
+            const option = document.createElement("option");
+            option.value = opt.value;
+            option.textContent = opt.label;
+            option.selected = stage.status === opt.value;
+            statusSelect.appendChild(option);
+          });
+          statusSelect.addEventListener("change", (e) => {
+            change.status = e.target.value;
+            markDirty();
+          });
+          statusCell.appendChild(statusSelect);
+
+          const tasksCell = document.createElement("td");
+          tasksCell.textContent = taskCount[stage.id] || 0;
+
+          const riskCell = document.createElement("td");
+          const riskToggle = document.createElement("button");
+          riskToggle.type = "button";
+          riskToggle.className = `icon-btn ${stage.risk_flag ? "active" : ""}`.trim();
+          riskToggle.textContent = "⚠️";
+          riskToggle.title = "Риск";
+          riskToggle.addEventListener("click", () => {
+            change.risk_flag = !change.risk_flag;
+            riskToggle.classList.toggle("active", change.risk_flag);
+            markDirty();
+          });
+          riskCell.appendChild(riskToggle);
+
+          const commentsCell = document.createElement("td");
+          commentsCell.textContent = commentsCount;
+
+          const actionsCell = document.createElement("td");
+          const actionWrap = document.createElement("div");
+          actionWrap.className = "table-actions";
+          [
+            { label: "✏️", title: "Редактировать", action: () => openStageForm(stage.id) },
+            { label: "💬", title: "Комментарии", action: () => openStageDiscussion(stage.id) },
+            { label: "➕", title: "Добавить задачу", action: () => openTaskForm(null, stage.id) },
+          ].forEach((cfg) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "icon-btn";
+            btn.textContent = cfg.label;
+            btn.title = cfg.title;
+            btn.addEventListener("click", cfg.action);
+            actionWrap.appendChild(btn);
+          });
+          actionsCell.appendChild(actionWrap);
+
+          const toolbar = document.createElement("div");
+          toolbar.className = "inline-save-bar";
+          const saveBtn = document.createElement("button");
+          saveBtn.type = "button";
+          saveBtn.textContent = "✓";
+          saveBtn.title = "Сохранить изменения";
+          saveBtn.addEventListener("click", async () => {
+            const updated = {
+              ...stage,
+              status: change.status,
+              planned_start: change.planned_start || null,
+              planned_end: change.planned_end || null,
+              actual_end: change.actual_end || null,
+              risk_flag: change.risk_flag,
+            };
+            await saveStage(updated);
+            await loadStages();
+          });
+          const cancelBtn = document.createElement("button");
+          cancelBtn.type = "button";
+          cancelBtn.textContent = "✕";
+          cancelBtn.title = "Отменить изменения";
+          cancelBtn.addEventListener("click", resetRow);
+          toolbar.append(saveBtn, cancelBtn);
+
+          row.append(
+            indexCell,
+            titleCell,
+            planCell,
+            statusCell,
+            tasksCell,
+            riskCell,
+            commentsCell,
+            actionsCell,
+            toolbar
+          );
+
           row.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             openStageContextMenu(event, stage, index);
           });
+
           tbody.appendChild(row);
         });
         table.appendChild(tbody);
         wrapper.appendChild(table);
         stagesContainer.appendChild(wrapper);
       }
-
       function renderStageTasks(stage) {
         const stageTasks = tasks
           .filter((task) => task.gtm_stage_id === stage.id)
@@ -3214,20 +4118,8 @@
           });
 
         const wrapper = document.createElement("div");
-        wrapper.className = "stage-task-list";
+        wrapper.className = "task-list";
         wrapper.dataset.stageId = stage.id;
-
-        const header = document.createElement("div");
-        header.className = "stage-task-header";
-        const title = document.createElement("strong");
-        title.textContent = `Задачи этапа (${stageTasks.length})`;
-        const addBtn = document.createElement("button");
-        addBtn.className = "ghost";
-        addBtn.textContent = "+ Задача";
-        addBtn.addEventListener("click", () => openTaskForm(null, stage.id));
-        header.appendChild(title);
-        header.appendChild(addBtn);
-        wrapper.appendChild(header);
 
         if (!stageTasks.length) {
           const empty = document.createElement("p");
@@ -3239,120 +4131,106 @@
 
         stageTasks.forEach((task) => {
           const collapsed = isTaskCollapsed(task.id);
-          const card = document.createElement("div");
-          card.className = `task-card${collapsed ? " collapsed" : ""}`;
-          card.dataset.taskId = task.id;
+          const totalSubs = task.subtasks?.length || 0;
+          const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
+          const row = document.createElement("div");
+          row.className = "task-row";
+          row.dataset.taskId = task.id;
 
-          const topRow = document.createElement("div");
-          topRow.className = "task-top-row";
-          const info = document.createElement("div");
-          const titleEl = document.createElement("strong");
-          titleEl.textContent = task.title;
-          info.appendChild(titleEl);
-          topRow.appendChild(info);
-          const topActions = document.createElement("div");
-          topActions.className = "task-top-actions";
-          const commentBtn = document.createElement("button");
-          commentBtn.type = "button";
-          commentBtn.className = "icon-button comment-trigger";
-          commentBtn.innerHTML = `💬 <span class="count">${task.comments?.length || 0}</span>`;
-          commentBtn.title = "Комментарии";
-          commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
-          const collapseBtn = document.createElement("button");
-          collapseBtn.type = "button";
-          collapseBtn.className = "icon-button";
-          collapseBtn.dataset.taskCollapse = task.id;
-          collapseBtn.textContent = collapsed ? "▾" : "▴";
-          collapseBtn.title = collapsed ? "Развернуть задачу" : "Свернуть задачу";
-          collapseBtn.addEventListener("click", () => {
-            const nextCollapsed = !card.classList.contains("collapsed");
-            card.classList.toggle("collapsed", nextCollapsed);
-            collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
-            collapseBtn.title = nextCollapsed ? "Развернуть задачу" : "Свернуть задачу";
-            setTaskCollapsed(task.id, nextCollapsed);
+          const statusBtn = document.createElement("button");
+          statusBtn.type = "button";
+          statusBtn.className = "task-status";
+          statusBtn.textContent = taskStatusIcon(task.status);
+          statusBtn.title = "Сменить статус";
+          statusBtn.addEventListener("click", () => {
+            const next = task.status === "todo" ? "in_progress" : task.status === "in_progress" ? "done" : "todo";
+            changeTaskStatus(task.id, next);
           });
-          topActions.appendChild(commentBtn);
-          topActions.appendChild(collapseBtn);
-          topRow.appendChild(topActions);
-          card.appendChild(topRow);
 
-          const badges = document.createElement("div");
-          badges.className = "task-badges";
-          const statusChip = document.createElement("span");
-          statusChip.className = "chip";
-          statusChip.textContent = taskStatusLabel(task.status);
-          badges.appendChild(statusChip);
+          const content = document.createElement("div");
+          content.className = "task-content";
+          const title = document.createElement("div");
+          title.className = "task-title";
+          title.textContent = task.title;
+          content.appendChild(title);
+
+          const meta = document.createElement("div");
+          meta.className = "task-meta";
           const due = dueInfo(task);
-          const dueChip = document.createElement("span");
-          dueChip.className = due.className;
-          dueChip.textContent = due.text;
-          badges.appendChild(dueChip);
-          if (task.important) {
-            const importantChip = document.createElement("span");
-            importantChip.className = "flag-badge flag-important";
-            importantChip.textContent = "Важно";
-            badges.appendChild(importantChip);
-          }
-          if (task.urgency === "high") {
-            const urgentChip = document.createElement("span");
-            urgentChip.className = "flag-badge flag-urgent";
-            urgentChip.textContent = "Срочно";
-            badges.appendChild(urgentChip);
-          }
-          card.appendChild(badges);
+          const duePill = document.createElement("span");
+          duePill.className = `pill small ${due.className || ""}`.trim();
+          duePill.textContent = due.text;
+          meta.appendChild(duePill);
 
-          const progress = taskProgress(task);
-          const progressBlock = document.createElement("div");
-          progressBlock.className = "stage-progress";
-          progressBlock.innerHTML = `
-            <div class="progress-line"><div class="fill" style="width:${progress.percent}%"></div></div>
-            <div class="muted">Прогресс задачи: ${progress.label}</div>
-          `;
-          card.appendChild(progressBlock);
+          const subsPill = document.createElement("span");
+          subsPill.className = "pill small";
+          subsPill.textContent = `Подзадачи: ${doneSubs}/${totalSubs}`;
+          meta.appendChild(subsPill);
 
-          const details = document.createElement("div");
-          details.className = "task-details";
-          if (task.description) {
-            const desc = document.createElement("div");
-            desc.className = "task-description";
-            desc.textContent = task.description;
-            details.appendChild(desc);
-          }
+          const commentsCount = task.comments?.length || 0;
+          const commentPill = document.createElement("span");
+          commentPill.className = "pill small muted";
+          commentPill.textContent = `Комменты: ${commentsCount}`;
+          meta.appendChild(commentPill);
+
+          const stageName = stage.title || "Этап";
+          const stagePill = document.createElement("span");
+          stagePill.className = "pill small muted optional";
+          stagePill.textContent = stageName;
+          meta.appendChild(stagePill);
+
+          content.appendChild(meta);
 
           const actions = document.createElement("div");
-          actions.className = "task-inline-actions";
-
-          const actionButtons = [
-            { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
-            {
-              label: task.status === "done" ? "↺" : "✔",
-              title: task.status === "done" ? "Вернуть в работу" : "Отметить выполненной",
-              onClick: () => changeTaskStatus(task.id, task.status === "done" ? "todo" : "done"),
-            },
-            {
-              label: task.important ? "★" : "☆",
-              title: task.important ? "Снять важность" : "Сделать важной",
-              onClick: () => toggleImportant(task.id),
-            },
-            { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
-          ];
-
-          actionButtons.forEach((cfg) => {
+          actions.className = "task-actions";
+          const makeBtn = (label, titleText, handler, extra = []) => {
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
-            btn.textContent = cfg.label;
-            btn.title = cfg.title;
-            btn.addEventListener("click", cfg.onClick);
-            actions.appendChild(btn);
+            btn.className = `icon-btn ${extra.join(" ")}`.trim();
+            btn.title = titleText;
+            btn.textContent = label;
+            btn.addEventListener("click", handler);
+            return btn;
+          };
+
+          const editBtn = makeBtn("✏️", "Редактировать", () => openTaskForm(task.id));
+          const commentBtn = makeBtn("💬", "Комментарии", () => openTaskDiscussion(task.id));
+          if (commentsCount > 0) {
+            const count = document.createElement("span");
+            count.className = "count";
+            count.textContent = commentsCount;
+            commentBtn.appendChild(count);
+          }
+          const importantBtn = makeBtn(task.important ? "★" : "☆", "Важно", () => toggleImportant(task.id), [
+            task.important ? "active" : "",
+          ]);
+          const deleteBtn = makeBtn("🗑️", "Удалить", () => deleteTask(task.id), ["danger"]);
+          const collapseBtn = makeBtn(collapsed ? "▾" : "▴", collapsed ? "Развернуть подзадачи" : "Свернуть подзадачи", () => {
+            body.hidden = !body.hidden;
+            const next = body.hidden;
+            collapseBtn.textContent = next ? "▾" : "▴";
+            collapseBtn.title = next ? "Развернуть подзадачи" : "Свернуть подзадачи";
+            setTaskCollapsed(task.id, next);
           });
 
-          details.appendChild(actions);
+          [editBtn, commentBtn, importantBtn, deleteBtn, collapseBtn].forEach((btn) => actions.appendChild(btn));
 
-          details.appendChild(renderSubtasksSection(task));
-          card.appendChild(details);
+          row.append(statusBtn, content, actions);
 
-          card.addEventListener("contextmenu", (event) => {
+          const body = document.createElement("div");
+          body.className = "task-body";
+          body.dataset.taskBody = task.id;
+          body.hidden = collapsed || totalSubs === 0;
+
+          const description = document.createElement("div");
+          description.className = "muted";
+          description.textContent = task.description || "";
+          if (task.description) {
+            body.appendChild(description);
+          }
+          body.appendChild(renderSubtasksSection(task));
+
+          row.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             const menu = [
               { label: "Редактировать", action: () => openTaskForm(task.id) },
@@ -3360,17 +4238,13 @@
                 label: task.status === "done" ? "Вернуть в работу" : "Отметить выполненной",
                 action: () => changeTaskStatus(task.id, task.status === "done" ? "todo" : "done"),
               },
-              {
-                label: task.important ? "Снять важность" : "Отметить как важную",
-                action: () => toggleImportant(task.id),
-              },
               { label: "Комментарии", action: () => openTaskDiscussion(task.id) },
               { label: "Удалить", action: () => deleteTask(task.id) },
             ];
             openContextMenu(event, menu);
           });
 
-          wrapper.appendChild(card);
+          wrapper.append(row, body);
         });
 
         return wrapper;
@@ -3381,30 +4255,89 @@
         updateTaskViewSwitch();
         taskCompactContent.innerHTML = "";
         taskCompactContent.classList.toggle("table-scroll", taskViewMode === "table");
-        if (!tasks.length) {
-          taskCompactContent.innerHTML = '<p class="muted">Задачи ещё не добавлены.</p>';
+        const visibleTasks = getFilteredTasks();
+        if (!visibleTasks.length) {
+          taskCompactContent.innerHTML = '<p class="muted">Под подходящие фильтры задач нет.</p>';
           return;
         }
         if (taskViewMode === "table") {
-          taskCompactContent.appendChild(buildTaskTable());
+          taskCompactContent.appendChild(buildTaskTable(visibleTasks));
         } else {
-          taskCompactContent.appendChild(buildKanbanBoard());
+          taskCompactContent.appendChild(buildKanbanBoard(visibleTasks));
         }
       }
 
-      function buildTaskTable() {
+      function getFilteredTasks() {
+        return tasks.filter((task) => {
+          if (taskFilterStatus !== "all" && task.status !== taskFilterStatus) return false;
+          if (taskFilterRisk) {
+            const stage = gtmStages.find((s) => s.id === task.gtm_stage_id);
+            if (!stage?.risk_flag) return false;
+          }
+          if (taskFilterNoDue && task.due_date) return false;
+          return true;
+        });
+      }
+
+      function renderTaskFilterChips() {
+        if (!taskFilters) return;
+        const statusCount = tasks.reduce((acc, task) => {
+          acc[task.status] = (acc[task.status] || 0) + 1;
+          return acc;
+        }, {});
+        taskFilters.innerHTML = "";
+        const statuses = [
+          { key: "all", label: "Все" },
+          { key: "todo", label: "ToDo" },
+          { key: "in_progress", label: "В работе" },
+          { key: "done", label: "Готово" },
+        ];
+        statuses.forEach((item) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = `filter-chip${taskFilterStatus === item.key ? " active" : ""}`;
+          const count = item.key === "all" ? tasks.length : statusCount[item.key] || 0;
+          chip.innerHTML = `${item.label} <span class="count">${count}</span>`;
+          chip.addEventListener("click", () => {
+            taskFilterStatus = item.key;
+            renderTaskFilterChips();
+            renderCompactTaskView();
+          });
+          taskFilters.appendChild(chip);
+        });
+
+        const riskChip = document.createElement("button");
+        riskChip.type = "button";
+        riskChip.className = `filter-chip${taskFilterRisk ? " active" : ""}`;
+        riskChip.textContent = "С риском";
+        riskChip.addEventListener("click", () => {
+          taskFilterRisk = !taskFilterRisk;
+          renderTaskFilterChips();
+          renderCompactTaskView();
+        });
+        taskFilters.appendChild(riskChip);
+
+        const noDueChip = document.createElement("button");
+        noDueChip.type = "button";
+        noDueChip.className = `filter-chip${taskFilterNoDue ? " active" : ""}`;
+        noDueChip.textContent = "Без срока";
+        noDueChip.addEventListener("click", () => {
+          taskFilterNoDue = !taskFilterNoDue;
+          renderTaskFilterChips();
+          renderCompactTaskView();
+        });
+        taskFilters.appendChild(noDueChip);
+      }
+
+      function buildTaskTable(taskList) {
         const table = document.createElement("table");
         table.className = "compact-table";
         table.innerHTML = `
           <thead>
             <tr>
               <th>Задача</th>
-              <th>Этап</th>
               <th>Статус</th>
-              <th>Важность</th>
-              <th>Срочность</th>
-              <th>Срок</th>
-              <th>Прогресс</th>
+              <th>Подзадачи</th>
               <th>Действия</th>
             </tr>
           </thead>
@@ -3415,7 +4348,7 @@
           return acc;
         }, {});
         const statusOrder = { todo: 0, in_progress: 1, done: 2 };
-        const sortedTasks = [...tasks].sort((a, b) => {
+        const sortedTasks = [...taskList].sort((a, b) => {
           const stageDiff = (orderMap[a.gtm_stage_id] ?? 999) - (orderMap[b.gtm_stage_id] ?? 999);
           if (stageDiff !== 0) return stageDiff;
           const statusDiff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
@@ -3434,32 +4367,16 @@
           const row = document.createElement("tr");
 
           const titleCell = document.createElement("td");
-          titleCell.innerHTML = `<strong>${task.title}</strong>`;
+          titleCell.innerHTML = `<div style="font-weight:700">${task.title}</div><div class="muted">${stageTitle(task.gtm_stage_id)} · ${due.text}</div>`;
           row.appendChild(titleCell);
-
-          const stageCell = document.createElement("td");
-          stageCell.textContent = stageTitle(task.gtm_stage_id);
-          row.appendChild(stageCell);
 
           const statusCell = document.createElement("td");
           statusCell.innerHTML = `<span class="chip">${taskStatusLabel(task.status)}</span>`;
           row.appendChild(statusCell);
 
-          const importanceCell = document.createElement("td");
-          importanceCell.innerHTML = task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—";
-          row.appendChild(importanceCell);
-
-          const urgencyCell = document.createElement("td");
-          urgencyCell.innerHTML = task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—";
-          row.appendChild(urgencyCell);
-
-          const dueCell = document.createElement("td");
-          dueCell.innerHTML = `<span class="${due.className}">${due.text}</span>`;
-          row.appendChild(dueCell);
-
-          const progressCell = document.createElement("td");
-          progressCell.textContent = progress.label;
-          row.appendChild(progressCell);
+          const subCell = document.createElement("td");
+          subCell.textContent = progress.label;
+          row.appendChild(subCell);
 
           const actionsCell = document.createElement("td");
           const actionWrap = document.createElement("div");
@@ -3475,7 +4392,7 @@
           actionButtons.forEach((cfg) => {
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
+            btn.className = cfg.danger ? "icon-btn danger" : "icon-btn";
             btn.textContent = cfg.label;
             btn.title = cfg.title;
             btn.addEventListener("click", cfg.onClick);
@@ -3491,11 +4408,11 @@
         return table;
       }
 
-      function buildKanbanBoard() {
+      function buildKanbanBoard(taskList) {
         const board = document.createElement("div");
         board.className = "kanban-board";
         const grouped = { todo: [], in_progress: [], done: [] };
-        tasks.forEach((task) => {
+        taskList.forEach((task) => {
           const bucket = grouped[task.status] || grouped.todo;
           bucket.push(task);
         });
@@ -3507,424 +4424,87 @@
             return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
           });
         });
-        kanbanStatuses.forEach(({ key, label }) => {
+        Object.entries(grouped).forEach(([status, bucket]) => {
           const column = document.createElement("div");
           column.className = "kanban-column";
+          column.dataset.status = status;
           const header = document.createElement("div");
           header.className = "kanban-column-header";
-          header.innerHTML = `<span>${label}</span><span class="muted">${grouped[key]?.length || 0}</span>`;
+          header.textContent = { todo: "ToDo", in_progress: "В работе", done: "Готово" }[status] || status;
+          column.appendChild(header);
           const body = document.createElement("div");
           body.className = "kanban-column-body";
-          body.dataset.status = key;
-          body.addEventListener("dragover", handleKanbanDragOver);
-          body.addEventListener("dragleave", handleKanbanDragLeave);
-          body.addEventListener("drop", handleKanbanDrop);
-          if (!grouped[key]?.length) {
-            const empty = document.createElement("p");
+          if (!bucket.length) {
+            const empty = document.createElement("div");
             empty.className = "kanban-empty";
             empty.textContent = "Нет задач";
             body.appendChild(empty);
-          } else {
-            grouped[key].forEach((task) => body.appendChild(createKanbanCard(task)));
           }
-          column.appendChild(header);
+          bucket.forEach((task) => {
+            const card = document.createElement("div");
+            card.className = "kanban-card";
+            card.draggable = true;
+            card.dataset.taskId = task.id;
+            card.dataset.status = status;
+            card.innerHTML = `
+              <div style="font-weight:700">${task.title}</div>
+              <div class="kanban-meta">${dueInfo(task).text}</div>
+            `;
+            card.addEventListener("dragstart", (e) => {
+              draggedTaskId = task.id;
+              card.classList.add("dragging");
+              e.dataTransfer.effectAllowed = "move";
+            });
+            card.addEventListener("dragend", () => {
+              draggedTaskId = null;
+              card.classList.remove("dragging");
+            });
+            body.appendChild(card);
+          });
           column.appendChild(body);
           board.appendChild(column);
         });
+
+        board.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          const column = event.target.closest(".kanban-column");
+          if (!column) return;
+          const status = column.dataset.status;
+          if (!status || status === "done") return;
+          column.classList.add("drop-ready");
+        });
+
+        board.addEventListener("dragleave", (event) => {
+          const column = event.target.closest(".kanban-column");
+          if (column) column.classList.remove("drop-ready");
+        });
+
+        board.addEventListener("drop", async (event) => {
+          event.preventDefault();
+          const column = event.target.closest(".kanban-column");
+          if (!column || !draggedTaskId) return;
+          const status = column.dataset.status;
+          if (!status) return;
+          await changeTaskStatus(draggedTaskId, status);
+          column.classList.remove("drop-ready");
+        });
+
         return board;
       }
-
-      function createKanbanCard(task) {
-        const card = document.createElement("div");
-        card.className = "kanban-card";
-        card.draggable = true;
-        card.dataset.taskId = task.id;
-        card.addEventListener("dragstart", handleKanbanDragStart);
-        card.addEventListener("dragend", handleKanbanDragEnd);
-        card.addEventListener("dblclick", () => openTaskForm(task.id));
-        const title = document.createElement("strong");
-        title.textContent = task.title;
-        card.appendChild(title);
-        const meta = document.createElement("div");
-        meta.className = "kanban-meta";
-        meta.innerHTML = `<span>${stageTitle(task.gtm_stage_id)}</span>`;
-        const due = dueInfo(task);
-        meta.innerHTML += `<span class="${due.className}">${due.text}</span>`;
-        card.appendChild(meta);
-        const badges = document.createElement("div");
-        badges.className = "task-badges";
-        if (task.important) {
-          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
-        }
-        if (task.urgency === "high") {
-          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
-        }
-        const statusChip = document.createElement("span");
-        statusChip.className = "chip";
-        statusChip.textContent = taskStatusLabel(task.status);
-        badges.appendChild(statusChip);
-        card.appendChild(badges);
-        return card;
-      }
-
-      function handleKanbanDragStart(event) {
-        const card = event.currentTarget;
-        draggedTaskId = card.dataset.taskId;
-        card.classList.add("dragging");
-        if (event.dataTransfer) {
-          event.dataTransfer.setData("text/plain", draggedTaskId);
-          event.dataTransfer.effectAllowed = "move";
-        }
-      }
-
-      function handleKanbanDragEnd(event) {
-        event.currentTarget.classList.remove("dragging");
-        draggedTaskId = null;
-      }
-
-      function handleKanbanDragOver(event) {
-        event.preventDefault();
-        event.currentTarget.classList.add("drop-ready");
-        if (event.dataTransfer) {
-          event.dataTransfer.dropEffect = "move";
-        }
-      }
-
-      function handleKanbanDragLeave(event) {
-        event.currentTarget.classList.remove("drop-ready");
-      }
-
-      async function handleKanbanDrop(event) {
-        event.preventDefault();
-        event.currentTarget.classList.remove("drop-ready");
-        const status = event.currentTarget.dataset.status;
-        if (!draggedTaskId || !status) {
-          draggedTaskId = null;
-          return;
-        }
-        const task = tasks.find((t) => String(t.id) === String(draggedTaskId));
-        draggedTaskId = null;
-        if (task && task.status !== status) {
-          await changeTaskStatus(task.id, status);
-        } else {
-          renderCompactTaskView();
-        }
-      }
-
-      function taskProgressScore(task) {
-        if (!task) return 0;
-        const subtasks = task.subtasks || [];
-        if (subtasks.length) {
-          const done = subtasks.filter((s) => s.done).length;
-          return subtasks.length ? done / subtasks.length : 0;
-        }
-        if (task.status === "done") return 1;
-        if (task.status === "in_progress") return 0.5;
-        return 0;
-      }
-
-      function stageProgressScore(stage) {
-        const relatedTasks = tasks.filter((task) => task.gtm_stage_id === stage.id);
-        if (!relatedTasks.length) {
-          if (stage.status === "done") return 1;
-          if (stage.status === "in_progress") return 0.5;
-          return 0;
-        }
-        const total = relatedTasks.reduce((acc, task) => acc + taskProgressScore(task), 0);
-        return total / relatedTasks.length;
-      }
-
-      function calcProjectProgress() {
-        const totalStages = gtmStages.length;
-        if (!totalStages) {
-          return { label: "Этапы не заданы", percent: 0, completed: 0 };
-        }
-        const stageScores = gtmStages.map((stage) => stageProgressScore(stage));
-        const percent = Math.round((stageScores.reduce((a, b) => a + b, 0) / totalStages) * 100);
-        const completed = stageScores.filter((score) => score >= 0.999).length;
-        return { label: `Завершено ${completed} из ${totalStages}`, percent, completed };
-      }
-
-      function calcProjectRisk() {
-        const today = new Date();
-        const overdueStage = gtmStages.some(
-          (s) => s.planned_end && ["done", "cancelled"].indexOf(s.status) === -1 && new Date(s.planned_end) < today
-        );
-        const overdueTask = tasks.some((t) => t.due_date && t.status !== "done" && new Date(t.due_date) < today);
-        return overdueStage || overdueTask;
-      }
-
-      function renderGtmProgress() {
-        const progress = calcProjectProgress();
-        gtmProgressLabel.textContent = progress.label;
-        gtmProgressFill.style.width = `${progress.percent}%`;
-        gtmProgressBadge.textContent = `${progress.percent}%`;
-        const risky = calcProjectRisk();
-        if (projectRiskEl) {
-          projectRiskEl.textContent = risky ? "⚠️ Есть просрочки" : "Риски: нет";
-          projectRiskEl.classList.toggle("warn", risky);
-        }
-      }
-
-      function openStageContextMenu(event, stage, index) {
-        const actions = [
-          { label: "Редактировать", action: () => openStageForm(stage.id) },
-          { label: stage.risk_flag ? "Снять риск" : "Отметить риск", action: () => toggleRisk(stage.id, !stage.risk_flag) },
-          { label: "Добавить задачу", action: () => openTaskForm(null, stage.id) },
-          { label: "Комментарии", action: () => openStageDiscussion(stage.id) },
-          { label: "Переместить вверх", disabled: index === 0, action: () => moveStage(stage.id, -1) },
-          { label: "Переместить вниз", disabled: index === gtmStages.length - 1, action: () => moveStage(stage.id, 1) },
-          { label: "Удалить", action: () => deleteStage(stage.id) },
-        ];
-        openContextMenu(event, actions);
-      }
-
-      function openContextMenu(event, actions) {
-        contextMenuList.innerHTML = "";
-        actions.forEach((item) => {
-          const li = document.createElement("li");
-          li.textContent = item.label;
-          if (item.disabled) {
-            li.classList.add("disabled");
-          } else {
-            li.addEventListener("click", () => {
-              item.action();
-              hideContextMenu();
-            });
-          }
-          contextMenuList.appendChild(li);
-        });
-
-        contextMenu.style.display = "block";
-        contextMenu.style.left = `${event.pageX}px`;
-        contextMenu.style.top = `${event.pageY}px`;
-      }
-
-      function hideContextMenu() {
-        contextMenu.style.display = "none";
-      }
-
-      document.addEventListener("click", () => hideContextMenu());
-
-      function openStageForm(stageId = null) {
-        document.getElementById("modal").style.display = "flex";
-        const stage = gtmStages.find((s) => s.id === stageId);
-        document.getElementById("modalTitle").textContent = stage ? "Редактирование этапа" : "Новый этап";
-        document.getElementById("stageId").value = stage ? stage.id : "";
-        document.getElementById("stageTitle").value = stage ? stage.title : "";
-        document.getElementById("stageOrder").value = stage ? stage.order : gtmStages.length;
-        if (stageDescriptionArea) {
-          stageDescriptionArea.innerHTML = stage?.description || "";
-        }
-        document.getElementById("stagePlannedStart").value = stage?.planned_start || "";
-        document.getElementById("stagePlannedEnd").value = stage?.planned_end || "";
-        document.getElementById("stageActualEnd").value = stage?.actual_end || "";
-        document.getElementById("stageStatus").value = stage?.status || "not_started";
-        document.getElementById("stageRisk").checked = stage?.risk_flag || false;
-      }
-
-      function closeModal() {
-        document.getElementById("modal").style.display = "none";
-        if (stageDescriptionArea) {
-          stageDescriptionArea.innerHTML = "";
-        }
-      }
-
-      document.getElementById("stageForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const payload = {
-          title: document.getElementById("stageTitle").value,
-          order: Number(document.getElementById("stageOrder").value || 0),
-          description: editorHtml(stageDescriptionArea) || null,
-          planned_start: document.getElementById("stagePlannedStart").value || null,
-          planned_end: document.getElementById("stagePlannedEnd").value || null,
-          actual_end: document.getElementById("stageActualEnd").value || null,
-          status: document.getElementById("stageStatus").value,
-          risk_flag: document.getElementById("stageRisk").checked,
-          comments: [],
-        };
-
-        const stageId = document.getElementById("stageId").value;
-        let res;
-        if (stageId) {
-          const existing = gtmStages.find((s) => s.id === stageId);
-          payload.comments = existing?.comments || [];
-          res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-        } else {
-          if (!stageDescriptionArea) {
-            payload.description = null;
-          }
-          res = await fetch(`/api/projects/${projectId}/gtm-stages`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-        }
-
-        if (res.ok) {
-          await loadStages();
-          closeModal();
-        } else {
-          alert("Ошибка сохранения этапа");
-        }
-      });
-
-      async function changeStatus(stageId, value) {
-        const stage = gtmStages.find((s) => s.id === stageId);
-        if (!stage) return;
-        stage.status = value;
-        await saveStage(stage);
-      }
-
-      async function toggleRisk(stageId, value) {
-        const stage = gtmStages.find((s) => s.id === stageId);
-        if (!stage) return;
-        stage.risk_flag = value;
-        await saveStage(stage);
-      }
-
-      async function moveStage(stageId, delta) {
-        const index = gtmStages.findIndex((s) => s.id === stageId);
-        if (index === -1) return;
-        const target = index + delta;
-        if (target < 0 || target >= gtmStages.length) return;
-        const otherId = gtmStages[target].id;
-
-        [gtmStages[index].order, gtmStages[target].order] = [gtmStages[target].order, gtmStages[index].order];
-        const firstSave = saveStage(gtmStages[index]);
-        const secondSave = saveStage(gtmStages[target]);
-        await Promise.all([firstSave, secondSave]);
-        await loadStages();
-      }
-
-      async function deleteStage(stageId) {
-        if (!confirm("Удалить этап?")) return;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}`, { method: "DELETE" });
-        if (res.ok) {
-          await loadStages();
-        } else {
-          alert("Не удалось удалить этап");
-        }
-      }
-
-      async function saveStage(stage) {
-        await fetch(`/api/projects/${projectId}/gtm-stages/${stage.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(stage),
-        });
-      }
-
-      async function applyTemplate() {
-        const templateId = templateSelect.value;
-        if (!templateId) return alert("Выберите шаблон");
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/apply-template?template_id=${templateId}`, {
-          method: "POST",
-        });
-        if (res.ok) {
-          gtmStages = await res.json();
-          renderStages();
-          await loadTasks();
-        } else {
-          alert("Не удалось применить шаблон");
-        }
-      }
-
-      async function saveTemplate() {
-        const name = prompt("Название шаблона", project?.name ? `GTM ${project.name}` : "Новый шаблон");
-        if (!name) return;
-        const description = prompt("Описание шаблона (необязательно)") || null;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/save-template`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description }),
-        });
-        if (res.ok) {
-          await loadTemplates();
-          alert("Шаблон сохранён");
-        } else {
-          alert("Не удалось сохранить шаблон");
-        }
-      }
-
-      function triggerImport() {
-        importInput.click();
-      }
-
-      importInput.addEventListener("change", async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/import`, {
-          method: "POST",
-          body: formData,
-        });
-        if (res.ok) {
-          gtmStages = await res.json();
-          renderStages();
-          alert("Этапы импортированы и сохранены");
-        } else {
-          const detail = await res.json();
-          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
-        }
-        event.target.value = "";
-      });
-
-      async function exportStages() {
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/export`);
-        if (!res.ok) {
-          alert("Не удалось выгрузить этапы");
-          return;
-        }
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `gtm_stages_${projectId}.xlsx`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      }
-
-      async function loadTasks() {
-        const res = await fetch(`/api/projects/${projectId}/tasks`, { cache: "no-store" });
-        tasks = res.ok ? await res.json() : [];
-        renderStages();
-        renderGtmProgress();
-        renderCompactTaskView();
-        focusTaskIfNeeded();
-      }
-
-      function renderTaskFilters() {
-        taskGtmStageSelect.innerHTML = "";
-        const sorted = [...gtmStages].sort((a, b) => a.order - b.order);
-        if (!sorted.length) {
-          const placeholder = document.createElement("option");
-          placeholder.value = "";
-          placeholder.textContent = "Нет этапов";
-          taskGtmStageSelect.appendChild(placeholder);
-          taskGtmStageSelect.disabled = true;
-        } else {
-          taskGtmStageSelect.disabled = false;
-        }
-        sorted.forEach((stage) => {
-          const option = document.createElement("option");
-          option.value = stage.id;
-          option.textContent = `${stage.order}. ${stage.title}`;
-          taskGtmStageSelect.appendChild(option);
-        });
-      }
-
       function taskStatusLabel(value) {
         return {
           todo: "ToDo",
           in_progress: "В работе",
           done: "Готово",
         }[value] || value;
+      }
+
+      function taskStatusIcon(value) {
+        return {
+          todo: "◻️",
+          in_progress: "⏳",
+          done: "✅",
+        }[value] || "◻️";
       }
 
       function stageTitle(stageId) {
@@ -3934,30 +4514,32 @@
       }
 
       function dueInfo(task) {
-        if (!task.due_date) return { text: "Срок не назначен", className: "tag" };
+        if (!task.due_date) return { text: "Срок не назначен", className: "muted" };
         const today = new Date();
         const due = new Date(task.due_date);
         const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
         if (task.status === "done") {
-          return { text: `Срок: ${task.due_date}`, className: "tag" };
+          return { text: `Срок: ${task.due_date}`, className: "" };
         }
         if (due < today) {
-          return { text: `Просрочено на ${Math.abs(diffDays)} дн.`, className: "tag due-overdue" };
+          return { text: `Просрочено на ${Math.abs(diffDays)} дн.`, className: "due-overdue" };
         }
         if (diffDays <= 7) {
-          return { text: `До срока ${diffDays} дн.`, className: "tag due-soon" };
+          return { text: `До срока ${diffDays} дн.`, className: "due-soon" };
         }
-        return { text: `Срок: ${task.due_date}`, className: "tag" };
+        return { text: `Срок: ${task.due_date}`, className: "" };
       }
 
       function createSubtaskComposer(taskId) {
         const composer = document.createElement("div");
-        composer.className = "subtask-inline";
-        composer.innerHTML = `
-          <input class="inline-input" placeholder="Новая подзадача" />
-          <button class="ghost">Добавить</button>
-        `;
-        const [subInput, subBtn] = composer.querySelectorAll("input, button");
+        composer.className = "subtask-add";
+        const subInput = document.createElement("input");
+        subInput.className = "inline-input";
+        subInput.placeholder = "Новая подзадача";
+        const subBtn = document.createElement("button");
+        subBtn.type = "button";
+        subBtn.className = "icon-btn";
+        subBtn.textContent = "➕";
         const submit = () => {
           const title = subInput.value.trim();
           if (!title) return;
@@ -3971,40 +4553,41 @@
             submit();
           }
         });
+        composer.append(subInput, subBtn);
         return composer;
       }
 
       function renderSubtasksSection(task) {
         const wrapper = document.createElement("div");
-        const subtasksList = document.createElement("ul");
-        subtasksList.className = "subtasks";
         const subtasks = [...(task.subtasks || [])].sort((a, b) => a.order - b.order);
-        if (!subtasks.length) {
-          const li = document.createElement("li");
-          li.className = "muted";
-          li.style.background = "transparent";
-          li.style.border = "none";
-          li.textContent = "Подзадач пока нет";
-          subtasksList.appendChild(li);
-        } else {
-          subtasks.forEach((sub) => {
-            const li = document.createElement("li");
+        const active = subtasks.filter((s) => !s.done);
+        const completed = subtasks.filter((s) => s.done);
+
+        const renderList = (items, emptyText, done = false) => {
+          const list = document.createElement("div");
+          list.className = "subtasks";
+          if (!items.length) {
+            const empty = document.createElement("div");
+            empty.className = "muted";
+            empty.textContent = emptyText;
+            list.appendChild(empty);
+            return list;
+          }
+
+          items.forEach((sub) => {
+            const row = document.createElement("div");
+            row.className = `subtask-row${sub.done ? " done" : ""}`;
+
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
+            checkbox.className = "subtask-check";
             checkbox.checked = sub.done;
-            checkbox.addEventListener("change", (event) => {
-              toggleSubtask(task.id, sub.id, event.target.checked);
-            });
+            checkbox.addEventListener("change", (event) => toggleSubtask(task.id, sub.id, event.target.checked));
 
-            const title = document.createElement("div");
-            title.className = "subtask-title";
-            title.contentEditable = true;
-            title.textContent = sub.title;
-            if (sub.done) {
-              title.style.textDecoration = "line-through";
-              title.style.color = "#94a3b8";
-            }
-            title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.innerText));
+            const title = document.createElement("input");
+            title.className = "subtask-input inline-input";
+            title.value = sub.title;
+            title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.value));
             title.addEventListener("keydown", (e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -4014,34 +4597,47 @@
 
             const actions = document.createElement("div");
             actions.className = "subtask-actions";
-            const editBtn = document.createElement("button");
-            editBtn.className = "ghost";
-            editBtn.textContent = "✏️";
-            editBtn.title = "Редактировать";
-            editBtn.addEventListener("click", () => title.focus());
             const delBtn = document.createElement("button");
-            delBtn.className = "ghost";
+            delBtn.type = "button";
+            delBtn.className = "icon-btn tiny";
             delBtn.textContent = "🗑️";
+            delBtn.title = "Удалить подзадачу";
             delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
-            actions.appendChild(editBtn);
             actions.appendChild(delBtn);
 
-            li.appendChild(checkbox);
-            li.appendChild(title);
-            li.appendChild(actions);
-            li.addEventListener("contextmenu", (event) => {
+            row.append(checkbox, title, actions);
+            row.addEventListener("contextmenu", (event) => {
               event.preventDefault();
-              const items = [
+              const itemsMenu = [
                 { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
                 { label: "Переименовать", action: () => title.focus() },
                 { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
               ];
-              openContextMenu(event, items);
+              openContextMenu(event, itemsMenu);
             });
-            subtasksList.appendChild(li);
+
+            list.appendChild(row);
           });
+          return list;
+        };
+
+        const activeBlock = document.createElement("div");
+        const activeTitle = document.createElement("div");
+        activeTitle.className = "muted";
+        activeTitle.textContent = "Чек-лист";
+        activeBlock.append(activeTitle, renderList(active, "Нет активных подзадач"));
+        wrapper.appendChild(activeBlock);
+
+        if (completed.length) {
+          const doneBlock = document.createElement("div");
+          doneBlock.className = "completed-subtasks";
+          const doneTitle = document.createElement("div");
+          doneTitle.className = "muted";
+          doneTitle.textContent = "Выполненные";
+          doneBlock.append(doneTitle, renderList(completed, "Пока ничего не выполнено", true));
+          wrapper.appendChild(doneBlock);
         }
-        wrapper.appendChild(subtasksList);
+
         wrapper.appendChild(createSubtaskComposer(task.id));
         return wrapper;
       }
@@ -4381,7 +4977,11 @@
       async function changeTaskStatus(taskId, status) {
         const existing = tasks.find((t) => t.id === taskId);
         if (!existing) return;
-        const payload = { ...existing, status };
+        const updatedSubtasks = (existing.subtasks || []).map((sub) => ({
+          ...sub,
+          done: status === "done" ? true : sub.done,
+        }));
+        const payload = { ...existing, status, subtasks: updatedSubtasks };
         const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
