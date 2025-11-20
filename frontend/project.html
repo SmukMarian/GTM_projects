@@ -2343,6 +2343,12 @@
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
       const projectRiskEl = document.getElementById("project-risk");
       const taskStatusWeight = { not_started: 0, todo: 0, in_progress: 0.5, done: 1, cancelled: 0 };
+      const transparentPixel = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+      const scheduleIdle =
+        typeof requestIdleCallback === "function"
+          ? (cb) => requestIdleCallback(cb, { timeout: 48 })
+          : (cb) => setTimeout(() => cb({ timeRemaining: () => 0 }), 16);
+      const cancelIdle = typeof cancelIdleCallback === "function" ? cancelIdleCallback : clearTimeout;
       const kanbanStatuses = [
         { key: "todo", label: "ToDo" },
         { key: "in_progress", label: "В работе" },
@@ -2358,6 +2364,7 @@
       let images = [];
       let lightboxOrder = [];
       let lightboxIndex = 0;
+      let galleryObserver = null;
       let files = [];
       let projectComments = [];
       let historyEvents = [];
@@ -4426,50 +4433,123 @@
         return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
       }
 
+      function resetGalleryObserver() {
+        if (galleryObserver) {
+          galleryObserver.disconnect();
+        }
+
+        galleryObserver = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                const src = img.dataset.src;
+                if (src && img.src !== src) {
+                  img.src = src;
+                }
+                obs.unobserve(img);
+              }
+            });
+          },
+          { rootMargin: "200px 0px" }
+        );
+
+        galleryContainer.querySelectorAll("img[data-src]").forEach((img) => {
+          galleryObserver.observe(img);
+        });
+      }
+
+      function imageDownloadUrl(image) {
+        if (!image) return "";
+        const cacheKey = encodeURIComponent(image.updated_at || image.uploaded_at || image.id || "0");
+        return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
+      }
+
       function renderGallery() {
         galleryContainer.innerHTML = "";
         const sorted = [...images].sort((a, b) => a.order - b.order);
         lightboxOrder = sorted;
+
         if (!sorted.length) {
           galleryContainer.innerHTML = "<p class='muted'>Изображений пока нет</p>";
           return;
         }
 
-        sorted.forEach((img, index) => {
-          const card = document.createElement("div");
-          card.className = "image-card";
-          card.innerHTML = `
-            ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
-            <img class="image-thumb" src="${imageDownloadUrl(img)}" alt="${img.filename}" loading="lazy" decoding="async" fetchpriority="low" onclick="openImage('${img.id}')" />
-            <div class="image-meta">
-              <div style="display:flex; flex-direction:column; gap:2px">
-                <strong>${img.filename}</strong>
-                <span class="muted" style="font-size:0.9rem">${img.caption || "Без подписи"}</span>
-              </div>
-              <div class="toolbar">
-                <button class="ghost" onclick="openImage('${img.id}')">Просмотр</button>
-                <button class="ghost" onclick="editImageCaption('${img.id}')">Подпись</button>
-                <button class="ghost" onclick="setCover('${img.id}')" ${img.is_cover ? "disabled" : ""}>Сделать обложкой</button>
-                <button class="ghost" onclick="moveImage('${img.id}', -1)" ${index === 0 ? "disabled" : ""}>↑</button>
-                <button class="ghost" onclick="moveImage('${img.id}', 1)" ${index === sorted.length - 1 ? "disabled" : ""}>↓</button>
-                <button onclick="deleteImage('${img.id}')">Удалить</button>
-              </div>
-            </div>
-          `;
+        let cancelled = false;
+        const fragment = document.createDocumentFragment();
+        const total = sorted.length;
+        const batchByTime = typeof requestIdleCallback === "function";
 
-          card.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-            const actions = [
-              { label: "Просмотреть", action: () => openImage(img.id) },
-              { label: "Сделать обложкой", action: () => setCover(img.id) },
-              { label: "Изменить подпись", action: () => editImageCaption(img.id) },
-              { label: "Удалить", action: () => deleteImage(img.id) },
-            ];
-            openContextMenu(event, actions);
-          });
+        const renderChunk = () => {
+          if (cancelled) return;
 
-          galleryContainer.appendChild(card);
-        });
+          const start = performance.now();
+          let processed = 0;
+
+          while (processed < 12 && galleryContainer.isConnected) {
+            const currentIndex = fragment.childElementCount;
+            if (currentIndex >= total) break;
+
+            const img = sorted[currentIndex];
+            const card = document.createElement("div");
+            card.className = "image-card";
+            card.innerHTML = `
+              ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
+              <img class="image-thumb" src="${transparentPixel}" data-src="${imageDownloadUrl(img)}" alt="${img.filename}" loading="lazy" decoding="async" fetchpriority="low" onclick="openImage('${img.id}')" />
+              <div class="image-meta">
+                <div style="display:flex; flex-direction:column; gap:2px">
+                  <strong>${img.filename}</strong>
+                  <span class="muted" style="font-size:0.9rem">${img.caption || "Без подписи"}</span>
+                </div>
+                <div class="toolbar">
+                  <button class="ghost" onclick="openImage('${img.id}')">Просмотр</button>
+                  <button class="ghost" onclick="editImageCaption('${img.id}')">Подпись</button>
+                  <button class="ghost" onclick="setCover('${img.id}')" ${img.is_cover ? "disabled" : ""}>Сделать обложкой</button>
+                  <button class="ghost" onclick="moveImage('${img.id}', -1)" ${currentIndex === 0 ? "disabled" : ""}>↑</button>
+                  <button class="ghost" onclick="moveImage('${img.id}', 1)" ${currentIndex === total - 1 ? "disabled" : ""}>↓</button>
+                  <button onclick="deleteImage('${img.id}')">Удалить</button>
+                </div>
+              </div>
+            `;
+
+            card.addEventListener("contextmenu", (event) => {
+              event.preventDefault();
+              const actions = [
+                { label: "Просмотреть", action: () => openImage(img.id) },
+                { label: "Сделать обложкой", action: () => setCover(img.id) },
+                { label: "Изменить подпись", action: () => editImageCaption(img.id) },
+                { label: "Удалить", action: () => deleteImage(img.id) },
+              ];
+              openContextMenu(event, actions);
+            });
+
+            fragment.appendChild(card);
+            processed += 1;
+
+            if (batchByTime && performance.now() - start > 12) {
+              break;
+            }
+          }
+
+          if (fragment.childElementCount >= total) {
+            galleryContainer.replaceChildren(fragment);
+            resetGalleryObserver();
+            cancelled = true;
+            return;
+          }
+
+          scheduleIdle(renderChunk);
+        };
+
+        const handle = scheduleIdle(renderChunk);
+        galleryContainer.addEventListener(
+          "DOMNodeRemovedFromDocument",
+          () => {
+            cancelled = true;
+            cancelIdle(handle);
+          },
+          { once: true }
+        );
       }
 
       function renderCoverPanel() {
