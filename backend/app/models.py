@@ -12,6 +12,8 @@ from enum import Enum
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -76,13 +78,13 @@ class CustomFieldFilterMeta(BaseModel):
 class CustomFieldFilterRequest(BaseModel):
     field_id: str
     type: str
-    value: str | None = None
-    value_from: float | None = None
-    value_to: float | None = None
-    values: list[str] | None = None
-    bool: bool | None = None
-    date_from: date | None = None
-    date_to: date | None = None
+    value: Optional[str] = None
+    value_from: Optional[float] = None
+    value_to: Optional[float] = None
+    values: Optional[list[str]] = None
+    bool: Optional[bool] = None
+    date_from: Optional[date] = None
+    date_to: Optional[date] = None
 
 
 class Timestamped(BaseModel):
