@@ -28,7 +28,7 @@ def _configure_env(tmp: Path) -> None:
 # Настраиваем окружение до импорта приложения
 TEMP_DIR = Path(tempfile.mkdtemp(prefix="hpt_smoke_"))
 _configure_env(TEMP_DIR)
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from app.main import app  # noqa: E402
 
