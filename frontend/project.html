@@ -1376,10 +1376,9 @@
       }
 
       .project-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 2.4fr) minmax(300px, 1fr);
-        gap: 24px;
-        align-items: start;
+        display: flex;
+        gap: 22px;
+        align-items: flex-start;
         align-self: stretch;
       }
 
@@ -1387,13 +1386,16 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        flex: 2 1 520px;
+        min-width: 0;
       }
 
       .project-hero-right {
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        flex: 0 0 auto;
+        flex: 1 1 320px;
+        max-width: 420px;
       }
 
       .cover-card {
@@ -1407,9 +1409,9 @@
         gap: 12px;
         align-items: stretch;
         max-width: 420px;
-        flex: 0 0 auto;
+        width: 100%;
+        flex: 1 1 auto;
         align-self: flex-start;
-        width: auto;
       }
 
       .title-row {
@@ -1446,15 +1448,16 @@
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        padding: 0;
+        max-width: 420px;
         min-height: 0;
+        padding: 0;
       }
 
       .cover-frame img {
         display: block;
+        width: 100%;
         max-width: 100%;
         height: auto;
-        max-height: 520px;
         object-fit: contain;
         background: var(--surface-muted);
         margin: 0 auto;
@@ -1496,7 +1499,28 @@
 
       .cover-actions-row.single button {
         width: 100%;
+        display: inline-flex;
         justify-content: center;
+        align-items: center;
+        gap: 8px;
+      }
+
+      @media (max-width: 1100px) {
+        .project-hero {
+          flex-direction: column;
+        }
+
+        .project-hero-right {
+          width: 100%;
+          max-width: none;
+          align-self: stretch;
+        }
+
+        .cover-card,
+        .cover-frame {
+          max-width: 100%;
+          align-self: center;
+        }
       }
 
       .meta-grid {

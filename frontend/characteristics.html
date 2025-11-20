@@ -210,7 +210,7 @@
       #characteristics {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 16px;
       }
 
       .pill {
@@ -440,7 +440,7 @@
       #characteristics {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 16px;
       }
 
       .inline-editor h4 {
@@ -578,7 +578,12 @@
             <div class="inline-editor-grid">
               <label>
                 Название секции
-                <input id="newSectionTitle" required placeholder="Например: Основные параметры" />
+                <input
+                  id="newSectionTitle"
+                  class="inline-input"
+                  required
+                  placeholder="Например: Основные параметры"
+                />
               </label>
               <label>
                 Порядок
@@ -755,13 +760,14 @@
       }
 
       async function loadCharacteristics() {
+        const previousSections = [...characteristicSections];
         try {
           const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
           if (!res.ok) throw new Error();
           characteristicSections = await res.json();
         } catch (err) {
-          characteristicSections = [];
-          showToast("Не удалось загрузить секции", "error");
+          characteristicSections = previousSections.length ? previousSections : [];
+          showToast("Не удалось загрузить секции, попробуйте обновить страницу позже", "error");
         }
         editingSectionId = null;
         fieldEditor = null;
