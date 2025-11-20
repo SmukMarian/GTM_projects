@@ -660,6 +660,7 @@
 
       let characteristicTemplates = [];
       let characteristicSections = [];
+      const sectionsCacheKey = projectId ? `characteristics:${projectId}` : null;
       let project = null;
       let groups = [];
       let editingSectionId = null;
@@ -678,6 +679,7 @@
       if (!projectId) {
         characteristicContainer.innerHTML = "<p>Не передан параметр id</p>";
       } else {
+        hydrateCharacteristicsFromCache();
         if (backButton) backButton.addEventListener("click", () => (window.location.href = `/project.html?id=${projectId}`));
         focusNewSectionBtn?.addEventListener("click", focusNewSectionForm);
         newSectionForm?.addEventListener("submit", handleNewSectionSubmit);
@@ -765,14 +767,46 @@
           const res = await fetch(`/api/projects/${projectId}/characteristics/sections`);
           if (!res.ok) throw new Error();
           characteristicSections = await res.json();
+          persistCharacteristics();
         } catch (err) {
-          characteristicSections = previousSections.length ? previousSections : [];
+          if (!previousSections.length && sectionsCacheKey) {
+            try {
+              const cached = localStorage.getItem(sectionsCacheKey);
+              if (cached) characteristicSections = JSON.parse(cached);
+            } catch (cacheErr) {
+              characteristicSections = [];
+            }
+          } else {
+            characteristicSections = previousSections.length ? previousSections : [];
+          }
           showToast("Не удалось загрузить секции, попробуйте обновить страницу позже", "error");
         }
         editingSectionId = null;
         fieldEditor = null;
         pendingFieldEditorScroll = null;
         renderCharacteristics();
+      }
+
+      function persistCharacteristics() {
+        if (!sectionsCacheKey) return;
+        try {
+          localStorage.setItem(sectionsCacheKey, JSON.stringify(characteristicSections));
+        } catch (err) {
+          console.warn("Не удалось сохранить секции в кэш", err);
+        }
+      }
+
+      function hydrateCharacteristicsFromCache() {
+        if (!sectionsCacheKey) return;
+        try {
+          const cached = localStorage.getItem(sectionsCacheKey);
+          if (cached) {
+            characteristicSections = JSON.parse(cached);
+            renderCharacteristics();
+          }
+        } catch (err) {
+          console.warn("Не удалось загрузить секции из кэша", err);
+        }
       }
 
       function renderCharacteristicTemplates() {
@@ -1440,6 +1474,7 @@
           )
         );
         characteristicSections = sorted;
+        persistCharacteristics();
         editingSectionId = null;
         fieldEditor = null;
         pendingFieldEditorScroll = null;
@@ -1496,6 +1531,7 @@
         setButtonLoading(applyTemplateBtn, false);
         if (res.ok) {
           characteristicSections = await res.json();
+          persistCharacteristics();
           editingSectionId = null;
           fieldEditor = null;
           renderCharacteristics();
@@ -1539,6 +1575,7 @@
         setButtonLoading(copyStructureBtn, false);
         if (res.ok) {
           characteristicSections = await res.json();
+          persistCharacteristics();
           editingSectionId = null;
           fieldEditor = null;
           renderCharacteristics();
@@ -1568,6 +1605,7 @@
         if (res.ok) {
           const payload = await res.json();
           characteristicSections = payload.sections || payload;
+          persistCharacteristics();
           editingSectionId = null;
           fieldEditor = null;
           renderCharacteristics();
