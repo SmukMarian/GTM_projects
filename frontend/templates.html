@@ -316,13 +316,25 @@
       .template-detail input,
       .template-detail textarea,
       .template-detail select {
-        width: 100%;
         border-radius: 10px;
         border: 1px solid var(--border);
         padding: 8px 10px;
         background: var(--surface);
         color: var(--text);
         font: inherit;
+        flex: 1 1 auto;
+        max-width: 100%;
+      }
+
+      .template-detail label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .template-description {
+        min-height: 110px;
       }
 
       .detail-header {
@@ -681,7 +693,8 @@
         const descLabel = document.createElement("label");
         descLabel.textContent = "Описание";
         const descInput = document.createElement("textarea");
-        descInput.rows = 2;
+        descInput.rows = 4;
+        descInput.className = "template-description";
         descInput.value = draft.description || "";
         descInput.addEventListener("input", (event) => {
           draft.description = event.target.value || null;
@@ -993,7 +1006,8 @@
         const descLabel = document.createElement("label");
         descLabel.textContent = "Описание";
         const descInput = document.createElement("textarea");
-        descInput.rows = 2;
+        descInput.rows = 4;
+        descInput.className = "template-description";
         descInput.value = draft.description || "";
         descInput.addEventListener("input", (event) => {
           draft.description = event.target.value || null;

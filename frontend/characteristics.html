@@ -132,9 +132,7 @@
         border: 1px solid var(--border);
         border-radius: 14px;
         box-shadow: var(--shadow);
-        position: sticky;
-        top: 12px;
-        z-index: 900;
+        position: static;
       }
 
       .logo {
@@ -431,12 +429,15 @@
       }
 
       .field-editor .inline-editor-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(3, minmax(200px, 1fr));
+        gap: 12px;
+        align-items: end;
       }
 
-      .field-editor .inline-editor-grid label:nth-child(3) {
-        grid-column: 1 / span 2;
+      .field-editor .inline-editor-grid .inline-input,
+      .field-editor .inline-editor-grid select {
+        width: auto;
+        max-width: 100%;
       }
 
       .inline-editor label {
@@ -936,7 +937,9 @@
           downBtn.addEventListener("click", () => moveSection(section.id, 1));
 
           const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "Удалить";
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.title = "Удалить секцию";
+          deleteBtn.setAttribute("aria-label", "Удалить секцию");
           deleteBtn.addEventListener("click", () => deleteSection(section.id));
 
           headerActions.append(editSectionBtn, addFieldBtn, upBtn, downBtn, deleteBtn);
@@ -1037,7 +1040,9 @@
 
         const saveBtn = document.createElement("button");
         saveBtn.className = "primary";
-        saveBtn.textContent = "Сохранить";
+        saveBtn.textContent = "💾";
+        saveBtn.title = "Сохранить";
+        saveBtn.setAttribute("aria-label", "Сохранить");
         saveBtn.hidden = true;
 
         const cancelBtn = document.createElement("button");
@@ -1058,7 +1063,9 @@
         moveFieldDown.addEventListener("click", () => moveField(section.id, field.id, 1));
 
         const deleteFieldBtn = document.createElement("button");
-        deleteFieldBtn.textContent = "Удалить";
+        deleteFieldBtn.textContent = "🗑️";
+        deleteFieldBtn.title = "Удалить";
+        deleteFieldBtn.setAttribute("aria-label", "Удалить");
         deleteFieldBtn.addEventListener("click", () => deleteField(section.id, field.id));
 
         actionsBar.append(saveBtn, cancelBtn, moveFieldUp, moveFieldDown, deleteFieldBtn);
