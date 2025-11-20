@@ -1,4 +1,4 @@
-"""Локальное файловое хранилище для Haier Project Tracker.
+"""Локальное файловое хранилище для Projects Tracker.
 
 Слой отвечает за загрузку и сохранение доменных моделей в один JSON-файл,
 что соответствует требованию ТЗ о локальной работе и возможности ручного
@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Iterable
@@ -24,6 +25,8 @@ from .models import (
     CharacteristicTemplate,
     Comment,
     BrandMetric,
+    CustomFieldFilterMeta,
+    CustomFieldFilterRequest,
     DashboardPayload,
     DashboardKPI,
     FileAttachment,
@@ -39,11 +42,14 @@ from .models import (
     RecentChange,
     GroupDashboardCard,
     RiskProject,
+    SpotlightTask,
     StatusSummary,
+    TaskSpotlightSummary,
     UpcomingItem,
     Subtask,
     Task,
     TaskStatus,
+    TaskUrgency,
     StageStatus,
 )
 
@@ -70,6 +76,153 @@ def load_store(path: Path) -> DataStore:
     if path.exists():
         return DataStore.model_validate_json(path.read_text(encoding="utf-8"))
     return DataStore()
+
+
+def _normalize_bool(value) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"true", "1", "yes", "да", "on"}:
+            return True
+        if lowered in {"false", "0", "no", "нет", "off"}:
+            return False
+    return None
+
+
+def _normalize_number(value) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.replace(",", "."))
+        except ValueError:
+            return None
+    return None
+
+
+def _normalize_date(value) -> date | None:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _detect_field_type(values: list) -> str:
+    non_null = [v for v in values if v is not None]
+    if not non_null:
+        return "text"
+    if all(isinstance(v, bool) for v in non_null):
+        return "checkbox"
+    if all(isinstance(v, (int, float)) for v in non_null):
+        return "number"
+    if all(_normalize_date(v) for v in non_null):
+        return "date"
+    if all(isinstance(v, str) for v in non_null):
+        unique = {v for v in non_null if v != ""}
+        if 1 < len(unique) <= 8:
+            return "select"
+    return "text"
+
+
+def _build_custom_field_meta(items, field_accessor, *, counter_key: str) -> list[CustomFieldFilterMeta]:
+    values_by_field: dict[str, list] = {}
+    counts: Counter[str] = Counter()
+    for item in items:
+        fields = field_accessor(item) or {}
+        for key, value in fields.items():
+            counts[key] += 1
+            values_by_field.setdefault(key, []).append(value)
+
+    metas: list[CustomFieldFilterMeta] = []
+    for key, count in counts.items():
+        if count <= 1:
+            continue
+        values = values_by_field.get(key, [])
+        field_type = _detect_field_type(values)
+        options = None
+        if field_type == "checkbox":
+            # Boolean options implicit; keep options None.
+            options = None
+        elif field_type == "select":
+            freq = Counter(str(v) for v in values if v not in (None, ""))
+            options = [
+                CustomFieldOption(value=val, count=cnt)
+                for val, cnt in sorted(freq.items(), key=lambda x: x[0])
+            ]
+        meta_kwargs = {
+            "field_id": key,
+            "label_ru": key,
+            "label_en": key,
+            "type": field_type,
+            "options": options,
+            f"{counter_key}_count": count,
+        }
+        metas.append(CustomFieldFilterMeta(**meta_kwargs))
+    metas.sort(key=lambda m: m.label_ru.lower())
+    return metas
+
+
+def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) -> bool:
+    if flt.type == "text":
+        if not flt.value:
+            return True
+        value = fields.get(flt.field_id)
+        return value is not None and str(value).lower().find(flt.value.lower()) != -1
+
+    if flt.type == "number":
+        target = _normalize_number(fields.get(flt.field_id))
+        if target is None:
+            return False
+        if flt.value_from is not None and target < flt.value_from:
+            return False
+        if flt.value_to is not None and target > flt.value_to:
+            return False
+        return True
+
+    if flt.type in {"select", "enum"}:
+        if not flt.values:
+            return True
+        value = fields.get(flt.field_id)
+        return value is not None and str(value) in set(flt.values)
+
+    if flt.type in {"checkbox", "boolean"}:
+        if flt.bool is None:
+            return True
+        value = _normalize_bool(fields.get(flt.field_id))
+        return value is not None and value is flt.bool
+
+    if flt.type == "date":
+        target = _normalize_date(fields.get(flt.field_id))
+        if target is None:
+            return False
+        if flt.date_from and target < flt.date_from:
+            return False
+        if flt.date_to and target > flt.date_to:
+            return False
+        return True
+
+    # Fallback for unknown types: string contains
+    if flt.value:
+        value = fields.get(flt.field_id)
+        return value is not None and str(value).lower().find(flt.value.lower()) != -1
+    return True
+
+
+def _filter_by_custom_fields(items, filters: list[CustomFieldFilterRequest] | None, *, field_accessor):
+    if not filters:
+        return list(items)
+    active = [f for f in filters if f is not None]
+    filtered = list(items)
+    for flt in active:
+        filtered = [item for item in filtered if _matches_filter(field_accessor(item), flt)]
+    return filtered
 
 
 class LocalRepository:
@@ -109,6 +262,7 @@ class LocalRepository:
         statuses: set[GroupStatus] | None = None,
         extra_key: str | None = None,
         extra_value: str | None = None,
+        filters: list[CustomFieldFilterRequest] | None = None,
     ) -> list[ProductGroup]:
         groups: Iterable[ProductGroup] = self.store.product_groups
         if not include_archived:
@@ -123,11 +277,12 @@ class LocalRepository:
             groups = [g for g in groups if key in g.extra_fields]
             if extra_value:
                 value_lower = extra_value.lower()
-                groups = [
-                    g
-                    for g in groups
-                    if str(g.extra_fields.get(key, "")).lower().find(value_lower) != -1
-                ]
+            groups = [
+                g
+                for g in groups
+                if str(g.extra_fields.get(key, "")).lower().find(value_lower) != -1
+            ]
+        groups = _filter_by_custom_fields(groups, filters, field_accessor=lambda g: g.extra_fields)
         return list(groups)
 
     def get_group(self, group_id: UUID) -> ProductGroup | None:
@@ -171,6 +326,7 @@ class LocalRepository:
         current_stage_id: UUID | None = None,
         planned_from: date | None = None,
         planned_to: date | None = None,
+        filters: list[CustomFieldFilterRequest] | None = None,
     ) -> list[Project]:
         projects: Iterable[Project] = self.store.projects
         if not include_archived:
@@ -195,7 +351,18 @@ class LocalRepository:
                 for p in projects
                 if p.planned_launch is not None and p.planned_launch <= planned_to
             ]
+        projects = _filter_by_custom_fields(projects, filters, field_accessor=lambda p: p.custom_fields)
         return list(projects)
+
+    def list_project_filter_meta(self) -> list[CustomFieldFilterMeta]:
+        return _build_custom_field_meta(
+            self.store.projects, field_accessor=lambda p: p.custom_fields, counter_key="projects"
+        )
+
+    def list_group_filter_meta(self) -> list[CustomFieldFilterMeta]:
+        return _build_custom_field_meta(
+            self.store.product_groups, field_accessor=lambda g: g.extra_fields, counter_key="groups"
+        )
 
     def get_project(self, project_id: UUID) -> Project | None:
         for project in self.store.projects:
@@ -687,16 +854,16 @@ class LocalRepository:
 
     def import_characteristics_from_excel(
         self, project_id: UUID, content: bytes
-    ) -> tuple[list[CharacteristicSection], list[str]]:
+    ) -> tuple[list[CharacteristicSection], list[str], dict[str, int]]:
         p_idx, project = self._get_project_with_index(project_id)
-        sections, errors = parse_characteristics_from_excel(content, project)
+        sections, errors, report = parse_characteristics_from_excel(content, project)
         if errors:
-            return [], errors
+            return [], errors, report
 
         project.characteristics = sections
         self.store.projects[p_idx] = project
         self.save()
-        return sections, []
+        return sections, [], report
 
     # --- Files ---
     def list_files(self, project_id: UUID) -> list[FileAttachment]:
@@ -1143,6 +1310,68 @@ class LocalRepository:
             upcoming=upcoming,
             recent_changes=recent_events,
         )
+
+    def build_priority_task_summary(
+        self, *, include_archived_projects: bool = False
+    ) -> TaskSpotlightSummary:
+        today = date.today()
+        group_names = {group.id: group.name for group in self.store.product_groups}
+        summary = TaskSpotlightSummary()
+
+        def sort_key(item: SpotlightTask) -> tuple[int, int, str]:
+            has_due = item.due_in_days is not None
+            due_value = item.due_in_days or 0
+            return (0 if has_due else 1, due_value, item.title.lower())
+
+        for project in self.store.projects:
+            if not include_archived_projects and project.status == ProjectStatus.ARCHIVED:
+                continue
+
+            stage_titles = {stage.id: stage.title for stage in project.gtm_stages}
+            group_name = group_names.get(project.group_id, "Без группы")
+
+            for task in project.tasks:
+                if task.status == TaskStatus.DONE:
+                    continue
+                is_important = bool(task.important)
+                is_urgent = task.urgency == TaskUrgency.HIGH
+                if not is_important and not is_urgent:
+                    continue
+
+                due_in_days = None
+                overdue = False
+                if task.due_date:
+                    due_in_days = (task.due_date - today).days
+                    overdue = due_in_days < 0
+
+                spotlight = SpotlightTask(
+                    task_id=task.id,
+                    title=task.title,
+                    project_id=project.id,
+                    project_name=project.name,
+                    group_id=project.group_id,
+                    group_name=group_name,
+                    gtm_stage_id=task.gtm_stage_id,
+                    gtm_stage_title=stage_titles.get(task.gtm_stage_id) if task.gtm_stage_id else None,
+                    due_date=task.due_date,
+                    due_in_days=due_in_days,
+                    important=is_important,
+                    urgency=task.urgency,
+                    status=task.status,
+                    overdue=overdue,
+                )
+
+                if is_important and is_urgent:
+                    summary.urgent_and_important.append(spotlight)
+                elif is_important:
+                    summary.important_only.append(spotlight)
+                else:
+                    summary.urgent_only.append(spotlight)
+
+        summary.urgent_and_important.sort(key=sort_key)
+        summary.important_only.sort(key=sort_key)
+        summary.urgent_only.sort(key=sort_key)
+        return summary
 
     # --- Backups ---
     def list_backups(self, backups_dir: Path) -> list[BackupInfo]:
