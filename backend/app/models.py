@@ -96,6 +96,18 @@ class CharacteristicTemplate(BaseModel):
     sections: list[CharacteristicSection] = Field(default_factory=list)
 
 
+class CharacteristicImportReport(BaseModel):
+    sections_created: int = 0
+    fields_created: int = 0
+    fields_updated: int = 0
+    rows_skipped: int = 0
+
+
+class CharacteristicImportResponse(BaseModel):
+    sections: list[CharacteristicSection]
+    report: CharacteristicImportReport
+
+
 class ChecklistItem(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     title: str

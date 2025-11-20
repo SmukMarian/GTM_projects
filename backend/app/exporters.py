@@ -159,11 +159,13 @@ def export_characteristics_to_excel(project: Project) -> bytes:
 
     headers = [
         "Секция",
+        "Порядок секции",
         "Label RU",
         "Label EN",
         "Value RU",
         "Value EN",
         "Тип поля",
+        "Порядок поля",
     ]
     sheet.append(headers)
 
@@ -172,11 +174,13 @@ def export_characteristics_to_excel(project: Project) -> bytes:
             sheet.append(
                 [
                     section.title,
+                    section.order,
                     field.label_ru,
                     field.label_en,
                     field.value_ru,
                     field.value_en,
                     field.field_type.value,
+                    field.order,
                 ]
             )
 
@@ -344,8 +348,8 @@ def _coerce_value(raw: str | int | float | bool | None, field_type: FieldType) -
 
 def import_characteristics_from_excel(
     content: bytes, project: Project
-) -> tuple[list[CharacteristicSection], list[str]]:
-    """Распарсить Excel с характеристиками и вернуть обновлённые секции и ошибки."""
+) -> tuple[list[CharacteristicSection], list[str], dict[str, int]]:
+    """Распарсить Excel с характеристиками и вернуть обновлённые секции, ошибки и отчёт."""
 
     try:
         workbook = load_workbook(filename=BytesIO(content))
@@ -362,13 +366,23 @@ def import_characteristics_from_excel(
     header_row = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
     header_map = {title.lower(): idx for idx, title in enumerate(header_row) if title}
 
-    required_columns = {"секция", "label ru", "label en"}
+    required_columns = {"секция", "label ru", "label en", "value ru", "value en", "тип поля"}
     missing = required_columns - set(header_map)
     if missing:
         return [], [f"Отсутствуют обязательные столбцы: {', '.join(sorted(missing))}"]
 
     errors: list[str] = []
     sections_copy: list[CharacteristicSection] = [section.model_copy(deep=True) for section in project.characteristics]
+    report = {
+        "sections_created": 0,
+        "fields_created": 0,
+        "fields_updated": 0,
+        "rows_skipped": 0,
+    }
+
+    # Быстрый доступ к существующим секциям и порядкам, чтобы корректно добавлять новые
+    section_index = {normalize(section.title): section for section in sections_copy}
+    max_section_order = max((section.order for section in sections_copy), default=-1)
 
     # Быстрый доступ к существующим секциям и порядкам, чтобы корректно добавлять новые
     section_index = {normalize(section.title): section for section in sections_copy}
@@ -398,12 +412,14 @@ def import_characteristics_from_excel(
         section_title = row[col("секция")]
         if not section_title:
             errors.append(f"Строка {row_index}: не заполнено название секции")
+            report["rows_skipped"] += 1
             continue
 
         label_ru = row[col("label ru")]
         label_en = row[col("label en")]
         if not label_ru and not label_en:
             errors.append(f"Строка {row_index}: не указаны Label RU/EN")
+            report["rows_skipped"] += 1
             continue
 
         normalized_section = normalize(str(section_title))
@@ -418,6 +434,7 @@ def import_characteristics_from_excel(
             section = CharacteristicSection(title=str(section_title), order=order, fields=[])
             sections_copy.append(section)
             section_index[normalized_section] = section
+            report["sections_created"] += 1
 
         max_field_order = max((fld.order for fld in section.fields), default=-1)
         normalized_ru = normalize(label_ru or "")
@@ -448,8 +465,10 @@ def import_characteristics_from_excel(
                 order=order,
             )
             section.fields.append(field)
+            report["fields_created"] += 1
         else:
             field.field_type = parse_field_type(row[type_cell_idx], field.field_type) if type_cell_idx is not None else field.field_type
+            report["fields_updated"] += 1
 
         value_ru_idx = col("value ru")
         value_en_idx = col("value en")
@@ -462,4 +481,4 @@ def import_characteristics_from_excel(
     for section in sections_copy:
         section.fields.sort(key=lambda f: f.order)
 
-    return sections_copy, errors
+    return sections_copy, errors, report

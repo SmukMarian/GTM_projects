@@ -690,16 +690,16 @@ class LocalRepository:
 
     def import_characteristics_from_excel(
         self, project_id: UUID, content: bytes
-    ) -> tuple[list[CharacteristicSection], list[str]]:
+    ) -> tuple[list[CharacteristicSection], list[str], dict[str, int]]:
         p_idx, project = self._get_project_with_index(project_id)
-        sections, errors = parse_characteristics_from_excel(content, project)
+        sections, errors, report = parse_characteristics_from_excel(content, project)
         if errors:
-            return [], errors
+            return [], errors, report
 
         project.characteristics = sections
         self.store.projects[p_idx] = project
         self.save()
-        return sections, []
+        return sections, [], report
 
     # --- Files ---
     def list_files(self, project_id: UUID) -> list[FileAttachment]:

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script src="/theme.js" defer></script>
     <script>
       (() => {
@@ -1426,19 +1427,22 @@
         overflow: hidden;
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08));
         border: 1px solid var(--border);
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 3 / 4;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        min-height: 320px;
+        max-width: 460px;
+        min-height: 360px;
       }
 
       .cover-frame img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        background: var(--surface-muted);
+        padding: 6px;
       }
 
       .cover-placeholder {

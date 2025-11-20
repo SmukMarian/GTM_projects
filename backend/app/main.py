@@ -31,6 +31,7 @@ from .models import (
     BackupRestoreRequest,
     CharacteristicField,
     CharacteristicSection,
+    CharacteristicImportResponse,
     CharacteristicTemplate,
     Comment,
     DashboardPayload,
@@ -694,25 +695,25 @@ def export_characteristics(project_id: UUID, repo: LocalRepository = Depends(get
         raise HTTPException(status_code=404, detail="Проект не найден")
 
     content = export_characteristics_to_excel(project)
-    filename = f"characteristics_{project_id}.xlsx"
+    filename = f"characteristics_{project_id}_{date.today().isoformat()}.xlsx"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(BytesIO(content), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers=headers)
 
 
 @app.post(
     "/api/projects/{project_id}/characteristics/import",
-    response_model=list[CharacteristicSection],
+    response_model=CharacteristicImportResponse,
     status_code=201,
 )
 def import_characteristics(
     project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
-) -> list[CharacteristicSection]:
+) -> CharacteristicImportResponse:
     content = file.file.read()
-    sections, errors = repo.import_characteristics_from_excel(project_id, content)
+    sections, errors, report = repo.import_characteristics_from_excel(project_id, content)
     if errors:
         raise HTTPException(status_code=400, detail={"errors": errors})
     log_event(repo, project_id, "Импортированы характеристики (Excel)")
-    return sections
+    return CharacteristicImportResponse(sections=sections, report=report)
 
 
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
