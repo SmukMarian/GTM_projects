@@ -4459,6 +4459,12 @@
         });
       }
 
+      function imageDownloadUrl(image) {
+        if (!image) return "";
+        const cacheKey = encodeURIComponent(image.updated_at || image.uploaded_at || image.id || "0");
+        return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
+      }
+
       function renderGallery() {
         galleryContainer.innerHTML = "";
         const sorted = [...images].sort((a, b) => a.order - b.order);
