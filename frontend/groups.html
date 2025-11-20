@@ -90,7 +90,7 @@
         box-shadow: var(--shadow);
         position: sticky;
         top: 12px;
-        z-index: 900;
+        z-index: 5;
       }
 
       .logo {
@@ -253,8 +253,7 @@
         position: fixed;
         inset: 0;
         display: grid;
-        grid-template-columns: 1fr;
-        place-items: stretch;
+        place-items: center;
         z-index: 1100;
       }
 
@@ -270,8 +269,8 @@
 
       .filter-card {
         position: relative;
-        margin: auto 0 auto auto;
-        width: min(420px, 92vw);
+        margin: 0 auto;
+        width: min(650px, 95vw);
         max-height: 100vh;
         background: var(--surface);
         border-radius: 16px;
@@ -420,6 +419,13 @@
         font: inherit;
         background: var(--surface-muted);
         color: var(--text);
+      }
+
+      .form-dialog input,
+      .form-dialog textarea,
+      .form-dialog select {
+        width: auto;
+        min-width: 0;
       }
 
       select {
@@ -905,6 +911,7 @@
       let viewMode = "cards";
       let groups = [];
       let projects = [];
+      const groupsCacheKey = "hpt-group-cache-v2";
       let selectedGroupId = null;
       const urlParams = new URLSearchParams(window.location.search);
       const initialGroupId = urlParams.get("group");
@@ -962,6 +969,28 @@
         return entries
           .map(([k, v]) => `<span class="chip"><strong>${k}:</strong> ${v ?? ""}</span>`)
           .join(" ");
+      }
+
+      function renderGroupsState() {
+        renderSummary();
+        renderCardView();
+        renderTableView();
+        if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
+          selectedGroupId = initialGroupId;
+        }
+        if (selectedGroupId) openDetails(selectedGroupId);
+      }
+
+      function hydrateGroupsFromCache() {
+        const cached = localStorage.getItem(groupsCacheKey);
+        if (!cached) return;
+        try {
+          groups = JSON.parse(cached);
+          renderGroupsState();
+        } catch (e) {
+          console.warn("Не удалось прочитать кеш групп", e);
+          groups = [];
+        }
       }
 
       function groupProjects(groupId) {
@@ -1601,19 +1630,18 @@
           });
           if (!res.ok) {
             alert("Не удалось загрузить группы");
+            if (groups.length) {
+              renderGroupsState();
+            }
             return;
           }
           groups = await res.json();
-          renderSummary();
-          renderCardView();
-          renderTableView();
-          if (!selectedGroupId && initialGroupId && groups.some((g) => g.id === initialGroupId)) {
-            selectedGroupId = initialGroupId;
-          }
-          if (selectedGroupId) openDetails(selectedGroupId);
+          localStorage.setItem(groupsCacheKey, JSON.stringify(groups));
+          renderGroupsState();
         } catch (err) {
           console.error(err);
           alert("Не удалось загрузить группы");
+          hydrateGroupsFromCache();
         }
       }
 
@@ -1656,6 +1684,7 @@
 
       applyViewMode(viewMode);
       restoreFilters();
+      hydrateGroupsFromCache();
       loadGroups();
     </script>
     <footer class="site-footer">
