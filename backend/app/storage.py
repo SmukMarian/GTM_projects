@@ -519,9 +519,9 @@ class LocalRepository:
             for s_idx, stage in enumerate(project.gtm_stages):
                 if stage.id == stage_id:
                     project.gtm_stages.pop(s_idx)
-                self.store.projects[p_idx] = project
-                self.save()
-                return
+                    self.store.projects[p_idx] = project
+                    self.save()
+                    return
             raise KeyError(f"Stage {stage_id} not found in project {project_id}")
         raise KeyError(f"Project {project_id} not found")
 

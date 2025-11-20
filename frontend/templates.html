@@ -306,11 +306,13 @@
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 16px;
-        background: var(--surface-muted);
+        background: radial-gradient(120% 120% at 20% 10%, rgba(16, 163, 127, 0.05), transparent 35%),
+          linear-gradient(180deg, var(--surface-muted) 0%, var(--surface) 65%, var(--surface-muted) 100%);
         min-height: 320px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 18px;
+        box-shadow: var(--shadow);
       }
 
       .template-detail input,
@@ -354,57 +356,163 @@
       .section-stack {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
       }
 
       .stage-card,
       .section-card {
+        position: relative;
+        overflow: hidden;
         border: 1px solid var(--border);
         border-radius: 14px;
-        padding: 12px;
-        background: var(--surface);
+        padding: 16px;
+        background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+      }
+
+      .stage-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, var(--accent-soft), transparent 60%);
+        opacity: 0.75;
+        pointer-events: none;
+      }
+
+      .stage-card > * {
+        position: relative;
       }
 
       .stage-card-header,
       .section-card-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         gap: 8px;
         flex-wrap: wrap;
+      }
+
+      .stage-header-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .stage-index {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: var(--surface-muted);
+        border: 1px solid var(--accent-soft);
+        border-radius: 12px;
+        color: var(--accent);
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .stage-description,
+      .task-header,
+      .task-description {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }
 
       .task-card,
       .field-card {
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 10px;
-        background: var(--surface-muted);
+        padding: 12px;
+        background: linear-gradient(180deg, var(--surface-muted) 0%, var(--surface) 100%);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
       }
 
       .subtask-list,
       .field-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
 
       .subtask-row,
       .field-row {
         display: grid;
-        grid-template-columns: 1fr 100px auto;
-        gap: 8px;
+        grid-template-columns: 1fr 120px auto;
+        gap: 10px;
         align-items: center;
+        background: var(--surface);
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px dashed var(--border);
       }
 
       .field-row {
         grid-template-columns: repeat(3, minmax(0, 1fr)) 110px auto;
+      }
+
+      .task-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+
+      .section-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--surface);
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        width: fit-content;
+      }
+
+      .section-heading::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        opacity: 0.7;
+      }
+
+      .section-heading.small {
+        font-size: 0.82rem;
+        padding: 4px 8px;
+      }
+
+      .subtask-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .add-block {
+        width: 100%;
+        border-style: dashed;
       }
 
       .subtask-row input[type="text"] {
@@ -733,6 +841,11 @@
         card.className = "stage-card";
         const header = document.createElement("div");
         header.className = "stage-card-header";
+        const headerInfo = document.createElement("div");
+        headerInfo.className = "stage-header-info";
+        const stageIndex = document.createElement("span");
+        stageIndex.className = "stage-index";
+        stageIndex.textContent = `Этап ${index + 1}`;
         const titleInput = document.createElement("input");
         titleInput.value = stage.title || "";
         titleInput.placeholder = "Название этапа";
@@ -740,6 +853,7 @@
           stage.title = event.target.value;
           markGtmDirty();
         });
+        headerInfo.append(stageIndex, titleInput);
         const headerActions = document.createElement("div");
         headerActions.className = "toolbar";
         const upBtn = document.createElement("button");
@@ -764,7 +878,12 @@
           deleteGtmStage(stage.id);
         });
         headerActions.append(upBtn, downBtn, delBtn);
-        header.append(titleInput, headerActions);
+        header.append(headerInfo, headerActions);
+        const descSection = document.createElement("div");
+        descSection.className = "stage-description";
+        const descLabel = document.createElement("div");
+        descLabel.className = "section-heading small";
+        descLabel.textContent = "Критерии завершения";
         const desc = document.createElement("textarea");
         desc.rows = 2;
         desc.placeholder = "Критерии завершения этапа";
@@ -773,27 +892,34 @@
           stage.description = event.target.value || null;
           markGtmDirty();
         });
-        card.append(header, desc);
+        descSection.append(descLabel, desc);
+        card.append(header, descSection);
+
+        const tasksTitle = document.createElement("div");
+        tasksTitle.className = "section-heading";
+        tasksTitle.textContent = "Задачи этапа";
 
         const tasksWrapper = document.createElement("div");
-        tasksWrapper.className = "stage-stack";
+        tasksWrapper.className = "task-stack";
         const tasks = (gtmState.draft.tasks || []).filter((task) => task.gtm_stage_id === stage.id);
         tasks.forEach((task) => tasksWrapper.appendChild(createTaskCard(task)));
         const addTaskBtn = document.createElement("button");
-        addTaskBtn.className = "ghost";
+        addTaskBtn.className = "ghost add-block";
         addTaskBtn.textContent = "+ Задача";
         addTaskBtn.addEventListener("click", (event) => {
           event.stopPropagation();
           addGtmTask(stage.id);
         });
         tasksWrapper.appendChild(addTaskBtn);
-        card.appendChild(tasksWrapper);
+        card.append(tasksTitle, tasksWrapper);
         return card;
       }
 
       function createTaskCard(task) {
         const card = document.createElement("div");
         card.className = "task-card";
+        const header = document.createElement("div");
+        header.className = "task-header";
         const title = document.createElement("input");
         title.value = task.title || "";
         title.placeholder = "Название задачи";
@@ -801,6 +927,13 @@
           task.title = event.target.value;
           markGtmDirty();
         });
+        header.appendChild(title);
+
+        const descWrapper = document.createElement("div");
+        descWrapper.className = "task-description";
+        const descLabel = document.createElement("div");
+        descLabel.className = "section-heading small";
+        descLabel.textContent = "Описание";
         const desc = document.createElement("textarea");
         desc.rows = 2;
         desc.placeholder = "Описание задачи";
@@ -809,6 +942,7 @@
           task.description = event.target.value || null;
           markGtmDirty();
         });
+        descWrapper.append(descLabel, desc);
         const subtaskList = document.createElement("div");
         subtaskList.className = "subtask-list";
         (task.subtasks || []).sort((a, b) => a.order - b.order).forEach((subtask) => {
@@ -839,13 +973,20 @@
           row.append(subInput, orderInput, deleteBtn);
           subtaskList.appendChild(row);
         });
+        const subtaskSection = document.createElement("div");
+        subtaskSection.className = "subtask-section";
+        const subtaskHeader = document.createElement("div");
+        subtaskHeader.className = "section-heading small";
+        subtaskHeader.textContent = "Подзадачи";
+        subtaskSection.append(subtaskHeader, subtaskList);
         const addSubtaskBtn = document.createElement("button");
-        addSubtaskBtn.className = "ghost";
+        addSubtaskBtn.className = "ghost add-block";
         addSubtaskBtn.textContent = "+ Подзадача";
         addSubtaskBtn.addEventListener("click", (event) => {
           event.stopPropagation();
           addGtmSubtask(task.id);
         });
+        subtaskSection.appendChild(addSubtaskBtn);
         const actions = document.createElement("div");
         actions.className = "detail-actions";
         const deleteTaskBtn = document.createElement("button");
@@ -856,7 +997,7 @@
           deleteGtmTask(task.id);
         });
         actions.appendChild(deleteTaskBtn);
-        card.append(title, desc, subtaskList, addSubtaskBtn, actions);
+        card.append(header, descWrapper, subtaskSection, actions);
         return card;
       }
 
