@@ -452,6 +452,29 @@
         flex-wrap: wrap;
       }
 
+      .icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .icon-button:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .icon-button.danger {
+        color: var(--danger);
+      }
+
       .kanban-board {
         display: flex;
         gap: 16px;
@@ -1203,6 +1226,8 @@
         display: flex;
         flex-direction: column;
         box-shadow: var(--shadow-soft);
+        content-visibility: auto;
+        contain-intrinsic-size: 280px 320px;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
 
@@ -1216,6 +1241,7 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         background: var(--surface-muted);
+        display: block;
         cursor: pointer;
       }
 
@@ -3224,27 +3250,32 @@
 
           const actions = document.createElement("div");
           actions.className = "task-inline-actions";
-          const editBtn = document.createElement("button");
-          editBtn.className = "ghost";
-          editBtn.textContent = "Редактировать";
-          editBtn.addEventListener("click", () => openTaskForm(task.id));
-          const toggleStatusBtn = document.createElement("button");
-          toggleStatusBtn.className = "ghost";
-          toggleStatusBtn.textContent = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
-          toggleStatusBtn.addEventListener("click", () =>
-            changeTaskStatus(task.id, task.status === "done" ? "todo" : "done")
-          );
-          const importantBtn = document.createElement("button");
-          importantBtn.className = "ghost";
-          importantBtn.textContent = task.important ? "Снять важность" : "Сделать важной";
-          importantBtn.addEventListener("click", () => toggleImportant(task.id));
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "Удалить";
-          deleteBtn.addEventListener("click", () => deleteTask(task.id));
-          actions.appendChild(editBtn);
-          actions.appendChild(toggleStatusBtn);
-          actions.appendChild(importantBtn);
-          actions.appendChild(deleteBtn);
+
+          const actionButtons = [
+            { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
+            {
+              label: task.status === "done" ? "↺" : "✔",
+              title: task.status === "done" ? "Вернуть в работу" : "Отметить выполненной",
+              onClick: () => changeTaskStatus(task.id, task.status === "done" ? "todo" : "done"),
+            },
+            {
+              label: task.important ? "★" : "☆",
+              title: task.important ? "Снять важность" : "Сделать важной",
+              onClick: () => toggleImportant(task.id),
+            },
+            { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
+          ];
+
+          actionButtons.forEach((cfg) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
+            btn.textContent = cfg.label;
+            btn.title = cfg.title;
+            btn.addEventListener("click", cfg.onClick);
+            actions.appendChild(btn);
+          });
+
           details.appendChild(actions);
 
           details.appendChild(renderSubtasksSection(task));
@@ -3330,23 +3361,59 @@
           const toggleTitle = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
           const toggleIcon = toggleStatus === "todo" ? "↺" : "✔";
           const row = document.createElement("tr");
-          row.innerHTML = `
-            <td><strong>${task.title}</strong></td>
-            <td>${stageTitle(task.gtm_stage_id)}</td>
-            <td><span class="chip">${taskStatusLabel(task.status)}</span></td>
-            <td>${task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—"}</td>
-            <td>${task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—"}</td>
-            <td><span class="${due.className}">${due.text}</span></td>
-            <td>${progress.label}</td>
-              <td>
-              <div class="table-actions">
-                <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
-                <button class="ghost" onclick="openTaskDiscussion('${task.id}')">💬</button>
-                <button class="ghost" title="${toggleTitle}" onclick="changeTaskStatus('${task.id}', '${toggleStatus}')">${toggleIcon}</button>
-                <button class="ghost" title="Удалить" onclick="deleteTask('${task.id}')">🗑️</button>
-              </div>
-            </td>
-          `;
+
+          const titleCell = document.createElement("td");
+          titleCell.innerHTML = `<strong>${task.title}</strong>`;
+          row.appendChild(titleCell);
+
+          const stageCell = document.createElement("td");
+          stageCell.textContent = stageTitle(task.gtm_stage_id);
+          row.appendChild(stageCell);
+
+          const statusCell = document.createElement("td");
+          statusCell.innerHTML = `<span class="chip">${taskStatusLabel(task.status)}</span>`;
+          row.appendChild(statusCell);
+
+          const importanceCell = document.createElement("td");
+          importanceCell.innerHTML = task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—";
+          row.appendChild(importanceCell);
+
+          const urgencyCell = document.createElement("td");
+          urgencyCell.innerHTML = task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—";
+          row.appendChild(urgencyCell);
+
+          const dueCell = document.createElement("td");
+          dueCell.innerHTML = `<span class="${due.className}">${due.text}</span>`;
+          row.appendChild(dueCell);
+
+          const progressCell = document.createElement("td");
+          progressCell.textContent = progress.label;
+          row.appendChild(progressCell);
+
+          const actionsCell = document.createElement("td");
+          const actionWrap = document.createElement("div");
+          actionWrap.className = "table-actions";
+
+          const actionButtons = [
+            { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
+            { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
+            { label: toggleIcon, title: toggleTitle, onClick: () => changeTaskStatus(task.id, toggleStatus) },
+            { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
+          ];
+
+          actionButtons.forEach((cfg) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
+            btn.textContent = cfg.label;
+            btn.title = cfg.title;
+            btn.addEventListener("click", cfg.onClick);
+            actionWrap.appendChild(btn);
+          });
+
+          actionsCell.appendChild(actionWrap);
+          row.appendChild(actionsCell);
+
           tbody.appendChild(row);
         });
         table.appendChild(tbody);
@@ -4373,7 +4440,7 @@
           card.className = "image-card";
           card.innerHTML = `
             ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
-            <img class="image-thumb" src="${imageDownloadUrl(img)}" alt="${img.filename}" onclick="openImage('${img.id}')" />
+            <img class="image-thumb" src="${imageDownloadUrl(img)}" alt="${img.filename}" loading="lazy" decoding="async" fetchpriority="low" onclick="openImage('${img.id}')" />
             <div class="image-meta">
               <div style="display:flex; flex-direction:column; gap:2px">
                 <strong>${img.filename}</strong>
