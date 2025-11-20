@@ -1,4 +1,4 @@
-"""Доменные модели Haier Project Tracker.
+"""Доменные модели Projects Tracker.
 
 Файл задаёт Pydantic-модели и перечисления, соответствующие сущностям
 из `Haier_Project_Tracker_TZ.md`. Модели служат единым контрактом между
@@ -12,7 +12,9 @@ from enum import Enum
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from typing import Optional
+
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class GroupStatus(str, Enum):
@@ -39,6 +41,11 @@ class TaskStatus(str, Enum):
     DONE = "done"
 
 
+class TaskUrgency(str, Enum):
+    NORMAL = "normal"
+    HIGH = "high"
+
+
 class PriorityLevel(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -51,6 +58,35 @@ class FieldType(str, Enum):
     SELECT = "select"
     CHECKBOX = "checkbox"
     OTHER = "other"
+
+
+class CustomFieldOption(BaseModel):
+    value: str
+    count: int = 0
+
+
+class CustomFieldFilterMeta(BaseModel):
+    field_id: str
+    label_ru: str
+    label_en: str
+    type: str
+    projects_count: int | None = None
+    groups_count: int | None = None
+    options: list[CustomFieldOption] | None = None
+
+
+class CustomFieldFilterRequest(BaseModel):
+    field_id: str
+    type: str
+    value: Optional[str] = None
+    value_from: Optional[float] = None
+    value_to: Optional[float] = None
+    values: Optional[list[str]] = None
+    bool_value: Optional[bool] = Field(default=None, alias="bool")
+    date_from: Optional[date] = None
+    date_to: Optional[date] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Timestamped(BaseModel):
@@ -67,12 +103,21 @@ class ProductGroup(Timestamped):
     extra_fields: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
 
 
+class GroupSearchRequest(BaseModel):
+    include_archived: bool = True
+    statuses: list[GroupStatus] | None = None
+    brand: str | None = None
+    extra_key: str | None = None
+    extra_value: str | None = None
+    filters: list[CustomFieldFilterRequest] = Field(default_factory=list)
+
+
 class CharacteristicField(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     label_ru: str
     label_en: str
-    value_ru: str | None = None
-    value_en: str | None = None
+    value_ru: str | int | float | bool | None = None
+    value_en: str | int | float | bool | None = None
     field_type: FieldType = FieldType.TEXT
     order: int = 0
 
@@ -89,6 +134,18 @@ class CharacteristicTemplate(BaseModel):
     name: str
     description: str | None = None
     sections: list[CharacteristicSection] = Field(default_factory=list)
+
+
+class CharacteristicImportReport(BaseModel):
+    sections_created: int = 0
+    fields_created: int = 0
+    fields_updated: int = 0
+    rows_skipped: int = 0
+
+
+class CharacteristicImportResponse(BaseModel):
+    sections: list[CharacteristicSection]
+    report: CharacteristicImportReport
 
 
 class ChecklistItem(BaseModel):
@@ -138,9 +195,35 @@ class Task(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     due_date: date | None = None
     important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
     gtm_stage_id: UUID | None = None
     subtasks: list[Subtask] = Field(default_factory=list)
     comments: list["Comment"] = Field(default_factory=list)
+
+
+class SpotlightTask(BaseModel):
+    """Краткая карточка задачи для сводки важности/срочности."""
+
+    task_id: UUID
+    title: str
+    project_id: UUID
+    project_name: str
+    group_id: UUID
+    group_name: str
+    gtm_stage_id: UUID | None = None
+    gtm_stage_title: str | None = None
+    due_date: date | None = None
+    due_in_days: int | None = None
+    important: bool = False
+    urgency: TaskUrgency = TaskUrgency.NORMAL
+    status: TaskStatus = TaskStatus.TODO
+    overdue: bool = False
+
+
+class TaskSpotlightSummary(BaseModel):
+    urgent_and_important: list[SpotlightTask] = Field(default_factory=list)
+    important_only: list[SpotlightTask] = Field(default_factory=list)
+    urgent_only: list[SpotlightTask] = Field(default_factory=list)
 
 
 class Comment(BaseModel):
@@ -215,6 +298,17 @@ class Project(Timestamped):
     images: list[ImageAttachment] = Field(default_factory=list)
     comments: list[Comment] = Field(default_factory=list)
     history: list[HistoryEvent] = Field(default_factory=list)
+
+
+class ProjectSearchRequest(BaseModel):
+    include_archived: bool = True
+    group_id: UUID | None = None
+    statuses: list[ProjectStatus] | None = None
+    brand: str | None = None
+    current_stage_id: UUID | None = None
+    planned_from: date | None = None
+    planned_to: date | None = None
+    filters: list[CustomFieldFilterRequest] = Field(default_factory=list)
 
 
 class ProjectExport(BaseModel):

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const key = "hpt-theme";
+        const normalize = (value) => (value === "dark" || value === "light" || value === "system" ? value : null);
+        const stored = normalize(localStorage.getItem(key));
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const mode = stored || "system";
+        const theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Важные задачи — Projects Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f7f8fc;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #d9e0ea;
+        --divider: rgba(148, 163, 184, 0.35);
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.12);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --flag-important-bg: #ffe6ef;
+        --flag-important-text: #a80738;
+        --flag-important-border: #ffb3c9;
+        --flag-urgent-bg: #fff2e0;
+        --flag-urgent-text: #b54708;
+        --flag-urgent-border: #f5c997;
+        --flag-risk-bg: #fff7d6;
+        --flag-risk-text: #92400e;
+        --flag-risk-border: #f4ce6a;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted: #9aa6b6;
+        --border: #1f2937;
+        --divider: rgba(148, 163, 184, 0.25);
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+        --accent-strong: #19b88f;
+        --accent-soft: rgba(16, 163, 127, 0.2);
+        --danger: #f87171;
+        --warning: #fbbf24;
+        --flag-important-bg: rgba(255, 99, 150, 0.16);
+        --flag-important-text: #ff9cbf;
+        --flag-important-border: rgba(255, 99, 150, 0.5);
+        --flag-urgent-bg: rgba(255, 183, 77, 0.18);
+        --flag-urgent-text: #ffddb0;
+        --flag-urgent-border: rgba(255, 183, 77, 0.5);
+        --flag-risk-bg: rgba(250, 204, 21, 0.15);
+        --flag-risk-text: #ffe79a;
+        --flag-risk-border: rgba(250, 204, 21, 0.6);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        color: var(--text);
+      }
+
+      .theme-menu {
+        position: relative;
+      }
+
+      .theme-menu summary {
+        list-style: none;
+        display: grid;
+        place-items: center;
+        padding: 6px;
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--surface-muted) 90%, var(--surface) 10%);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .theme-menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .theme-menu[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .theme-menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 120px;
+        width: max-content;
+        z-index: 950;
+      }
+
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .theme-menu-dropdown button {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        min-width: 0;
+      }
+
+      .theme-menu-dropdown button:hover,
+      .theme-menu-dropdown button[data-active="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 12px;
+        z-index: 900;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .logo img {
+        width: 36px;
+        height: 36px;
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
+      .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 32px 20px 88px;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.78rem;
+      }
+
+      h1 {
+        margin: 8px 0 0;
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        margin-top: 18px;
+      }
+
+      .alert {
+        margin-top: 18px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.06));
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .filter-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+      }
+
+      .checkbox input {
+        width: 18px;
+        height: 18px;
+      }
+
+      button.primary {
+        background: var(--accent);
+        border: none;
+        color: #fff;
+        border-radius: 10px;
+        padding: 8px 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button.primary:hover {
+        background: var(--accent-strong);
+      }
+
+      .spotlight-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .spotlight-card h2 {
+        margin: 0;
+      }
+
+      .spotlight-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .spotlight-description {
+        color: var(--muted);
+        margin: 6px 0 12px;
+      }
+
+      .spotlight-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .spotlight-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .spotlight-link {
+        font-weight: 700;
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .spotlight-link:hover {
+        color: var(--accent);
+      }
+
+      .spotlight-meta {
+        font-size: 0.9rem;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      .due-overdue {
+        border-color: rgba(239, 68, 68, 0.4);
+        color: var(--danger);
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      .due-soon {
+        border-color: rgba(245, 158, 11, 0.4);
+        color: var(--warning);
+        background: rgba(245, 158, 11, 0.08);
+      }
+
+      .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        border: 1px solid transparent;
+        font-weight: 600;
+      }
+
+      .flag-important {
+        background: var(--flag-important-bg);
+        color: var(--flag-important-text);
+        border-color: var(--flag-important-border);
+      }
+
+      .flag-urgent {
+        background: var(--flag-urgent-bg);
+        color: var(--flag-urgent-text);
+        border-color: var(--flag-urgent-border);
+      }
+
+      .flag-risk {
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
+      }
+
+      .flag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .empty-state {
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--surface-muted);
+        border: 1px dashed var(--border);
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .loading {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-weight: 600;
+      }
+
+      .loading::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
+          <a href="/templates.html">Шаблоны</a>
+          <details class="theme-menu">
+            <summary aria-label="Сменить тему">
+              <span aria-hidden="true">🌗</span>
+              <span class="theme-menu-label" data-theme-state>Тема</span>
+            </summary>
+            <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
+              <button type="button" role="menuitem" data-theme-select="light">☀️ Светлая</button>
+              <button type="button" role="menuitem" data-theme-select="system">🖥️ Системная</button>
+              <button type="button" role="menuitem" data-theme-select="dark">🌙 Тёмная</button>
+            </div>
+          </details>
+        </nav>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="pill">Задачи</div>
+          <h1>Важные и срочные</h1>
+          <p class="spotlight-description">Сводка по задачам с отметками важности и срочности во всех проектах.</p>
+        </div>
+        <div class="filter-row">
+          <label class="checkbox">
+            <input type="checkbox" id="includeArchived" /> Показывать архивные проекты
+          </label>
+          <button class="primary" id="refreshSpotlight">Обновить</button>
+        </div>
+      </div>
+
+      <div id="spotlightError" class="alert" hidden role="alert"></div>
+      <div id="spotlightLoading" class="card loading" role="status">Загружаем задачи…</div>
+      <div id="spotlightGrid" class="spotlight-grid" aria-live="polite"></div>
+    </div>
+
+    <script src="/theme.js" defer></script>
+    <script>
+      const includeArchived = document.getElementById("includeArchived");
+      const refreshBtn = document.getElementById("refreshSpotlight");
+      const errorBox = document.getElementById("spotlightError");
+      const loadingBlock = document.getElementById("spotlightLoading");
+      const grid = document.getElementById("spotlightGrid");
+
+      async function loadSpotlight() {
+        errorBox.hidden = true;
+        loadingBlock.hidden = false;
+        grid.innerHTML = "";
+        try {
+          const params = new URLSearchParams();
+          if (includeArchived.checked) {
+            params.set("include_archived_projects", "true");
+          }
+          const query = params.toString();
+          const res = await fetch(`/api/tasks/priority-summary${query ? `?${query}` : ""}`);
+          if (!res.ok) {
+            throw new Error("Сервер ответил с ошибкой");
+          }
+          const data = await res.json();
+          renderSpotlight(data);
+        } catch (error) {
+          errorBox.textContent = `Не удалось загрузить задачи: ${error?.message || error}`;
+          errorBox.hidden = false;
+        } finally {
+          loadingBlock.hidden = true;
+        }
+      }
+
+      function formatDue(task) {
+        if (!task.due_date) return "Срок не назначен";
+        if (task.status === "done") return `Срок: ${task.due_date}`;
+        if (task.overdue) return `Просрочено на ${Math.abs(task.due_in_days || 0)} дн.`;
+        if (typeof task.due_in_days === "number") {
+          if (task.due_in_days === 0) return "Срок сегодня";
+          if (task.due_in_days === 1) return "Срок завтра";
+          return `До срока ${task.due_in_days} дн.`;
+        }
+        return `Срок: ${task.due_date}`;
+      }
+
+      function dueClass(task) {
+        if (!task.due_date) return "tag";
+        if (task.overdue) return "tag due-overdue";
+        if (typeof task.due_in_days === "number" && task.due_in_days <= 7) return "tag due-soon";
+        return "tag";
+      }
+
+      function renderSpotlight(data) {
+        const columns = [
+          {
+            key: "urgent_and_important",
+            title: "Важные и срочные",
+            description: "Горят прямо сейчас, требуют реакции",
+          },
+          {
+            key: "important_only",
+            title: "Важные, но не срочные",
+            description: "Стратегические задачи без немедленного дедлайна",
+          },
+          {
+            key: "urgent_only",
+            title: "Срочные, но не важные",
+            description: "Тактические задачи, которые нужно закрыть быстро",
+          },
+        ];
+
+        grid.innerHTML = "";
+        columns.forEach((column) => {
+          const tasks = data?.[column.key] || [];
+          const card = document.createElement("article");
+          card.className = "spotlight-card card";
+          card.innerHTML = `
+            <div class="spotlight-card-header">
+              <h2>${column.title}</h2>
+              <span class="pill">${tasks.length}</span>
+            </div>
+            <p class="spotlight-description">${column.description}</p>
+          `;
+          if (!tasks.length) {
+            const empty = document.createElement("div");
+            empty.className = "empty-state";
+            empty.textContent = "Задач нет";
+            card.appendChild(empty);
+          } else {
+            const list = document.createElement("ul");
+            list.className = "spotlight-list";
+            tasks.forEach((task) => {
+              const item = document.createElement("li");
+              item.className = "spotlight-item";
+              const link = document.createElement("a");
+              link.className = "spotlight-link";
+              link.href = `/project.html?id=${task.project_id}&task=${task.task_id}`;
+              link.textContent = task.title;
+              item.appendChild(link);
+
+              const meta = document.createElement("div");
+              meta.className = "spotlight-meta";
+              const stage = task.gtm_stage_title || "Без этапа";
+              meta.innerHTML = `<span>${task.project_name}</span> · <span>${task.group_name}</span> · <span>${stage}</span>`;
+              item.appendChild(meta);
+
+              const due = document.createElement("div");
+              due.className = dueClass(task);
+              due.textContent = formatDue(task);
+              item.appendChild(due);
+
+              const flags = document.createElement("div");
+              flags.className = "flag-row";
+              if (task.important) {
+                const imp = document.createElement("span");
+                imp.className = "flag-badge flag-important";
+                imp.textContent = "Важно";
+                flags.appendChild(imp);
+              }
+              if (task.urgency === "high") {
+                const urg = document.createElement("span");
+                urg.className = "flag-badge flag-urgent";
+                urg.textContent = "Срочно";
+                flags.appendChild(urg);
+              }
+              if (task.overdue) {
+                const risk = document.createElement("span");
+                risk.className = "flag-badge flag-risk";
+                risk.textContent = "Риск";
+                flags.appendChild(risk);
+              }
+              if (flags.children.length) {
+                item.appendChild(flags);
+              }
+
+              list.appendChild(item);
+            });
+            card.appendChild(list);
+          }
+          grid.appendChild(card);
+        });
+      }
+
+      includeArchived.addEventListener("change", loadSpotlight);
+      refreshBtn.addEventListener("click", loadSpotlight);
+      loadSpotlight();
+    </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-"""Удобный запуск Haier Project Tracker как локального приложения.
+"""Удобный запуск Projects Tracker как локального приложения.
 
 Скрипт поднимает сервер FastAPI через uvicorn и автоматически
 открывает основную страницу в браузере по локальному адресу.
@@ -25,7 +25,7 @@ def _open_browser(url: str, delay: float) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Запуск локального веб-приложения Haier Project Tracker")
+    parser = argparse.ArgumentParser(description="Запуск локального веб-приложения Projects Tracker")
     parser.add_argument("--host", default="127.0.0.1", help="Адрес для прослушивания (по умолчанию 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="Порт для прослушивания (по умолчанию 8000)")
     parser.add_argument("--reload", action="store_true", help="Перезапускать сервер при изменениях кода (для разработки)")

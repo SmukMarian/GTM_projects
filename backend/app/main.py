@@ -1,4 +1,4 @@
-"""Базовый сервер Haier Project Tracker.
+"""Базовый сервер Projects Tracker.
 
 Этот модуль поднимает минимальное FastAPI-приложение, которое будет
 обслуживать фронтенд и API. На данном этапе реализован только health-check
@@ -31,7 +31,10 @@ from .models import (
     BackupRestoreRequest,
     CharacteristicField,
     CharacteristicSection,
+    CharacteristicImportResponse,
     CharacteristicTemplate,
+    CustomFieldFilterMeta,
+    GroupSearchRequest,
     Comment,
     DashboardPayload,
     FileAttachment,
@@ -42,18 +45,20 @@ from .models import (
     ImageAttachment,
     ProductGroup,
     Project,
+    ProjectSearchRequest,
     ProjectStatus,
     TemplateFromProjectRequest,
     Subtask,
     Task,
     TaskStatus,
+    TaskSpotlightSummary,
 )
 from .storage import LocalRepository
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = BASE_DIR / "frontend"
 
-app = FastAPI(title="Haier Project Tracker", version="0.1.0")
+app = FastAPI(title="Projects Tracker", version="0.1.0")
 repository = LocalRepository(settings.primary_store)
 
 
@@ -178,6 +183,28 @@ def list_groups(
     )
 
 
+@app.get("/api/groups/custom-fields/filters", response_model=list[CustomFieldFilterMeta])
+def list_group_field_filters(repo: LocalRepository = Depends(get_repository)) -> list[CustomFieldFilterMeta]:
+    """Вернуть набор пользовательских полей, подходящих для фильтрации групп."""
+
+    return repo.list_group_filter_meta()
+
+
+@app.post("/api/groups/search", response_model=list[ProductGroup])
+def search_groups(payload: GroupSearchRequest, repo: LocalRepository = Depends(get_repository)) -> list[ProductGroup]:
+    """Вернуть список групп с фильтрацией по пользовательским полям и статусам."""
+
+    status_set = set(payload.statuses) if payload.statuses else None
+    return repo.list_groups(
+        include_archived=payload.include_archived,
+        brand=payload.brand,
+        statuses=status_set,
+        extra_key=payload.extra_key,
+        extra_value=payload.extra_value,
+        filters=payload.filters,
+    )
+
+
 @app.get("/api/groups/{group_id}", response_model=ProductGroup)
 def get_group(group_id: UUID, repo: LocalRepository = Depends(get_repository)) -> ProductGroup:
     group = repo.get_group(group_id)
@@ -236,6 +263,30 @@ def list_projects(
         current_stage_id=current_stage_id,
         planned_from=planned_from,
         planned_to=planned_to,
+    )
+
+
+@app.get("/api/projects/custom-fields/filters", response_model=list[CustomFieldFilterMeta])
+def list_project_field_filters(repo: LocalRepository = Depends(get_repository)) -> list[CustomFieldFilterMeta]:
+    """Вернуть набор пользовательских полей, используемых в нескольких проектах."""
+
+    return repo.list_project_filter_meta()
+
+
+@app.post("/api/projects/search", response_model=list[Project])
+def search_projects(payload: ProjectSearchRequest, repo: LocalRepository = Depends(get_repository)) -> list[Project]:
+    """Вернуть список проектов с фильтрацией по пользовательским полям."""
+
+    statuses = set(payload.statuses) if payload.statuses else None
+    return repo.list_projects(
+        include_archived=payload.include_archived,
+        group_id=payload.group_id,
+        statuses=statuses,
+        brand=payload.brand,
+        current_stage_id=payload.current_stage_id,
+        planned_from=payload.planned_from,
+        planned_to=payload.planned_to,
+        filters=payload.filters,
     )
 
 
@@ -693,25 +744,25 @@ def export_characteristics(project_id: UUID, repo: LocalRepository = Depends(get
         raise HTTPException(status_code=404, detail="Проект не найден")
 
     content = export_characteristics_to_excel(project)
-    filename = f"characteristics_{project_id}.xlsx"
+    filename = f"characteristics_{project_id}_{date.today().isoformat()}.xlsx"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(BytesIO(content), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers=headers)
 
 
 @app.post(
     "/api/projects/{project_id}/characteristics/import",
-    response_model=list[CharacteristicSection],
+    response_model=CharacteristicImportResponse,
     status_code=201,
 )
 def import_characteristics(
     project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
-) -> list[CharacteristicSection]:
+) -> CharacteristicImportResponse:
     content = file.file.read()
-    sections, errors = repo.import_characteristics_from_excel(project_id, content)
+    sections, errors, report = repo.import_characteristics_from_excel(project_id, content)
     if errors:
         raise HTTPException(status_code=400, detail={"errors": errors})
     log_event(repo, project_id, "Импортированы характеристики (Excel)")
-    return sections
+    return CharacteristicImportResponse(sections=sections, report=report)
 
 
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
@@ -729,6 +780,13 @@ def list_tasks(
         return repo.list_tasks(project_id, statuses=statuses, only_active=only_active, gtm_stage_id=gtm_stage_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Проект не найден")
+
+
+@app.get("/api/tasks/priority-summary", response_model=TaskSpotlightSummary)
+def get_priority_tasks(
+    include_archived_projects: bool = False, repo: LocalRepository = Depends(get_repository)
+) -> TaskSpotlightSummary:
+    return repo.build_priority_task_summary(include_archived_projects=include_archived_projects)
 
 
 @app.post("/api/projects/{project_id}/tasks", response_model=Task, status_code=201)
@@ -1248,4 +1306,4 @@ else:
     def frontend_placeholder() -> str:
         """Заглушка, если фронтенд ещё не настроен."""
 
-        return "<h1>Haier Project Tracker</h1><p>Фронтенд ещё не настроен.</p>"
+        return "<h1>Projects Tracker</h1><p>Фронтенд ещё не настроен.</p>"
