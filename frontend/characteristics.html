@@ -184,12 +184,6 @@
         border: 0;
       }
 
-      .template-select {
-        min-width: 210px;
-        max-width: 280px;
-        background: var(--surface);
-      }
-
       .page {
         max-width: 1200px;
         margin: 0 auto;
@@ -390,6 +384,12 @@
         box-shadow: 0 0 0 2px var(--accent-soft);
       }
 
+      .template-select.inline-input {
+        width: auto;
+        min-width: 210px;
+        max-width: 280px;
+      }
+
       .inline-status {
         font-size: 12px;
         color: var(--muted-text);
@@ -428,6 +428,15 @@
         grid-template-columns: minmax(280px, 1fr) minmax(140px, 0.6fr);
         gap: 12px;
         align-items: end;
+      }
+
+      .field-editor .inline-editor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .field-editor .inline-editor-grid label:nth-child(3) {
+        grid-column: 1 / span 2;
       }
 
       .inline-editor label {
@@ -561,7 +570,11 @@
                 </button>
               </div>
               <div class="cluster">
-                <select id="characteristicTemplateSelect" class="template-select" aria-label="Выберите шаблон"></select>
+                <select
+                  id="characteristicTemplateSelect"
+                  class="template-select inline-input"
+                  aria-label="Выберите шаблон"
+                ></select>
                 <button id="applyTemplateBtn">Применить шаблон</button>
                 <button id="saveTemplateBtn">Сохранить как шаблон</button>
                 <button id="copyStructureBtn">Копировать структуру</button>
@@ -1362,6 +1375,7 @@
         const labelRuLabel = document.createElement("label");
         labelRuLabel.textContent = "Label RU";
         const labelRuInput = document.createElement("input");
+        labelRuInput.classList.add("inline-input");
         labelRuInput.value = currentField?.label_ru || "";
         labelRuInput.placeholder = "Например: Цвет";
         labelRuLabel.appendChild(labelRuInput);
@@ -1369,6 +1383,7 @@
         const labelEnLabel = document.createElement("label");
         labelEnLabel.textContent = "Label EN";
         const labelEnInput = document.createElement("input");
+        labelEnInput.classList.add("inline-input");
         labelEnInput.value = currentField?.label_en || "";
         labelEnInput.placeholder = "Например: Color";
         labelEnLabel.appendChild(labelEnInput);
