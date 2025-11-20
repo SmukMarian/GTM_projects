@@ -2,6 +2,11 @@
   const STORAGE_KEY = "hpt-theme";
   const mediaQuery = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
+  const srOnly = document.createElement("style");
+  srOnly.textContent =
+    ".sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}";
+  document.head.appendChild(srOnly);
+
   const normalize = (value) =>
     value === "dark" || value === "light" || value === "system" ? value : null;
 
@@ -11,22 +16,37 @@
     return mediaQuery && mediaQuery.matches ? "dark" : "light";
   };
 
+  const ICONS = {
+    light: "☀️",
+    dark: "🌙",
+    system: "🖥️",
+  };
+
+  const TITLES = {
+    light: "Светлая тема",
+    dark: "Тёмная тема",
+    system: "Системная тема",
+  };
+
   const refreshButtons = (mode, effective) => {
     document.querySelectorAll("[data-theme-select]").forEach((btn) => {
       const target = btn.dataset.themeSelect;
       const isActive = target === mode;
       btn.dataset.active = isActive ? "true" : "false";
       btn.setAttribute("aria-pressed", String(isActive));
-      if (target === "system") {
-        btn.title = "Следовать системным настройкам";
-      } else {
-        btn.title = target === "dark" ? "Переключить на тёмную тему" : "Переключить на светлую тему";
+      btn.title = TITLES[target] || "";
+      btn.setAttribute("aria-label", TITLES[target] || "");
+      const glyph = btn.querySelector("[data-theme-icon]");
+      if (glyph) {
+        glyph.textContent = ICONS[target] || "🌗";
       }
     });
 
-    document
-      .querySelectorAll("[data-theme-state]")
-      .forEach((label) => (label.textContent = mode === "system" ? `Системная (${effective === "dark" ? "тёмная" : "светлая"})` : mode === "dark" ? "Тёмная" : "Светлая"));
+    document.querySelectorAll("[data-theme-state]").forEach((label) => {
+      label.textContent = ICONS[effective] || "🌗";
+      label.setAttribute("title", TITLES[mode] || "");
+      label.setAttribute("aria-label", TITLES[mode] || "");
+    });
   };
 
   const applyTheme = (theme, { persist = true } = {}) => {
@@ -74,6 +94,29 @@
   };
 
   window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-theme-select]").forEach((btn) => {
+      if (!btn.querySelector("[data-theme-icon]")) {
+        const glyph = document.createElement("span");
+        glyph.dataset.themeIcon = "true";
+        glyph.setAttribute("aria-hidden", "true");
+        const sr = document.createElement("span");
+        sr.className = "sr-only";
+        sr.textContent = TITLES[btn.dataset.themeSelect] || "";
+        btn.textContent = "";
+        btn.append(glyph, sr);
+      }
+    });
+
+    document.querySelectorAll(".theme-menu summary").forEach((summary) => {
+      const indicator = summary.querySelector("[data-theme-state]");
+      if (indicator) {
+        summary.innerHTML = "";
+        summary.appendChild(indicator);
+      }
+      summary.setAttribute("title", TITLES[document.documentElement.dataset.themeMode || "system"] || "");
+      summary.setAttribute("aria-label", TITLES[document.documentElement.dataset.themeMode || "system"] || "");
+    });
+
     const mode = document.documentElement.dataset.themeMode || "system";
     refreshButtons(mode, getEffectiveTheme(mode));
     document.querySelectorAll("[data-theme-select]").forEach((btn) =>

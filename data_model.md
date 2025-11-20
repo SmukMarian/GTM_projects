@@ -1,4 +1,4 @@
-# Haier Project Tracker — Модель данных
+# Projects Tracker — Модель данных
 
 Текстовое описание сущностей и связей согласно `Haier_Project_Tracker_TZ.md`. Служит ориентиром для реализации хранилища и API.
 
@@ -73,7 +73,7 @@
 - Поле:
   - `id` (UUID)
   - `label_ru`, `label_en`
-  - `value_ru`, `value_en`
+  - `value_ru`, `value_en` — строка, число, булево значение или `null`
   - `field_type` — `text` / `number` / `select` / `checkbox` / `other`.
   - `order`
 
