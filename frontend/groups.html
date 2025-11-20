@@ -542,6 +542,8 @@
         box-shadow: var(--shadow);
         background: var(--surface);
         color: var(--text);
+        width: auto;
+        max-width: min(920px, 95vw);
       }
 
       dialog::backdrop {
@@ -1421,11 +1423,15 @@
         }
       }
 
-      async function loadGroupFilterMeta() {
-        if (groupFilterMeta.length) return;
+      async function loadGroupFilterMeta(force = false) {
+        if (groupFilterMeta.length && !force) return;
         const res = await fetch("/api/groups/custom-fields/filters");
         if (!res.ok) throw new Error("Не удалось загрузить кастомные поля групп");
         groupFilterMeta = await res.json();
+        customFieldFilters = customFieldFilters.filter((f) =>
+          groupFilterMeta.some((m) => m.field_id === f.field_id)
+        );
+        updateCustomFiltersBadge();
       }
 
       function renderGroupCustomFilters() {
@@ -1572,6 +1578,7 @@
       }
 
       async function loadGroups() {
+        await loadGroupFilterMeta();
         await loadProjectsForStats();
         const payload = {
           include_archived: showArchived.checked,

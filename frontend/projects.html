@@ -591,6 +591,8 @@
         box-shadow: var(--shadow);
         background: var(--surface);
         color: var(--text);
+        width: auto;
+        max-width: min(980px, 95vw);
       }
 
       dialog::backdrop {
@@ -799,6 +801,11 @@
         <button id="applyFilters" class="primary">Применить фильтры</button>
         <button id="resetFilters" class="ghost">Сбросить</button>
       </div>
+      <div class="filter-buttons">
+        <button id="applyFilters" class="primary">Применить фильтры</button>
+        <button id="resetFilters" class="ghost">Сбросить</button>
+      </div>
+    </div>
     </div>
     </div>
 
@@ -1085,13 +1092,17 @@
         }
       }
 
-      async function loadProjectFilterMeta() {
-        if (projectFilterMeta.length) return;
+      async function loadProjectFilterMeta(force = false) {
+        if (projectFilterMeta.length && !force) return;
         const res = await fetch("/api/projects/custom-fields/filters");
         if (!res.ok) {
           throw new Error("Не удалось загрузить кастомные поля");
         }
         projectFilterMeta = await res.json();
+        customFieldFilters = customFieldFilters.filter((f) =>
+          projectFilterMeta.some((m) => m.field_id === f.field_id)
+        );
+        updateCustomFiltersBadge();
       }
 
       function renderCustomFilterFields() {
@@ -1637,6 +1648,7 @@
       }
 
       async function loadProjects() {
+        await loadProjectFilterMeta();
         const payload = {
           include_archived: showArchived.checked,
           brand: brandFilter.value.trim() || null,
