@@ -18,7 +18,7 @@
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Haier Project Tracker — Дашборд</title>
+    <title>Projects Tracker — Дашборд</title>
     <style>
       :root {
         color-scheme: light;
@@ -60,7 +60,11 @@
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
@@ -535,60 +539,113 @@
         background: var(--accent-soft);
       }
 
-      .theme-toggle-group {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        display: inline-flex;
-        gap: 6px;
-        padding: 6px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        box-shadow: var(--shadow);
-        z-index: 1000;
+      .theme-menu {
+        position: relative;
       }
 
-      .theme-toggle-group button {
+      .theme-menu summary {
+        list-style: none;
+        display: grid;
+        place-items: center;
+        padding: 6px;
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .theme-menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .theme-menu[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .theme-menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 120px;
+        width: max-content;
+        z-index: 950;
+      }
+
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .theme-menu-dropdown button {
         border: none;
         background: transparent;
         color: var(--text);
-        padding: 8px 10px;
-        border-radius: 999px;
-        font-weight: 700;
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        min-width: 0;
       }
 
-      .theme-toggle-group button[data-active="true"] {
+      .theme-menu-dropdown button:hover,
+      .theme-menu-dropdown button[data-active="true"] {
         background: var(--accent-soft);
         color: var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
 
-      .theme-toggle-group button:hover {
-        transform: translateY(-2px);
-        background-color: var(--surface-muted);
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
       }
     </style>
   </head>
   <body>
-    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
-      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
-      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
-      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
-    </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <details class="theme-menu">
+            <summary aria-label="Сменить тему">
+              <span aria-hidden="true">🌗</span>
+              <span class="theme-menu-label" data-theme-state>Тема</span>
+            </summary>
+            <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
+              <button type="button" role="menuitem" data-theme-select="light">☀️ Светлая</button>
+              <button type="button" role="menuitem" data-theme-select="system">🖥️ Системная</button>
+              <button type="button" role="menuitem" data-theme-select="dark">🌙 Тёмная</button>
+            </div>
+          </details>
         </nav>
       </div>
     </div>
@@ -596,7 +653,7 @@
       <header>
         <div>
           <div class="pill">Дашборд</div>
-          <h1>Haier Project Tracker</h1>
+          <h1>Projects Tracker</h1>
           <p class="lead">Сводка по проектам, рискам и ближайшим дедлайнам</p>
         </div>
       </header>
@@ -632,6 +689,17 @@
           <button id="applyFilters" class="primary">Обновить</button>
           <button id="resetFilters" class="ghost">Сбросить фильтры</button>
         </div>
+      </div>
+
+      <div class="card priority-cta" aria-label="Сводка важных задач">
+        <div class="card-header">
+          <h2>Важные и срочные задачи</h2>
+          <a class="primary" href="/priority-tasks.html">Открыть сводку</a>
+        </div>
+        <p>
+          Быстрый список всех задач с отметками важности и срочности. Можно открыть проект сразу на нужной задаче и
+          свериться со сроками.
+        </p>
       </div>
 
       <div id="dashboardError" class="alert" hidden role="alert"></div>
@@ -1098,8 +1166,16 @@
         loadDashboard();
       });
 
+      showArchived.addEventListener("change", () => {
+        persistFilters();
+        loadDashboard();
+      });
+
       restoreFilters();
       loadGroupsForFilter().then(loadDashboard);
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>
