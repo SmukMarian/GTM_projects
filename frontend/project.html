@@ -2349,6 +2349,63 @@
           ? (cb) => requestIdleCallback(cb, { timeout: 48 })
           : (cb) => setTimeout(() => cb({ timeRemaining: () => 0 }), 16);
       const cancelIdle = typeof cancelIdleCallback === "function" ? cancelIdleCallback : clearTimeout;
+      async function maybeCreateBitmap(file) {
+        if (typeof createImageBitmap === "function") {
+          try {
+            return await createImageBitmap(file);
+          } catch (err) {
+            console.warn("createImageBitmap failed, falling back to Image", err);
+          }
+        }
+
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = reader.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function maybeDownscaleImage(file) {
+        if (!file || !file.type?.startsWith("image/")) return file;
+
+        let bitmap;
+        try {
+          bitmap = await maybeCreateBitmap(file);
+        } catch (err) {
+          console.warn("Preview decode failed, uploading original", err);
+          return file;
+        }
+
+        const maxSide = 1600;
+        const largestSide = Math.max(bitmap.width || 0, bitmap.height || 0);
+        if (!largestSide || (largestSide <= maxSide && file.size <= 5 * 1024 * 1024)) {
+          return file;
+        }
+
+        const scale = Math.min(1, maxSide / largestSide);
+        const targetWidth = Math.max(1, Math.round((bitmap.width || 0) * scale));
+        const targetHeight = Math.max(1, Math.round((bitmap.height || 0) * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext("2d", { alpha: true });
+        ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+        if (!blob || blob.size >= file.size * 0.95) {
+          return file;
+        }
+
+        const safeName = file.name.replace(/\.(png|jpg|jpeg|webp|bmp|gif)$/i, "") || "image";
+        return new File([blob], `${safeName}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+      }
       const kanbanStatuses = [
         { key: "todo", label: "ToDo" },
         { key: "in_progress", label: "В работе" },
@@ -4459,12 +4516,6 @@
         });
       }
 
-      function imageDownloadUrl(image) {
-        if (!image) return "";
-        const cacheKey = encodeURIComponent(image.updated_at || image.uploaded_at || image.id || "0");
-        return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
-      }
-
       function renderGallery() {
         galleryContainer.innerHTML = "";
         const sorted = [...images].sort((a, b) => a.order - b.order);
@@ -4578,8 +4629,9 @@
       imageUploadInput.addEventListener("change", async (event) => {
         const selected = Array.from(event.target.files || []);
         for (const file of selected) {
+          const optimized = await maybeDownscaleImage(file);
           const formData = new FormData();
-          formData.append("file", file);
+          formData.append("file", optimized);
           const res = await fetch(`/api/projects/${projectId}/images/upload`, {
             method: "POST",
             body: formData,
@@ -4600,8 +4652,9 @@
       coverUploadInput.addEventListener("change", async (event) => {
         const selected = event.target.files?.[0];
         if (!selected) return;
+        const optimized = await maybeDownscaleImage(selected);
         const formData = new FormData();
-        formData.append("file", selected);
+        formData.append("file", optimized);
         formData.append("is_cover", "true");
         const res = await fetch(`/api/projects/${projectId}/images/upload`, {
           method: "POST",
