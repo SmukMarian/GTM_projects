@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class GroupStatus(str, Enum):
@@ -82,9 +82,11 @@ class CustomFieldFilterRequest(BaseModel):
     value_from: Optional[float] = None
     value_to: Optional[float] = None
     values: Optional[list[str]] = None
-    bool: Optional[bool] = None
+    bool_value: Optional[bool] = Field(default=None, alias="bool")
     date_from: Optional[date] = None
     date_to: Optional[date] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Timestamped(BaseModel):

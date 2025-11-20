@@ -25,6 +25,7 @@ from .models import (
     CharacteristicTemplate,
     Comment,
     BrandMetric,
+    CustomFieldOption,
     CustomFieldFilterMeta,
     CustomFieldFilterRequest,
     DashboardPayload,
@@ -193,10 +194,10 @@ def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) ->
         return value is not None and str(value) in set(flt.values)
 
     if flt.type in {"checkbox", "boolean"}:
-        if flt.bool is None:
+        if flt.bool_value is None:
             return True
         value = _normalize_bool(fields.get(flt.field_id))
-        return value is not None and value is flt.bool
+        return value is not None and value is flt.bool_value
 
     if flt.type == "date":
         target = _normalize_date(fields.get(flt.field_id))
@@ -277,11 +278,11 @@ class LocalRepository:
             groups = [g for g in groups if key in g.extra_fields]
             if extra_value:
                 value_lower = extra_value.lower()
-            groups = [
-                g
-                for g in groups
-                if str(g.extra_fields.get(key, "")).lower().find(value_lower) != -1
-            ]
+                groups = [
+                    g
+                    for g in groups
+                    if str(g.extra_fields.get(key, "")).lower().find(value_lower) != -1
+                ]
         groups = _filter_by_custom_fields(groups, filters, field_accessor=lambda g: g.extra_fields)
         return list(groups)
 
