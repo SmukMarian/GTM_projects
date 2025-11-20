@@ -18,7 +18,7 @@
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Проекты — Haier Project Tracker</title>
+    <title>Проекты — Projects Tracker</title>
     <style>
       :root {
         color-scheme: light;
@@ -58,7 +58,11 @@
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
@@ -168,12 +172,37 @@
         min-width: 0;
       }
 
+      .form-field.status-field {
+        grid-column: 1 / -1;
+      }
+
       .filter-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .filter-actions .filter-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .badge-dot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--text);
+        font-size: 12px;
+        border: 1px solid var(--border);
+        font-weight: 700;
       }
 
       .checkbox-list {
@@ -193,10 +222,91 @@
         white-space: nowrap;
       }
 
+      .filter-panel {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        place-items: stretch;
+        z-index: 1100;
+      }
+
+      .filter-panel[hidden] {
+        display: none;
+      }
+
+      .filter-panel .backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+      }
+
+      .filter-card {
+        position: relative;
+        margin: auto 0 auto auto;
+        width: min(420px, 92vw);
+        max-height: 100vh;
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .filter-card header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--divider);
+      }
+
+      .filter-card .body {
+        padding: 14px 16px 8px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .filter-card .footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--divider);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .filter-field label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .filter-field .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
       .filter-buttons {
         display: inline-flex;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
       }
 
       button {
@@ -481,6 +591,12 @@
         box-shadow: var(--shadow);
         background: var(--surface);
         color: var(--text);
+        width: 100%;
+        max-width: min(980px, 95vw);
+      }
+
+      dialog.form-dialog {
+        width: auto;
       }
 
       dialog::backdrop {
@@ -540,60 +656,101 @@
         overflow-x: auto;
       }
 
-      .theme-toggle-group {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        display: inline-flex;
-        gap: 6px;
+      .theme-menu {
+        position: relative;
+      }
+
+      .theme-menu summary {
+        list-style: none;
+        display: grid;
+        place-items: center;
         padding: 6px;
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .theme-menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .theme-menu[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .theme-menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 12px;
         box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 120px;
+        width: max-content;
         z-index: 1200;
       }
 
-      .theme-toggle-group button {
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .theme-menu-dropdown button {
         border: none;
         background: transparent;
         color: var(--text);
-        padding: 8px 10px;
-        border-radius: 999px;
-        font-weight: 700;
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        min-width: 0;
       }
 
-      .theme-toggle-group button[data-active="true"] {
+      .theme-menu-dropdown button:hover,
+      .theme-menu-dropdown button[data-active="true"] {
         background: var(--accent-soft);
         color: var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      }
-
-      .theme-toggle-group button:hover {
-        transform: translateY(-2px);
-        background-color: var(--surface-muted);
       }
     </style>
   </head>
   <body>
-    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
-      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
-      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
-      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
-    </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <details class="theme-menu">
+            <summary aria-label="Сменить тему">
+              <span aria-hidden="true">🌗</span>
+              <span class="theme-menu-label" data-theme-state>Тема</span>
+            </summary>
+            <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
+              <button type="button" role="menuitem" data-theme-select="light">☀️ Светлая</button>
+              <button type="button" role="menuitem" data-theme-select="system">🖥️ Системная</button>
+              <button type="button" role="menuitem" data-theme-select="dark">🌙 Тёмная</button>
+            </div>
+          </details>
         </nav>
       </div>
     </div>
@@ -629,25 +786,26 @@
           Плановый запуск по
           <input type="date" id="plannedTo" />
         </label>
-        <div class="form-field">
+        <div class="form-field status-field">
           <span>Статусы</span>
           <div class="checkbox-list status-row">
             <label class="checkbox"><input type="checkbox" value="active" class="status-filter" /> <span>Активные</span></label>
             <label class="checkbox"><input type="checkbox" value="closed" class="status-filter" /> <span>Закрытые</span></label>
             <label class="checkbox"><input type="checkbox" value="archived" class="status-filter" /> <span>Архив</span></label>
+            <label class="checkbox"><input type="checkbox" id="showArchived" /> <span>Показывать архив</span></label>
           </div>
         </div>
       </div>
-      <div class="filter-actions">
-        <label class="checkbox">
-          <input type="checkbox" id="showArchived" />
-          <span>Показывать архив</span>
-        </label>
-        <div class="filter-buttons">
-          <button id="applyFilters" class="primary">Применить фильтры</button>
-          <button id="resetFilters" class="ghost">Сбросить</button>
-        </div>
+    <div class="filter-actions">
+      <div class="filter-trigger">
+        <button id="openCustomFilters" class="ghost">Фильтры</button>
+        <span id="customFiltersBadge" class="badge-dot" hidden>0</span>
       </div>
+      <div class="filter-buttons">
+        <button id="applyFilters" class="primary">Применить фильтры</button>
+        <button id="resetFilters" class="ghost">Сбросить</button>
+      </div>
+    </div>
     </div>
 
     <div class="toolbar" style="margin-top: 0">
@@ -690,7 +848,25 @@
       </div>
     </div>
 
-    <dialog id="projectDialog">
+    <div id="customFilterPanel" class="filter-panel" hidden>
+      <div class="backdrop" aria-hidden="true"></div>
+      <div class="filter-card">
+        <header>
+          <div>
+            <p class="pill" style="margin: 0 0 4px">Расширенные фильтры</p>
+            <strong>Фильтры по кастомным полям</strong>
+          </div>
+          <button id="closeCustomFilters" class="ghost" aria-label="Закрыть фильтры">✕</button>
+        </header>
+        <div class="body" id="customFilterFields"></div>
+        <div class="footer">
+          <button id="resetCustomFilters" class="ghost">Сбросить</button>
+          <button id="applyCustomFilters" class="primary">Применить</button>
+        </div>
+      </div>
+    </div>
+
+    <dialog id="projectDialog" class="form-dialog">
       <div class="dialog-body large-form">
         <div class="flex space-between" style="align-items: start">
           <div>
@@ -786,6 +962,13 @@
       const closeDetailsBtn = document.getElementById("closeDetails");
       const contextMenu = document.getElementById("contextMenu");
       const contextMenuList = document.getElementById("contextMenuList");
+      const openCustomFiltersBtn = document.getElementById("openCustomFilters");
+      const closeCustomFiltersBtn = document.getElementById("closeCustomFilters");
+      const applyCustomFiltersBtn = document.getElementById("applyCustomFilters");
+      const resetCustomFiltersBtn = document.getElementById("resetCustomFilters");
+      const customFilterPanel = document.getElementById("customFilterPanel");
+      const customFilterFields = document.getElementById("customFilterFields");
+      const customFiltersBadge = document.getElementById("customFiltersBadge");
       const filterStorageKey = "hpt-projects-filters";
 
       const dialog = document.getElementById("projectDialog");
@@ -824,6 +1007,8 @@
       let stageOptions = [];
       const PAGE_SIZE = 30;
       let visibleProjects = PAGE_SIZE;
+      let projectFilterMeta = [];
+      let customFieldFilters = [];
 
       closeDetailsBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -850,6 +1035,8 @@
         plannedTo.value = "";
         showArchived.checked = false;
         statusCheckboxes.forEach((cb) => (cb.checked = false));
+        customFieldFilters = [];
+        updateCustomFiltersBadge();
       }
 
       function persistFilters() {
@@ -864,6 +1051,7 @@
             .filter((cb) => cb.checked)
             .map((cb) => cb.value),
           viewMode,
+          customFilters: customFieldFilters,
         };
         localStorage.setItem(filterStorageKey, JSON.stringify(state));
       }
@@ -883,10 +1071,180 @@
             cb.checked = Array.isArray(state.statuses) ? state.statuses.includes(cb.value) : false;
           });
           applyViewMode(state.viewMode === "table" ? "table" : "cards");
+          if (Array.isArray(state.customFilters)) {
+            customFieldFilters = state.customFilters;
+            updateCustomFiltersBadge();
+          }
         } catch (e) {
           console.warn("Не удалось прочитать сохранённые фильтры проектов", e);
           localStorage.removeItem(filterStorageKey);
         }
+      }
+
+      function updateCustomFiltersBadge() {
+        const count = customFieldFilters.length;
+        if (count > 0) {
+          customFiltersBadge.hidden = false;
+          customFiltersBadge.textContent = count;
+        } else {
+          customFiltersBadge.hidden = true;
+        }
+      }
+
+      async function loadProjectFilterMeta(force = false) {
+        if (projectFilterMeta.length && !force) return;
+        const res = await fetch("/api/projects/custom-fields/filters");
+        if (!res.ok) {
+          throw new Error("Не удалось загрузить кастомные поля");
+        }
+        projectFilterMeta = await res.json();
+        customFieldFilters = customFieldFilters.filter((f) =>
+          projectFilterMeta.some((m) => m.field_id === f.field_id)
+        );
+        updateCustomFiltersBadge();
+      }
+
+      function renderCustomFilterFields() {
+        customFilterFields.innerHTML = "";
+        projectFilterMeta.forEach((meta) => {
+          const container = document.createElement("div");
+          container.className = "filter-field";
+          container.dataset.fieldId = meta.field_id;
+          const preset = customFieldFilters.find((f) => f.field_id === meta.field_id) || {};
+          const label = document.createElement("label");
+          label.textContent = meta.label_ru || meta.field_id;
+          container.appendChild(label);
+
+          if (meta.type === "number") {
+            const row = document.createElement("div");
+            row.className = "row";
+            const from = document.createElement("input");
+            from.type = "number";
+            from.className = "inline-input";
+            from.placeholder = "От";
+            from.value = preset.value_from ?? "";
+            const to = document.createElement("input");
+            to.type = "number";
+            to.className = "inline-input";
+            to.placeholder = "До";
+            to.value = preset.value_to ?? "";
+            row.append(from, to);
+            container.appendChild(row);
+          } else if (meta.type === "select" || meta.type === "enum") {
+            const select = document.createElement("select");
+            select.multiple = true;
+            select.size = Math.min(6, (meta.options || []).length || 4);
+            select.className = "inline-input";
+            (meta.options || []).forEach((opt) => {
+              const option = document.createElement("option");
+              option.value = opt.value;
+              option.textContent = `${opt.value} (${opt.count})`;
+              if ((preset.values || []).includes(opt.value)) option.selected = true;
+              select.appendChild(option);
+            });
+            container.appendChild(select);
+          } else if (meta.type === "checkbox" || meta.type === "boolean") {
+            const select = document.createElement("select");
+            select.className = "inline-input";
+            [
+              { value: "", label: "Любое" },
+              { value: "true", label: "Да" },
+              { value: "false", label: "Нет" },
+            ].forEach((opt) => {
+              const option = document.createElement("option");
+              option.value = opt.value;
+              option.textContent = opt.label;
+              if (
+                (preset.bool === true && opt.value === "true") ||
+                (preset.bool === false && opt.value === "false") ||
+                (preset.bool === undefined && opt.value === "")
+              ) {
+                option.selected = true;
+              }
+              select.appendChild(option);
+            });
+            container.appendChild(select);
+          } else if (meta.type === "date") {
+            const row = document.createElement("div");
+            row.className = "row";
+            const from = document.createElement("input");
+            from.type = "date";
+            from.className = "inline-input";
+            from.placeholder = "От";
+            from.value = preset.date_from ?? "";
+            const to = document.createElement("input");
+            to.type = "date";
+            to.className = "inline-input";
+            to.placeholder = "До";
+            to.value = preset.date_to ?? "";
+            row.append(from, to);
+            container.appendChild(row);
+          } else {
+            const input = document.createElement("input");
+            input.className = "inline-input";
+            input.placeholder = "Содержит…";
+            input.value = preset.value || "";
+            container.appendChild(input);
+          }
+
+          customFilterFields.appendChild(container);
+        });
+      }
+
+      function collectCustomFiltersFromUi() {
+        const filters = [];
+        projectFilterMeta.forEach((meta) => {
+          const block = customFilterFields.querySelector(`[data-field-id="${meta.field_id}"]`);
+          if (!block) return;
+          if (meta.type === "number") {
+            const [from, to] = block.querySelectorAll("input");
+            const value_from = from.value ? Number(from.value) : null;
+            const value_to = to.value ? Number(to.value) : null;
+            if (value_from !== null || value_to !== null) {
+              filters.push({ field_id: meta.field_id, type: "number", value_from, value_to });
+            }
+          } else if (meta.type === "select" || meta.type === "enum") {
+            const select = block.querySelector("select");
+            const values = Array.from(select.selectedOptions).map((o) => o.value);
+            if (values.length) {
+              filters.push({ field_id: meta.field_id, type: "select", values });
+            }
+          } else if (meta.type === "checkbox" || meta.type === "boolean") {
+            const select = block.querySelector("select");
+            if (select.value === "true") {
+              filters.push({ field_id: meta.field_id, type: "checkbox", bool: true });
+            } else if (select.value === "false") {
+              filters.push({ field_id: meta.field_id, type: "checkbox", bool: false });
+            }
+          } else if (meta.type === "date") {
+            const [from, to] = block.querySelectorAll("input");
+            const date_from = from.value || null;
+            const date_to = to.value || null;
+            if (date_from || date_to) {
+              filters.push({ field_id: meta.field_id, type: "date", date_from, date_to });
+            }
+          } else {
+            const input = block.querySelector("input");
+            if (input.value.trim()) {
+              filters.push({ field_id: meta.field_id, type: "text", value: input.value.trim() });
+            }
+          }
+        });
+        return filters;
+      }
+
+      async function openCustomFilters() {
+        try {
+          await loadProjectFilterMeta();
+          renderCustomFilterFields();
+          customFilterPanel.hidden = false;
+        } catch (err) {
+          alert(err.message || "Не удалось открыть фильтры");
+        }
+      }
+
+      function closeCustomFilters() {
+        customFilterPanel.hidden = true;
       }
 
       function formatDate(val) {
@@ -1289,15 +1647,24 @@
       }
 
       async function loadProjects() {
-        const params = new URLSearchParams();
-        params.set("include_archived", showArchived.checked);
-        if (brandFilter.value) params.set("brand", brandFilter.value.trim());
-        if (groupFilter.value) params.set("group_id", groupFilter.value);
-        if (stageFilter.value) params.set("current_stage_id", stageFilter.value);
-        if (plannedFrom.value) params.set("planned_from", plannedFrom.value);
-        if (plannedTo.value) params.set("planned_to", plannedTo.value);
-        buildStatusParams(params);
-        const res = await fetch(`/api/projects?${params.toString()}`);
+        await loadProjectFilterMeta();
+        const payload = {
+          include_archived: showArchived.checked,
+          brand: brandFilter.value.trim() || null,
+          group_id: groupFilter.value || null,
+          current_stage_id: stageFilter.value || null,
+          planned_from: plannedFrom.value || null,
+          planned_to: plannedTo.value || null,
+          statuses: Array.from(statusCheckboxes)
+            .filter((cb) => cb.checked)
+            .map((cb) => cb.value),
+          filters: customFieldFilters,
+        };
+        const res = await fetch(`/api/projects/search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
         if (!res.ok) {
           alert("Не удалось загрузить проекты");
           return;
@@ -1426,6 +1793,22 @@
         localStorage.removeItem(filterStorageKey);
         loadProjects();
       });
+      openCustomFiltersBtn.addEventListener("click", openCustomFilters);
+      closeCustomFiltersBtn.addEventListener("click", closeCustomFilters);
+      customFilterPanel.querySelector(".backdrop").addEventListener("click", closeCustomFilters);
+      applyCustomFiltersBtn.addEventListener("click", () => {
+        customFieldFilters = collectCustomFiltersFromUi();
+        updateCustomFiltersBadge();
+        persistFilters();
+        closeCustomFilters();
+        loadProjects();
+      });
+      resetCustomFiltersBtn.addEventListener("click", () => {
+        customFieldFilters = [];
+        renderCustomFilterFields();
+        updateCustomFiltersBadge();
+        persistFilters();
+      });
       toggleViewBtn.addEventListener("click", toggleView);
       newProjectBtn.addEventListener("click", openCreate);
       exportProjectsBtn.addEventListener("click", exportProjects);
@@ -1443,5 +1826,8 @@
       restoreFilters();
       loadGroups().then(loadProjects);
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>
