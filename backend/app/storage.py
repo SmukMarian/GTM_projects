@@ -583,11 +583,15 @@ class LocalRepository:
                 return new_stages
         raise KeyError(f"Project {project_id} not found")
 
-    def replace_gtm_stages(self, project_id: UUID, stages: list[GTMStage]) -> list[GTMStage]:
+    def replace_gtm_stages(
+        self, project_id: UUID, stages: list[GTMStage], tasks: list[Task] | None = None
+    ) -> list[GTMStage]:
         for p_idx, project in enumerate(self.store.projects):
             if project.id != project_id:
                 continue
             project.gtm_stages = stages
+            if tasks is not None:
+                project.tasks = tasks
             self.store.projects[p_idx] = project
             self.save()
             return stages

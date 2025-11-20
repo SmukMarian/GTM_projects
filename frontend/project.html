@@ -982,36 +982,76 @@
       }
 
       .task-card {
+        position: relative;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        background: var(--surface);
-        margin-bottom: 12px;
+        border-radius: 14px;
+        padding: 14px 14px 12px;
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 90%);
+        margin-bottom: 14px;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+
+      .task-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(120deg, rgba(16, 163, 127, 0.28), rgba(59, 130, 246, 0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+
+      .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
       }
 
       .task-card.task-highlight {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2);
+        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2), 0 16px 32px rgba(15, 23, 42, 0.18);
       }
 
       .task-card.collapsed .task-details,
       .task-card.collapsed .task-inline-actions,
       .task-card.collapsed .task-description,
       .task-card.collapsed .subtasks,
-      .task-card.collapsed .subtask-inline {
+      .task-card.collapsed .subtask-inline,
+      .task-card.collapsed .task-meta-grid {
         display: none;
       }
 
-      .task-top-row {
+      .task-head {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
+      }
+
+      .task-title-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .task-rank {
+        min-width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px dashed var(--border);
+        font-weight: 700;
       }
 
       .task-top-actions {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         align-items: center;
       }
 
@@ -1024,21 +1064,33 @@
 
       .task-description {
         color: var(--muted);
-        font-size: 0.92rem;
-        margin-bottom: 8px;
+        font-size: 0.94rem;
+        margin-bottom: 4px;
       }
 
       .task-details {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-top: 6px;
       }
 
-      .task-meta {
-        display: flex;
+      .task-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 8px;
+        margin: 8px 0;
+      }
+
+      .task-meta-chip {
+        display: flex;
         align-items: center;
-        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 0.92rem;
       }
 
       .status-chip {
@@ -3417,19 +3469,48 @@
           return wrapper;
         }
 
-        stageTasks.forEach((task) => {
+        stageTasks.forEach((task, idx) => {
           const collapsed = isTaskCollapsed(task.id);
           const card = document.createElement("div");
           card.className = `task-card${collapsed ? " collapsed" : ""}`;
           card.dataset.taskId = task.id;
 
-          const topRow = document.createElement("div");
-          topRow.className = "task-top-row";
-          const info = document.createElement("div");
+          const head = document.createElement("div");
+          head.className = "task-head";
+
+          const titleBlock = document.createElement("div");
+          titleBlock.className = "task-title-block";
+          const rank = document.createElement("span");
+          rank.className = "task-rank";
+          rank.textContent = `${idx + 1}`;
+          const titleWrap = document.createElement("div");
           const titleEl = document.createElement("strong");
           titleEl.textContent = task.title;
-          info.appendChild(titleEl);
-          topRow.appendChild(info);
+          titleWrap.appendChild(titleEl);
+          const statusLine = document.createElement("div");
+          statusLine.className = "task-badges";
+          const statusChip = document.createElement("span");
+          statusChip.className = "chip";
+          statusChip.textContent = taskStatusLabel(task.status);
+          statusLine.appendChild(statusChip);
+          if (task.important) {
+            const importantChip = document.createElement("span");
+            importantChip.className = "flag-badge flag-important";
+            importantChip.textContent = "Важно";
+            statusLine.appendChild(importantChip);
+          }
+          if (task.urgency === "high") {
+            const urgentChip = document.createElement("span");
+            urgentChip.className = "flag-badge flag-urgent";
+            urgentChip.textContent = "Срочно";
+            statusLine.appendChild(urgentChip);
+          }
+          titleWrap.appendChild(statusLine);
+          titleBlock.appendChild(rank);
+          titleBlock.appendChild(titleWrap);
+
+          head.appendChild(titleBlock);
+
           const topActions = document.createElement("div");
           topActions.className = "task-top-actions";
           const commentBtn = document.createElement("button");
@@ -3453,35 +3534,37 @@
           });
           topActions.appendChild(commentBtn);
           topActions.appendChild(collapseBtn);
-          topRow.appendChild(topActions);
-          card.appendChild(topRow);
+          head.appendChild(topActions);
+          card.appendChild(head);
 
-          const badges = document.createElement("div");
-          badges.className = "task-badges";
-          const statusChip = document.createElement("span");
-          statusChip.className = "chip";
-          statusChip.textContent = taskStatusLabel(task.status);
-          badges.appendChild(statusChip);
+          const metaGrid = document.createElement("div");
+          metaGrid.className = "task-meta-grid";
           const due = dueInfo(task);
-          const dueChip = document.createElement("span");
-          dueChip.className = due.className;
-          dueChip.textContent = due.text;
-          badges.appendChild(dueChip);
-          if (task.important) {
-            const importantChip = document.createElement("span");
-            importantChip.className = "flag-badge flag-important";
-            importantChip.textContent = "Важно";
-            badges.appendChild(importantChip);
-          }
-          if (task.urgency === "high") {
-            const urgentChip = document.createElement("span");
-            urgentChip.className = "flag-badge flag-urgent";
-            urgentChip.textContent = "Срочно";
-            badges.appendChild(urgentChip);
-          }
-          card.appendChild(badges);
-
           const progress = taskProgress(task);
+
+          const dueChip = document.createElement("div");
+          dueChip.className = "task-meta-chip";
+          dueChip.innerHTML = `<span class="${due.className}">${due.text}</span>`;
+          const progressChip = document.createElement("div");
+          progressChip.className = "task-meta-chip";
+          progressChip.innerHTML = `✅ ${progress.label}`;
+          const subCountChip = document.createElement("div");
+          const totalSubs = task.subtasks?.length || 0;
+          const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
+          subCountChip.className = "task-meta-chip";
+          subCountChip.textContent = totalSubs
+            ? `Подзадачи: ${doneSubs}/${totalSubs}`
+            : "Подзадач нет";
+          const stageChip = document.createElement("div");
+          stageChip.className = "task-meta-chip";
+          stageChip.textContent = `Этап: ${stage.title}`;
+
+          metaGrid.appendChild(dueChip);
+          metaGrid.appendChild(progressChip);
+          metaGrid.appendChild(subCountChip);
+          metaGrid.appendChild(stageChip);
+          card.appendChild(metaGrid);
+
           const progressBlock = document.createElement("div");
           progressBlock.className = "stage-progress";
           progressBlock.innerHTML = `
@@ -4047,6 +4130,7 @@
         if (res.ok) {
           gtmStages = await res.json();
           renderStages();
+          await loadTasks();
           alert("Этапы импортированы и сохранены");
         } else {
           const detail = await res.json();
@@ -4156,72 +4240,86 @@
 
       function renderSubtasksSection(task) {
         const wrapper = document.createElement("div");
-        const subtasksList = document.createElement("ul");
-        subtasksList.className = "subtasks";
         const subtasks = [...(task.subtasks || [])].sort((a, b) => a.order - b.order);
-        if (!subtasks.length) {
-          const li = document.createElement("li");
-          li.className = "muted";
-          li.style.background = "transparent";
-          li.style.border = "none";
-          li.textContent = "Подзадач пока нет";
-          subtasksList.appendChild(li);
-        } else {
-          subtasks.forEach((sub) => {
+        const active = subtasks.filter((s) => !s.done);
+        const completed = subtasks.filter((s) => s.done);
+
+        const buildList = (items, titleText, emptyText) => {
+          const block = document.createElement("div");
+          const heading = document.createElement("div");
+          heading.className = "muted";
+          heading.textContent = titleText;
+          block.appendChild(heading);
+          const list = document.createElement("ul");
+          list.className = "subtasks";
+          if (!items.length) {
             const li = document.createElement("li");
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.checked = sub.done;
-            checkbox.addEventListener("change", (event) => {
-              toggleSubtask(task.id, sub.id, event.target.checked);
-            });
+            li.className = "muted";
+            li.style.background = "transparent";
+            li.style.border = "none";
+            li.textContent = emptyText;
+            list.appendChild(li);
+          } else {
+            items.forEach((sub) => {
+              const li = document.createElement("li");
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = sub.done;
+              checkbox.addEventListener("change", (event) => {
+                toggleSubtask(task.id, sub.id, event.target.checked);
+              });
 
-            const title = document.createElement("div");
-            title.className = "subtask-title";
-            title.contentEditable = true;
-            title.textContent = sub.title;
-            if (sub.done) {
-              title.style.textDecoration = "line-through";
-              title.style.color = "#94a3b8";
-            }
-            title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.innerText));
-            title.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                title.blur();
+              const title = document.createElement("div");
+              title.className = "subtask-title";
+              title.contentEditable = true;
+              title.textContent = sub.title;
+              if (sub.done) {
+                title.style.textDecoration = "line-through";
+                title.style.color = "#94a3b8";
               }
-            });
+              title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.innerText));
+              title.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  title.blur();
+                }
+              });
 
-            const actions = document.createElement("div");
-            actions.className = "subtask-actions";
-            const editBtn = document.createElement("button");
-            editBtn.className = "ghost";
-            editBtn.textContent = "✏️";
-            editBtn.title = "Редактировать";
-            editBtn.addEventListener("click", () => title.focus());
-            const delBtn = document.createElement("button");
-            delBtn.className = "ghost";
-            delBtn.textContent = "🗑️";
-            delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
-            actions.appendChild(editBtn);
-            actions.appendChild(delBtn);
+              const actions = document.createElement("div");
+              actions.className = "subtask-actions";
+              const editBtn = document.createElement("button");
+              editBtn.className = "ghost";
+              editBtn.textContent = "✏️";
+              editBtn.title = "Редактировать";
+              editBtn.addEventListener("click", () => title.focus());
+              const delBtn = document.createElement("button");
+              delBtn.className = "ghost";
+              delBtn.textContent = "🗑️";
+              delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
+              actions.appendChild(editBtn);
+              actions.appendChild(delBtn);
 
-            li.appendChild(checkbox);
-            li.appendChild(title);
-            li.appendChild(actions);
-            li.addEventListener("contextmenu", (event) => {
-              event.preventDefault();
-              const items = [
-                { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
-                { label: "Переименовать", action: () => title.focus() },
-                { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
-              ];
-              openContextMenu(event, items);
+              li.appendChild(checkbox);
+              li.appendChild(title);
+              li.appendChild(actions);
+              li.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                const itemsMenu = [
+                  { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
+                  { label: "Переименовать", action: () => title.focus() },
+                  { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
+                ];
+                openContextMenu(event, itemsMenu);
+              });
+              list.appendChild(li);
             });
-            subtasksList.appendChild(li);
-          });
-        }
-        wrapper.appendChild(subtasksList);
+          }
+          block.appendChild(list);
+          return block;
+        };
+
+        wrapper.appendChild(buildList(active, "Активные подзадачи", "Нет активных подзадач"));
+        wrapper.appendChild(buildList(completed, "Выполненные", "Пока ничего не выполнено"));
         wrapper.appendChild(createSubtaskComposer(task.id));
         return wrapper;
       }
