@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script src="/theme.js" defer></script>
     <script>
       (() => {
@@ -18,7 +19,7 @@
         document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
       })();
     </script>
-    <title>Карточка проекта — Haier Project Tracker</title>
+    <title>Карточка проекта — Projects Tracker</title>
     <style>
       :root {
         color-scheme: light;
@@ -38,6 +39,15 @@
         --accent-soft: rgba(16, 163, 127, 0.12);
         --danger: #ef4444;
         --warning: #f59e0b;
+        --flag-important-bg: #ffe6ef;
+        --flag-important-text: #a80738;
+        --flag-important-border: #ffb3c9;
+        --flag-urgent-bg: #fff2e0;
+        --flag-urgent-text: #b54708;
+        --flag-urgent-border: #f5c997;
+        --flag-risk-bg: #fff7d6;
+        --flag-risk-text: #92400e;
+        --flag-risk-border: #f4ce6a;
       }
 
       [data-theme="dark"] {
@@ -56,11 +66,24 @@
         --accent-soft: rgba(16, 163, 127, 0.2);
         --danger: #f87171;
         --warning: #fbbf24;
+        --flag-important-bg: rgba(255, 99, 150, 0.16);
+        --flag-important-text: #ff9cbf;
+        --flag-important-border: rgba(255, 99, 150, 0.5);
+        --flag-urgent-bg: rgba(255, 183, 77, 0.18);
+        --flag-urgent-text: #ffddb0;
+        --flag-urgent-border: rgba(255, 183, 77, 0.5);
+        --flag-risk-bg: rgba(250, 204, 21, 0.15);
+        --flag-risk-text: #ffe79a;
+        --flag-risk-border: rgba(250, 204, 21, 0.6);
       }
 
       body {
         margin: 0;
+        min-height: 100vh;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
         color: var(--text);
       }
 
@@ -185,6 +208,11 @@
         margin-bottom: 12px;
       }
 
+      .toolbar.stage-toolbar {
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+
       button {
         cursor: pointer;
         border: 1px solid var(--border);
@@ -241,6 +269,32 @@
         gap: 12px;
       }
 
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .view-switch {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .view-switch button {
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+
+      .view-switch button.active {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
       .stage-card {
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -249,11 +303,30 @@
         background: var(--surface);
       }
 
+      .stage-card.collapsed {
+        padding-bottom: 6px;
+      }
+
+      .stage-card.collapsed .stage-description,
+      .stage-card.collapsed .stage-progress,
+      .stage-card.collapsed .stage-meta-grid,
+      .stage-card.collapsed .stage-controls,
+      .stage-card.collapsed .stage-task-list {
+        display: none;
+      }
+
       .stage-header {
         display: flex;
         justify-content: space-between;
         gap: 10px;
         align-items: center;
+      }
+
+      .stage-title-line {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
       }
 
       .chip {
@@ -264,17 +337,55 @@
         background: var(--surface-muted);
         border-radius: 8px;
         font-size: 0.85rem;
+        border: 1px solid transparent;
       }
 
       .chip.warn {
-        background: rgba(248, 113, 113, 0.16);
-        color: #fca5a5;
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
+        font-weight: 600;
+      }
+
+      .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .flag-important {
+        background: var(--flag-important-bg);
+        color: var(--flag-important-text);
+        border-color: var(--flag-important-border);
+      }
+
+      .flag-urgent {
+        background: var(--flag-urgent-bg);
+        color: var(--flag-urgent-text);
+        border-color: var(--flag-urgent-border);
+      }
+
+      .flag-risk {
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
       }
 
       .stage-description {
         margin-top: 4px;
         color: var(--muted);
         font-size: 0.9rem;
+      }
+
+      .stage-description.empty {
+        font-style: italic;
       }
 
       .stage-progress {
@@ -305,6 +416,109 @@
         gap: 12px;
       }
 
+      .compact-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+
+      .compact-table th,
+      .compact-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .compact-table th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        background: var(--surface-muted);
+      }
+
+      .compact-table tbody tr:nth-child(even) {
+        background: rgba(148, 163, 184, 0.08);
+      }
+
+      .compact-table .chip {
+        margin-right: 4px;
+      }
+
+      .table-actions {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .kanban-board {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+
+      .kanban-column {
+        flex: 1;
+        min-width: 220px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kanban-column-header {
+        padding: 12px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .kanban-column-body {
+        padding: 0 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 160px;
+      }
+
+      .kanban-column.drop-ready {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+      }
+
+      .kanban-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .kanban-card.dragging {
+        opacity: 0.6;
+      }
+
+      .kanban-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .kanban-empty {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-style: italic;
+      }
+
       .stage-task-header {
         display: flex;
         align-items: center;
@@ -324,6 +538,34 @@
         flex-wrap: wrap;
         gap: 8px;
         margin-top: 8px;
+      }
+
+      .icon-button {
+        border-radius: 999px;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-size: 0.9rem;
+      }
+
+      .icon-button:hover {
+        background: var(--surface);
+      }
+
+      .comment-trigger {
+        min-width: 48px;
+        padding: 0 12px;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .comment-trigger .count {
+        font-weight: 700;
       }
 
       .comment-block-header {
@@ -368,6 +610,18 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      #discussionList {
+        max-height: 45vh;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .discussion-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
       .comment-item {
@@ -438,7 +692,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 30;
+        z-index: 9999;
       }
 
       .modal {
@@ -453,6 +707,19 @@
 
       .modal.modal-wide {
         width: min(820px, 96vw);
+      }
+
+      .modal.modal-tall {
+        width: min(820px, 96vw);
+        max-height: 80vh;
+      }
+
+      .modal-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
       }
 
       .modal h3 {
@@ -481,6 +748,35 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 12px;
+      }
+
+      .task-flags-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .flag-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-weight: 600;
+      }
+
+      .flag-checkbox input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .flag-select {
+        flex: 1;
+        min-width: 220px;
       }
 
       .modal form .checkbox-row {
@@ -561,6 +857,51 @@
         padding: 12px;
         background: var(--surface);
         margin-bottom: 12px;
+      }
+
+      .task-card.task-highlight {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2);
+      }
+
+      .task-card.collapsed .task-details,
+      .task-card.collapsed .task-inline-actions,
+      .task-card.collapsed .task-description,
+      .task-card.collapsed .subtasks,
+      .task-card.collapsed .subtask-inline {
+        display: none;
+      }
+
+      .task-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .task-top-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .task-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0;
+      }
+
+      .task-description {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-bottom: 8px;
+      }
+
+      .task-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
       .task-meta {
@@ -964,47 +1305,80 @@
         text-align: left;
       }
 
-      .theme-toggle-group {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        display: inline-flex;
-        gap: 6px;
+      .theme-menu {
+        position: relative;
+      }
+
+      .theme-menu summary {
+        list-style: none;
+        display: grid;
+        place-items: center;
+        min-width: 38px;
+        min-height: 38px;
         padding: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .theme-menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .theme-menu[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .theme-menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 12px;
         box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 120px;
+        width: max-content;
         z-index: 1200;
       }
 
-      .theme-toggle-group button {
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .theme-menu-dropdown button {
         border: none;
         background: transparent;
         color: var(--text);
+        text-align: center;
         padding: 8px 10px;
-        border-radius: 999px;
-        font-weight: 700;
+        border-radius: 10px;
         cursor: pointer;
-        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
       }
 
-      .theme-toggle-group button[data-active="true"] {
+      .theme-menu-dropdown button:hover,
+      .theme-menu-dropdown button[data-active="true"] {
         background: var(--accent-soft);
         color: var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      }
-
-      .theme-toggle-group button:hover {
-        transform: translateY(-2px);
-        background-color: var(--surface-muted);
       }
 
       .project-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 2.4fr) minmax(280px, 1fr);
-        gap: 24px;
-        align-items: stretch;
+        display: flex;
+        gap: 22px;
+        align-items: flex-start;
         align-self: stretch;
       }
 
@@ -1012,18 +1386,32 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        flex: 2 1 520px;
+        min-width: 0;
       }
 
       .project-hero-right {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex: 1 1 320px;
+        max-width: 420px;
+      }
+
+      .cover-card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 18px;
         padding: 14px;
+        box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
         gap: 12px;
-        align-self: stretch;
-        box-shadow: var(--shadow);
+        align-items: stretch;
+        max-width: 420px;
+        width: 100%;
+        flex: 1 1 auto;
+        align-self: flex-start;
       }
 
       .title-row {
@@ -1053,21 +1441,26 @@
         position: relative;
         border-radius: 14px;
         overflow: hidden;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08));
+        background: var(--surface-muted);
         border: 1px solid var(--border);
-        aspect-ratio: 1 / 1;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: var(--shadow-soft);
         width: 100%;
-        min-height: 320px;
+        max-width: 420px;
+        min-height: 0;
+        padding: 0;
       }
 
       .cover-frame img {
+        display: block;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        background: var(--surface-muted);
+        margin: 0 auto;
       }
 
       .cover-placeholder {
@@ -1078,13 +1471,56 @@
         gap: 8px;
         color: var(--muted-text);
         text-align: center;
-        padding: 12px;
+        padding: 20px 16px;
+        min-height: 160px;
       }
 
       .cover-actions {
         display: flex;
-        gap: 8px;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .cover-actions-row {
+        display: flex;
+        gap: 10px;
         flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: stretch;
+      }
+
+      .cover-actions-row > button {
+        flex: 1;
+      }
+
+      .cover-actions-row.single {
+        justify-content: center;
+      }
+
+      .cover-actions-row.single button {
+        width: 100%;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+      }
+
+      @media (max-width: 1100px) {
+        .project-hero {
+          flex-direction: column;
+        }
+
+        .project-hero-right {
+          width: 100%;
+          max-width: none;
+          align-self: stretch;
+        }
+
+        .cover-card,
+        .cover-frame {
+          max-width: 100%;
+          align-self: center;
+        }
       }
 
       .meta-grid {
@@ -1106,6 +1542,113 @@
       .meta-tile span {
         color: var(--muted-text);
         font-size: 12px;
+      }
+
+      .custom-fields-panel {
+        margin-top: 16px;
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .custom-fields-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .custom-fields-panel-header .muted {
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+      }
+
+      .custom-fields-panel-header strong {
+        font-size: 1rem;
+      }
+
+      .custom-fields-panel-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .custom-field-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .custom-field-chip {
+        display: inline-flex;
+        flex-direction: column;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        min-width: 160px;
+      }
+
+      .custom-field-chip span {
+        font-size: 12px;
+        color: var(--muted-text);
+      }
+
+      .custom-fields-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .custom-field-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      .custom-field-row label {
+        flex: 1 1 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .custom-field-row input {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font: inherit;
+        color: var(--text);
+      }
+
+      .custom-field-row button {
+        white-space: nowrap;
+        height: 40px;
+      }
+
+      .custom-field-row-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .custom-field-row .icon-only {
+        min-width: 0;
+        padding: 8px 10px;
       }
 
       .progress-shell {
@@ -1130,8 +1673,9 @@
       }
 
       .risk-chip.warn {
-        border-color: var(--danger);
-        color: var(--danger);
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
       }
 
       .progress-bar {
@@ -1147,25 +1691,43 @@
         background: linear-gradient(90deg, var(--accent), var(--accent-strong, #2dd4bf));
         transition: width 0.3s ease;
       }
+
+      .site-footer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+        text-align: center;
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-text);
+      }
     </style>
   </head>
   <body>
-    <div class="theme-toggle-group" role="group" aria-label="Переключение темы">
-      <button type="button" data-theme-select="light" aria-pressed="false" aria-label="Включить светлую тему">☀️</button>
-      <button type="button" data-theme-select="system" aria-pressed="false" aria-label="Следовать системным настройкам">🖥️</button>
-      <button type="button" data-theme-select="dark" aria-pressed="false" aria-label="Включить тёмную тему">🌙</button>
-    </div>
     <div class="app-shell">
       <div class="topbar">
-        <a class="logo" href="/index.html" aria-label="Haier Project Tracker">
-          <img src="/favicon.svg" alt="Haier Project Tracker" />
-          <div>Haier Project Tracker</div>
+        <a class="logo" href="/index.html" aria-label="Projects Tracker">
+          <img src="/favicon.svg" alt="Projects Tracker" />
+          <div>Projects Tracker</div>
         </a>
         <nav aria-label="Главное меню">
           <a href="/index.html">Дашборд</a>
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <details class="theme-menu">
+            <summary aria-label="Сменить тему">
+              <span aria-hidden="true" data-theme-state>🌗</span>
+            </summary>
+            <div class="theme-menu-dropdown" role="menu" aria-label="Переключение темы">
+              <button type="button" role="menuitem" data-theme-select="light" title="Светлая тема">☀️</button>
+              <button type="button" role="menuitem" data-theme-select="system" title="Системная тема">🖥️</button>
+              <button type="button" role="menuitem" data-theme-select="dark" title="Тёмная тема">🌙</button>
+            </div>
+          </details>
         </nav>
       </div>
     </div>
@@ -1226,6 +1788,19 @@
               <strong id="project-fob">—</strong>
             </div>
           </div>
+          <div class="custom-fields-panel" aria-live="polite">
+            <div class="custom-fields-panel-header">
+              <div>
+                <div class="muted">Пользовательские поля</div>
+                <strong id="custom-fields-summary">Нет значений</strong>
+              </div>
+              <div class="custom-fields-panel-actions">
+                <button class="ghost" type="button" id="add-custom-field">➕ Поле</button>
+                <button class="ghost" type="button" id="edit-custom-fields">Редактировать</button>
+              </div>
+            </div>
+            <div id="project-custom-fields" class="custom-field-badges" aria-live="polite"></div>
+          </div>
           <div class="progress-shell">
             <div style="display:flex; justify-content: space-between; align-items:center; gap: 8px; flex-wrap: wrap">
               <div style="display:flex; flex-direction: column; gap: 4px">
@@ -1245,19 +1820,25 @@
           </div>
         </div>
         <div class="project-hero-right">
-          <div class="cover-frame" id="cover-frame">
-            <div id="cover-placeholder" class="cover-placeholder">
-              <div style="font-size: 28px">🖼️</div>
-              <div>Добавьте обложку проекта</div>
+          <div class="cover-card">
+            <div class="cover-frame" id="cover-frame">
+              <div id="cover-placeholder" class="cover-placeholder">
+                <div style="font-size: 28px">🖼️</div>
+                <div>Добавьте обложку проекта</div>
+              </div>
+              <img id="cover-image" alt="Обложка проекта" style="display: none" />
             </div>
-            <img id="cover-image" alt="Обложка проекта" style="display: none" />
+            <div class="cover-actions">
+              <div class="cover-actions-row">
+                <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
+                <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
+              </div>
+              <div class="cover-actions-row single">
+                <button class="ghost" onclick="scrollToGallery()">Галерея</button>
+              </div>
+            </div>
+            <input type="file" id="coverUpload" accept="image/*" style="display: none" />
           </div>
-          <div class="cover-actions">
-            <button class="primary" onclick="triggerCoverUpload()">Загрузить / заменить</button>
-            <button class="ghost" onclick="clearCover()" id="clear-cover" disabled>Снять обложку</button>
-            <button class="ghost" onclick="scrollToGallery()">Галерея</button>
-          </div>
-          <input type="file" id="coverUpload" accept="image/*" style="display: none" />
         </div>
       </div>
     </div>
@@ -1267,17 +1848,35 @@
     <div class="card">
       <div class="stage-header" style="margin-bottom: 8px">
         <h2>GTM-этапы</h2>
-        <div class="toolbar" style="margin: 0">
-          <button class="primary" onclick="openStageForm()">Добавить этап</button>
-          <select id="templateSelect"></select>
-          <button onclick="applyTemplate()">Применить шаблон</button>
-          <button onclick="saveTemplate()">Сохранить как шаблон</button>
-          <button onclick="triggerImport()">Импорт Excel</button>
-          <button onclick="exportStages()">Экспорт Excel</button>
-          <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+        <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
+          <button type="button" data-stage-view="cards">Карточки</button>
+          <button type="button" data-stage-view="table">Таблица</button>
         </div>
       </div>
+      <div class="toolbar stage-toolbar">
+        <button class="primary" onclick="openStageForm()">Добавить этап</button>
+        <select id="templateSelect"></select>
+        <button onclick="applyTemplate()">Применить шаблон</button>
+        <button onclick="saveTemplate()">Сохранить как шаблон</button>
+        <button onclick="triggerImport()">Импорт Excel</button>
+        <button onclick="exportStages()">Экспорт Excel</button>
+        <input type="file" id="importInput" accept=".xlsx" style="display: none" />
+      </div>
       <div id="stages"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage-header" style="margin-bottom: 8px">
+        <h2>Компактный список задач</h2>
+        <div class="view-switch" id="taskViewSwitch" role="group" aria-label="Вид задач">
+          <button type="button" data-task-view="table">Таблица</button>
+          <button type="button" data-task-view="kanban">Канбан</button>
+        </div>
+      </div>
+      <p class="muted" style="margin-top: 0">
+        Переключайте таблицу и канбан, чтобы быстро приоритизировать задачи вне карточек этапов.
+      </p>
+      <div id="taskCompactContent" class="table-scroll"></div>
     </div>
 
     <div class="card">
@@ -1452,6 +2051,13 @@
             Расширенное описание
             <textarea id="basicFull" rows="4"></textarea>
           </label>
+          <div class="custom-fields-form">
+            <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 8px">
+              <strong>Пользовательские поля</strong>
+              <button type="button" class="ghost" id="basicAddCustomField">➕ Поле</button>
+            </div>
+            <div id="basicCustomFields"></div>
+          </div>
           <div class="modal-actions">
             <button type="button" onclick="closeBasicsModal()">Отмена</button>
             <button class="primary" type="submit">Сохранить</button>
@@ -1557,10 +2163,19 @@
               Описание
               <textarea id="taskDescription" rows="3" placeholder="Детали и критерии задачи"></textarea>
             </label>
-            <label class="checkbox-row checkbox-lite" style="justify-content: flex-start">
-              <input type="checkbox" id="taskImportant" />
-              <span>Отметить как важную</span>
-            </label>
+            <div class="task-flags-row">
+              <label class="flag-checkbox">
+                <input type="checkbox" id="taskImportant" />
+                <span>Важная задача</span>
+              </label>
+              <label class="flag-select">
+                Срочность
+                <select id="taskUrgency">
+                  <option value="normal">Обычная</option>
+                  <option value="high">Срочно</option>
+                </select>
+              </label>
+            </div>
             <div class="modal-actions">
               <button type="button" onclick="closeTaskModal()">Отмена</button>
               <button class="primary" type="submit">Сохранить</button>
@@ -1599,11 +2214,25 @@
         </div>
       </div>
 
+      <div id="discussionModal" class="modal-backdrop">
+        <div class="modal modal-tall">
+          <div class="modal-heading">
+            <h3 id="discussionTitle">Комментарии</h3>
+            <button type="button" class="icon-button" id="closeDiscussionButton" aria-label="Закрыть обсуждение">✕</button>
+          </div>
+          <div class="discussion-body">
+            <ul id="discussionList" class="comment-list"></ul>
+            <div id="discussionComposer"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <script>
       const params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
+      const focusTaskId = params.get("task");
       const stagesContainer = document.getElementById("stages");
       const templateSelect = document.getElementById("templateSelect");
       const importInput = document.getElementById("importInput");
@@ -1611,6 +2240,15 @@
       const basicsModal = document.getElementById("basicsModal");
       const taskModal = document.getElementById("taskModal");
       const taskGtmStageSelect = document.getElementById("taskGtmStage");
+      const taskUrgencyField = document.getElementById("taskUrgency");
+      const discussionModal = document.getElementById("discussionModal");
+      const discussionTitle = document.getElementById("discussionTitle");
+      const discussionList = document.getElementById("discussionList");
+      const discussionComposer = document.getElementById("discussionComposer");
+      const closeDiscussionButton = document.getElementById("closeDiscussionButton");
+      const stageViewSwitch = document.getElementById("stageViewSwitch");
+      const taskViewSwitch = document.getElementById("taskViewSwitch");
+      const taskCompactContent = document.getElementById("taskCompactContent");
 
       const galleryContainer = document.getElementById("gallery");
       const imageUploadInput = document.getElementById("imageUploadInput");
@@ -1649,6 +2287,8 @@
       const projectPromoEl = document.getElementById("project-promo");
       const projectRrpEl = document.getElementById("project-rrp");
       const projectFobEl = document.getElementById("project-fob");
+      const projectCustomFieldsEl = document.getElementById("project-custom-fields");
+      const projectCustomFieldsSummary = document.getElementById("custom-fields-summary");
       const projectShortChip = document.getElementById("project-short-id");
       const copyIdBtn = document.getElementById("copy-id");
       const basicsForm = document.getElementById("projectBasicsForm");
@@ -1667,12 +2307,21 @@
       const basicFob = document.getElementById("basicFob");
       const basicShort = document.getElementById("basicShort");
       const basicFull = document.getElementById("basicFull");
+      const basicCustomFields = document.getElementById("basicCustomFields");
+      const basicAddCustomFieldBtn = document.getElementById("basicAddCustomField");
+      const editCustomFieldsBtn = document.getElementById("edit-custom-fields");
+      const addCustomFieldBtn = document.getElementById("add-custom-field");
       const openCharacteristicsBtn = document.getElementById("open-characteristics");
       const gtmProgressLabel = document.getElementById("gtm-progress-label");
       const gtmProgressFill = document.getElementById("gtm-progress-fill");
       const gtmProgressBadge = document.getElementById("gtm-progress-badge");
       const projectRiskEl = document.getElementById("project-risk");
       const taskStatusWeight = { not_started: 0, todo: 0, in_progress: 0.5, done: 1, cancelled: 0 };
+      const kanbanStatuses = [
+        { key: "todo", label: "ToDo" },
+        { key: "in_progress", label: "В работе" },
+        { key: "done", label: "Готово" },
+      ];
 
       let project = null;
       let groupInfo = null;
@@ -1686,8 +2335,40 @@
       let files = [];
       let projectComments = [];
       let historyEvents = [];
+      const stageViewKey = "hpt_stage_view_mode";
+      const taskViewKey = "hpt_task_view_mode";
+      const collapsedStagesKey = "hpt_collapsed_stages";
+      const collapsedTasksKey = "hpt_collapsed_tasks";
+      let stageViewMode = localStorage.getItem(stageViewKey) === "table" ? "table" : "cards";
+      let taskViewMode = localStorage.getItem(taskViewKey) === "kanban" ? "kanban" : "table";
+      let collapsedStages = new Set();
+      let collapsedTasks = new Set();
+      try {
+        const storedStages = JSON.parse(localStorage.getItem(collapsedStagesKey) || "[]");
+        if (Array.isArray(storedStages)) {
+          collapsedStages = new Set(storedStages);
+        }
+      } catch (error) {
+        console.warn("Не удалось прочитать состояние свернутых этапов", error);
+        collapsedStages = new Set();
+      }
+      try {
+        const storedCollapsed = JSON.parse(localStorage.getItem(collapsedTasksKey) || "[]");
+        if (Array.isArray(storedCollapsed)) {
+          collapsedTasks = new Set(storedCollapsed);
+        }
+      } catch (error) {
+        console.warn("Не удалось прочитать состояние свернутых задач", error);
+        collapsedTasks = new Set();
+      }
+      let discussionContext = null;
+      let focusTaskHandled = false;
+      let draggedTaskId = null;
 
       basicsForm?.addEventListener("submit", saveBasics);
+      basicAddCustomFieldBtn?.addEventListener("click", () => addBasicCustomFieldRow());
+      editCustomFieldsBtn?.addEventListener("click", () => focusCustomFieldsEditor());
+      addCustomFieldBtn?.addEventListener("click", () => focusCustomFieldsEditor(true));
       fileForm?.addEventListener("submit", handleFileSubmit);
       copyIdBtn?.addEventListener("click", copyProjectId);
       editBasicsBtn?.addEventListener("click", () => {
@@ -1696,6 +2377,32 @@
       });
       openCharacteristicsBtn?.addEventListener("click", () => {
         window.location.href = `/characteristics.html?id=${projectId}`;
+      });
+      stageViewSwitch?.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-stage-view]");
+        if (!target) return;
+        const mode = target.dataset.stageView;
+        if (mode && mode !== stageViewMode) {
+          stageViewMode = mode;
+          localStorage.setItem(stageViewKey, stageViewMode);
+          renderStages();
+        }
+      });
+      taskViewSwitch?.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-task-view]");
+        if (!target) return;
+        const mode = target.dataset.taskView;
+        if (mode && mode !== taskViewMode) {
+          taskViewMode = mode;
+          localStorage.setItem(taskViewKey, taskViewMode);
+          renderCompactTaskView();
+        }
+      });
+      closeDiscussionButton?.addEventListener("click", closeDiscussionModal);
+      discussionModal?.addEventListener("click", (event) => {
+        if (event.target === discussionModal) {
+          closeDiscussionModal();
+        }
       });
 
       if (!projectId) {
@@ -1793,6 +2500,45 @@
         return { wrapper, area };
       }
 
+      function persistCollapsedTasks() {
+        localStorage.setItem(collapsedTasksKey, JSON.stringify(Array.from(collapsedTasks)));
+      }
+
+      function isTaskCollapsed(taskId) {
+        if (!taskId) return false;
+        return collapsedTasks.has(String(taskId));
+      }
+
+      function setTaskCollapsed(taskId, collapsed) {
+        if (!taskId) return;
+        const normalizedId = String(taskId);
+        if (collapsed) {
+          collapsedTasks.add(normalizedId);
+        } else {
+          collapsedTasks.delete(normalizedId);
+        }
+        persistCollapsedTasks();
+      }
+
+      function focusTaskIfNeeded() {
+        if (!focusTaskId || focusTaskHandled) return;
+        const card = document.querySelector(`.task-card[data-task-id='${focusTaskId}']`);
+        if (!card) return;
+        focusTaskHandled = true;
+        if (card.classList.contains("collapsed")) {
+          card.classList.remove("collapsed");
+          setTaskCollapsed(focusTaskId, false);
+          const collapseBtn = document.querySelector(`[data-task-collapse='${focusTaskId}']`);
+          if (collapseBtn) {
+            collapseBtn.textContent = "▴";
+            collapseBtn.title = "Свернуть задачу";
+          }
+        }
+        card.classList.add("task-highlight");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => card.classList.remove("task-highlight"), 4000);
+      }
+
       async function loadData() {
         await loadGroupList();
         await Promise.all([
@@ -1815,24 +2561,25 @@
       }
 
       async function loadProject() {
-        const res = await fetch(`/api/projects/${projectId}`);
+        const res = await fetch(`/api/projects/${projectId}`, { cache: "no-store" });
         if (!res.ok) {
           stagesContainer.innerHTML = "<p>Проект не найден</p>";
           return;
         }
         project = await res.json();
+        project.custom_fields = project.custom_fields || {};
         await loadGroupInfo();
         renderProject();
       }
 
       async function loadGroupInfo() {
         if (!project?.group_id) return;
-        const res = await fetch(`/api/groups/${project.group_id}`);
+        const res = await fetch(`/api/groups/${project.group_id}`, { cache: "no-store" });
         groupInfo = res.ok ? await res.json() : null;
       }
 
       async function loadGroupList() {
-        const res = await fetch("/api/groups?include_archived=true");
+        const res = await fetch("/api/groups?include_archived=true", { cache: "no-store" });
         groups = res.ok ? await res.json() : [];
         basicGroup.innerHTML = groups
           .map((g) => `<option value="${g.id}">${g.name}</option>`)
@@ -1840,13 +2587,13 @@
       }
 
       async function loadTemplates() {
-        const res = await fetch("/api/gtm-templates");
+        const res = await fetch("/api/gtm-templates", { cache: "no-store" });
         gtmTemplates = res.ok ? await res.json() : [];
         renderTemplates();
       }
 
       async function loadStages() {
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages`);
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages`, { cache: "no-store" });
         gtmStages = res.ok ? await res.json() : [];
         renderStages();
         renderTaskFilters();
@@ -1874,6 +2621,7 @@
         projectPromoEl.textContent = formatMoney(project.promo_price);
         projectRrpEl.textContent = formatMoney(project.rrp_price);
         projectFobEl.textContent = formatMoney(project.fob_price);
+        renderProjectCustomFields();
 
         const badges = [];
         if (project.status === "archived") {
@@ -1893,6 +2641,33 @@
         fillBasicsForm();
       }
 
+      function renderProjectCustomFields() {
+        if (!projectCustomFieldsEl) return;
+        const entries = Object.entries(project?.custom_fields || {});
+        if (!entries.length) {
+          if (projectCustomFieldsSummary) {
+            projectCustomFieldsSummary.textContent = "Нет значений";
+          }
+          projectCustomFieldsEl.innerHTML =
+            '<div class="muted" style="padding: 6px 0">Пользовательские поля не заданы</div>';
+          return;
+        }
+        if (projectCustomFieldsSummary) {
+          projectCustomFieldsSummary.textContent = formatCustomFieldCount(entries.length);
+        }
+        projectCustomFieldsEl.innerHTML = "";
+        entries.forEach(([key, value]) => {
+          const chip = document.createElement("div");
+          chip.className = "custom-field-chip";
+          const title = document.createElement("span");
+          title.textContent = key;
+          const content = document.createElement("strong");
+          content.textContent = value === null || value === undefined || value === "" ? "—" : value;
+          chip.append(title, content);
+          projectCustomFieldsEl.appendChild(chip);
+        });
+      }
+
       function openBasicsModal() {
         if (!basicsModal) return;
         basicsModal.style.display = "flex";
@@ -1901,6 +2676,23 @@
       function closeBasicsModal() {
         if (!basicsModal) return;
         basicsModal.style.display = "none";
+      }
+
+      function focusCustomFieldsEditor(addRow = false) {
+        fillBasicsForm();
+        if (addRow) {
+          addBasicCustomFieldRow();
+        }
+        openBasicsModal();
+        requestAnimationFrame(() => {
+          if (!basicCustomFields) return;
+          const rows = Array.from(basicCustomFields.querySelectorAll(".custom-field-row"));
+          const targetRow = addRow && rows.length ? rows[rows.length - 1] : rows[0];
+          const targetInput = targetRow?.querySelector("input");
+          const scrollTarget = targetRow || basicCustomFields;
+          scrollTarget?.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetInput?.focus();
+        });
       }
 
       function copyProjectId() {
@@ -1933,6 +2725,7 @@
           fob_price: basicFob.value ? parseFloat(basicFob.value) : null,
           short_description: basicShort.value || null,
           full_description: basicFull.value || null,
+          custom_fields: collectBasicCustomFields(),
         };
         const res = await fetch(`/api/projects/${project.id}`, {
           method: "PUT",
@@ -1944,6 +2737,7 @@
           return;
         }
         project = await res.json();
+        project.custom_fields = project.custom_fields || {};
         await loadGroupInfo();
         renderProject();
         closeBasicsModal();
@@ -1964,9 +2758,110 @@
         basicFob.value = project.fob_price ?? "";
         basicShort.value = project.short_description || "";
         basicFull.value = project.full_description || "";
+        populateBasicCustomFields(project.custom_fields || {});
         if (project.group_id) {
           basicGroup.value = project.group_id;
         }
+      }
+
+      function addBasicCustomFieldRow(key = "", value = "") {
+        if (!basicCustomFields) return;
+        const row = document.createElement("div");
+        row.className = "custom-field-row";
+
+        const keyLabel = document.createElement("label");
+        keyLabel.textContent = "Название";
+        const keyInput = document.createElement("input");
+        keyInput.value = key;
+        keyInput.placeholder = "Например: SKU";
+        keyLabel.appendChild(keyInput);
+
+        const valueLabel = document.createElement("label");
+        valueLabel.textContent = "Значение";
+        const valueInput = document.createElement("input");
+        valueInput.value = value ?? "";
+        valueInput.placeholder = "Введите значение";
+        valueLabel.appendChild(valueInput);
+
+        const actions = document.createElement("div");
+        actions.className = "custom-field-row-actions";
+
+        const moveUpBtn = document.createElement("button");
+        moveUpBtn.type = "button";
+        moveUpBtn.className = "ghost icon-only btn-move-up";
+        moveUpBtn.title = "Вверх";
+        moveUpBtn.textContent = "↑";
+        moveUpBtn.addEventListener("click", () => {
+          const prev = row.previousElementSibling;
+          if (prev) {
+            basicCustomFields.insertBefore(row, prev);
+            updateCustomFieldReorderControls();
+          }
+        });
+
+        const moveDownBtn = document.createElement("button");
+        moveDownBtn.type = "button";
+        moveDownBtn.className = "ghost icon-only btn-move-down";
+        moveDownBtn.title = "Вниз";
+        moveDownBtn.textContent = "↓";
+        moveDownBtn.addEventListener("click", () => {
+          const next = row.nextElementSibling?.nextElementSibling;
+          const sibling = row.nextElementSibling;
+          if (sibling) {
+            basicCustomFields.insertBefore(row, next || null);
+            updateCustomFieldReorderControls();
+          }
+        });
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "ghost icon-only";
+        removeBtn.title = "Удалить поле";
+        removeBtn.textContent = "✕";
+        removeBtn.addEventListener("click", () => {
+          row.remove();
+          updateCustomFieldReorderControls();
+        });
+
+        actions.append(moveUpBtn, moveDownBtn, removeBtn);
+        row.append(keyLabel, valueLabel, actions);
+        basicCustomFields.appendChild(row);
+        updateCustomFieldReorderControls();
+      }
+
+      function populateBasicCustomFields(fields = {}) {
+        if (!basicCustomFields) return;
+        basicCustomFields.innerHTML = "";
+        const entries = Object.entries(fields);
+        if (!entries.length) {
+          addBasicCustomFieldRow();
+          return;
+        }
+        entries.forEach(([key, value]) => addBasicCustomFieldRow(key, value ?? ""));
+      }
+
+      function updateCustomFieldReorderControls() {
+        if (!basicCustomFields) return;
+        const rows = Array.from(basicCustomFields.querySelectorAll(".custom-field-row"));
+        rows.forEach((row, index) => {
+          const up = row.querySelector(".btn-move-up");
+          const down = row.querySelector(".btn-move-down");
+          if (up) up.disabled = index === 0;
+          if (down) down.disabled = index === rows.length - 1;
+        });
+      }
+
+      function collectBasicCustomFields() {
+        if (!basicCustomFields) return {};
+        const result = {};
+        basicCustomFields.querySelectorAll(".custom-field-row").forEach((row) => {
+          const [keyInput, valueInput] = row.querySelectorAll("input");
+          if (!keyInput) return;
+          const key = keyInput.value.trim();
+          if (!key) return;
+          result[key] = valueInput ? valueInput.value || null : null;
+        });
+        return result;
       }
 
       function renderTemplates() {
@@ -1992,6 +2887,15 @@
         }[value] || value;
       }
 
+      function formatCustomFieldCount(count) {
+        if (!count) return "Нет значений";
+        const mod10 = count % 10;
+        const mod100 = count % 100;
+        if (mod10 === 1 && mod100 !== 11) return `${count} поле`;
+        if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return `${count} поля`;
+        return `${count} полей`;
+      }
+
       function formatMoney(value) {
         if (value === null || value === undefined || value === "") return "—";
         const num = Number(value);
@@ -1999,24 +2903,73 @@
         return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
       }
 
+      function updateStageViewSwitch() {
+        stageViewSwitch?.querySelectorAll("[data-stage-view]").forEach((btn) => {
+          const isActive = btn.dataset.stageView === stageViewMode;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+      }
+
+      function updateTaskViewSwitch() {
+        taskViewSwitch?.querySelectorAll("[data-task-view]").forEach((btn) => {
+          const isActive = btn.dataset.taskView === taskViewMode;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+      }
+
+      function isStageCollapsed(stageId) {
+        return collapsedStages.has(String(stageId));
+      }
+
+      function setStageCollapsed(stageId, collapsed) {
+        const normalizedId = String(stageId);
+        if (collapsed) {
+          collapsedStages.add(normalizedId);
+        } else {
+          collapsedStages.delete(normalizedId);
+        }
+        try {
+          localStorage.setItem(collapsedStagesKey, JSON.stringify(Array.from(collapsedStages)));
+        } catch (error) {
+          console.warn("Не удалось сохранить состояние этапов", error);
+        }
+      }
+
 
       function renderStages() {
         gtmStages.sort((a, b) => a.order - b.order);
+        updateStageViewSwitch();
         if (!gtmStages.length) {
           stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           return;
         }
 
+        if (stageViewMode === "table") {
+          renderStageTable();
+          return;
+        }
+
         stagesContainer.innerHTML = "";
         gtmStages.forEach((stage, index) => {
+          const collapsed = isStageCollapsed(stage.id);
           const card = document.createElement("div");
-          card.className = "stage-card";
+          card.className = `stage-card${collapsed ? " collapsed" : ""}`;
           card.dataset.stageId = stage.id;
           const percent = Math.round(stageProgressScore(stage) * 100);
           card.innerHTML = `
             <div class="stage-header">
               <div>
-                <strong>${index + 1}. ${stage.title}</strong>
+                <div class="stage-title-line">
+                  <strong>${index + 1}. ${stage.title}</strong>
+                  <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
+                    💬 <span class="count">${stage.comments?.length || 0}</span>
+                  </button>
+                  <button class="icon-button" data-stage-collapse="${stage.id}" aria-label="Свернуть этап">
+                    ${collapsed ? "▾" : "▴"}
+                  </button>
+                </div>
                 <div class="stage-description" id="stage-desc-${stage.id}"></div>
               </div>
               <div class="stage-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
@@ -2052,7 +3005,6 @@
               <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
             </div>
             <div id="stage-tasks-${stage.id}"></div>
-            <div id="stage-comments-${stage.id}"></div>
           `;
 
           card.addEventListener("contextmenu", (event) => {
@@ -2062,19 +3014,94 @@
 
           const desc = card.querySelector(`#stage-desc-${stage.id}`);
           if (desc) {
-            desc.innerHTML = stage.description || '<span class="muted">Описание не заполнено</span>';
+            if (stage.description) {
+              desc.innerHTML = stage.description;
+              desc.classList.remove("empty");
+            } else {
+              desc.innerHTML = '<span class="muted">Описание не заполнено</span>';
+              desc.classList.add("empty");
+            }
           }
           const taskSlot = card.querySelector(`#stage-tasks-${stage.id}`);
           if (taskSlot) {
             taskSlot.replaceWith(renderStageTasks(stage));
           }
-          const commentSlot = card.querySelector(`#stage-comments-${stage.id}`);
-          if (commentSlot) {
-            commentSlot.replaceWith(renderStageComments(stage));
+          const stageCommentBtn = card.querySelector(`[data-stage-comments='${stage.id}']`);
+          stageCommentBtn?.addEventListener("click", () => openStageDiscussion(stage.id));
+          const collapseBtn = card.querySelector(`[data-stage-collapse='${stage.id}']`);
+          if (collapseBtn) {
+            collapseBtn.title = collapsed ? "Развернуть этап" : "Свернуть этап";
+            collapseBtn.setAttribute("aria-label", collapsed ? "Развернуть этап" : "Свернуть этап");
+            collapseBtn.addEventListener("click", () => {
+              const nextCollapsed = !card.classList.contains("collapsed");
+              card.classList.toggle("collapsed", nextCollapsed);
+              collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
+              const label = nextCollapsed ? "Развернуть этап" : "Свернуть этап";
+              collapseBtn.title = label;
+              collapseBtn.setAttribute("aria-label", label);
+              setStageCollapsed(stage.id, nextCollapsed);
+            });
           }
 
           stagesContainer.appendChild(card);
         });
+      }
+
+      function renderStageTable() {
+        stagesContainer.innerHTML = "";
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-scroll";
+        const table = document.createElement("table");
+        table.className = "compact-table";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Этап</th>
+              <th>План / Факт</th>
+              <th>Статус</th>
+              <th>Задач</th>
+              <th>Риск</th>
+              <th>Комментарии</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+        `;
+        const tbody = document.createElement("tbody");
+        const taskCount = tasks.reduce((acc, task) => {
+          const key = task.gtm_stage_id || "__none";
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        gtmStages.forEach((stage, index) => {
+          const row = document.createElement("tr");
+          const planned = `${stage.planned_start || "—"} → ${stage.planned_end || "—"}`;
+          const fact = stage.actual_end || "—";
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${stage.title}</td>
+            <td><div>${planned}</div><div class="muted">Факт: ${fact}</div></td>
+            <td><span class="chip">${statusLabel(stage.status)}</span></td>
+            <td>${taskCount[stage.id] || 0}</td>
+            <td>${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : "—"}</td>
+            <td>${stage.comments?.length || 0}</td>
+            <td>
+              <div class="table-actions">
+                <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
+                <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬</button>
+                <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
+              </div>
+            </td>
+          `;
+          row.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            openStageContextMenu(event, stage, index);
+          });
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        stagesContainer.appendChild(wrapper);
       }
 
       function renderStageTasks(stage) {
@@ -2114,48 +3141,68 @@
         }
 
         stageTasks.forEach((task) => {
+          const collapsed = isTaskCollapsed(task.id);
           const card = document.createElement("div");
-          card.className = "task-card compact";
+          card.className = `task-card${collapsed ? " collapsed" : ""}`;
           card.dataset.taskId = task.id;
 
           const topRow = document.createElement("div");
-          topRow.className = "stage-task-header";
+          topRow.className = "task-top-row";
           const info = document.createElement("div");
-          info.style.display = "flex";
-          info.style.flexDirection = "column";
-          info.style.gap = "4px";
           const titleEl = document.createElement("strong");
           titleEl.textContent = task.title;
           info.appendChild(titleEl);
-          if (task.description) {
-            const desc = document.createElement("div");
-            desc.className = "muted";
-            desc.textContent = task.description;
-            info.appendChild(desc);
-          }
+          topRow.appendChild(info);
+          const topActions = document.createElement("div");
+          topActions.className = "task-top-actions";
+          const commentBtn = document.createElement("button");
+          commentBtn.type = "button";
+          commentBtn.className = "icon-button comment-trigger";
+          commentBtn.innerHTML = `💬 <span class="count">${task.comments?.length || 0}</span>`;
+          commentBtn.title = "Комментарии";
+          commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
+          const collapseBtn = document.createElement("button");
+          collapseBtn.type = "button";
+          collapseBtn.className = "icon-button";
+          collapseBtn.dataset.taskCollapse = task.id;
+          collapseBtn.textContent = collapsed ? "▾" : "▴";
+          collapseBtn.title = collapsed ? "Развернуть задачу" : "Свернуть задачу";
+          collapseBtn.addEventListener("click", () => {
+            const nextCollapsed = !card.classList.contains("collapsed");
+            card.classList.toggle("collapsed", nextCollapsed);
+            collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
+            collapseBtn.title = nextCollapsed ? "Развернуть задачу" : "Свернуть задачу";
+            setTaskCollapsed(task.id, nextCollapsed);
+          });
+          topActions.appendChild(commentBtn);
+          topActions.appendChild(collapseBtn);
+          topRow.appendChild(topActions);
+          card.appendChild(topRow);
 
-          const tagBar = document.createElement("div");
-          tagBar.style.display = "flex";
-          tagBar.style.flexWrap = "wrap";
-          tagBar.style.gap = "6px";
+          const badges = document.createElement("div");
+          badges.className = "task-badges";
           const statusChip = document.createElement("span");
           statusChip.className = "chip";
           statusChip.textContent = taskStatusLabel(task.status);
-          tagBar.appendChild(statusChip);
+          badges.appendChild(statusChip);
           const due = dueInfo(task);
           const dueChip = document.createElement("span");
           dueChip.className = due.className;
           dueChip.textContent = due.text;
-          tagBar.appendChild(dueChip);
+          badges.appendChild(dueChip);
           if (task.important) {
             const importantChip = document.createElement("span");
-            importantChip.className = "chip warn";
+            importantChip.className = "flag-badge flag-important";
             importantChip.textContent = "Важно";
-            tagBar.appendChild(importantChip);
+            badges.appendChild(importantChip);
           }
-          topRow.appendChild(info);
-          topRow.appendChild(tagBar);
-          card.appendChild(topRow);
+          if (task.urgency === "high") {
+            const urgentChip = document.createElement("span");
+            urgentChip.className = "flag-badge flag-urgent";
+            urgentChip.textContent = "Срочно";
+            badges.appendChild(urgentChip);
+          }
+          card.appendChild(badges);
 
           const progress = taskProgress(task);
           const progressBlock = document.createElement("div");
@@ -2165,6 +3212,15 @@
             <div class="muted">Прогресс задачи: ${progress.label}</div>
           `;
           card.appendChild(progressBlock);
+
+          const details = document.createElement("div");
+          details.className = "task-details";
+          if (task.description) {
+            const desc = document.createElement("div");
+            desc.className = "task-description";
+            desc.textContent = task.description;
+            details.appendChild(desc);
+          }
 
           const actions = document.createElement("div");
           actions.className = "task-inline-actions";
@@ -2189,10 +3245,10 @@
           actions.appendChild(toggleStatusBtn);
           actions.appendChild(importantBtn);
           actions.appendChild(deleteBtn);
-          card.appendChild(actions);
+          details.appendChild(actions);
 
-          card.appendChild(renderSubtasksSection(task));
-          card.appendChild(renderTaskComments(task));
+          details.appendChild(renderSubtasksSection(task));
+          card.appendChild(details);
 
           card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
@@ -2206,6 +3262,7 @@
                 label: task.important ? "Снять важность" : "Отметить как важную",
                 action: () => toggleImportant(task.id),
               },
+              { label: "Комментарии", action: () => openTaskDiscussion(task.id) },
               { label: "Удалить", action: () => deleteTask(task.id) },
             ];
             openContextMenu(event, menu);
@@ -2217,167 +3274,205 @@
         return wrapper;
       }
 
-      function renderStageComments(stage) {
-        const block = document.createElement("div");
-        block.className = "comment-block";
-        block.dataset.stageId = stage.id;
-        const header = document.createElement("div");
-        header.className = "comment-block-header";
-        const title = document.createElement("strong");
-        title.textContent = "Комментарии этапа";
-        const addBtn = document.createElement("button");
-        addBtn.className = "ghost";
-        addBtn.textContent = "Добавить";
-        addBtn.addEventListener("click", () => focusStageCommentEditor(stage.id));
-        header.appendChild(title);
-        header.appendChild(addBtn);
-        block.appendChild(header);
-
-        const list = document.createElement("ul");
-        list.className = "comment-list";
-        const stageComments = stage.comments?.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) || [];
-        if (!stageComments.length) {
-          const empty = document.createElement("li");
-          empty.className = "muted";
-          empty.textContent = "Комментариев пока нет";
-          list.appendChild(empty);
+      function renderCompactTaskView() {
+        if (!taskCompactContent) return;
+        updateTaskViewSwitch();
+        taskCompactContent.innerHTML = "";
+        taskCompactContent.classList.toggle("table-scroll", taskViewMode === "table");
+        if (!tasks.length) {
+          taskCompactContent.innerHTML = '<p class="muted">Задачи ещё не добавлены.</p>';
+          return;
+        }
+        if (taskViewMode === "table") {
+          taskCompactContent.appendChild(buildTaskTable());
         } else {
-          stageComments.forEach((comment) => {
-            const item = document.createElement("li");
-            item.className = "comment-item";
-            item.id = `stage-comment-${stage.id}-${comment.id}`;
-            const meta = document.createElement("div");
-            meta.className = "muted";
-            meta.style.fontSize = "0.85rem";
-            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${
-              comment.edited_at ? " · изменено" : ""
-            }`;
-            const body = document.createElement("div");
-            body.innerHTML = comment.text || "";
-            const actions = document.createElement("div");
-            actions.className = "comment-actions";
-            const editBtn = document.createElement("button");
-            editBtn.className = "ghost";
-            editBtn.textContent = "Редактировать";
-            editBtn.addEventListener("click", () => openStageCommentEditor(stage.id, comment));
-            const delBtn = document.createElement("button");
-            delBtn.className = "ghost";
-            delBtn.textContent = "Удалить";
-            delBtn.addEventListener("click", () => deleteStageComment(stage.id, comment.id));
-            actions.appendChild(editBtn);
-            actions.appendChild(delBtn);
-            item.appendChild(meta);
-            item.appendChild(body);
-            item.appendChild(actions);
-            list.appendChild(item);
+          taskCompactContent.appendChild(buildKanbanBoard());
+        }
+      }
+
+      function buildTaskTable() {
+        const table = document.createElement("table");
+        table.className = "compact-table";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Задача</th>
+              <th>Этап</th>
+              <th>Статус</th>
+              <th>Важность</th>
+              <th>Срочность</th>
+              <th>Срок</th>
+              <th>Прогресс</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+        `;
+        const tbody = document.createElement("tbody");
+        const orderMap = gtmStages.reduce((acc, stage, index) => {
+          acc[stage.id] = index;
+          return acc;
+        }, {});
+        const statusOrder = { todo: 0, in_progress: 1, done: 2 };
+        const sortedTasks = [...tasks].sort((a, b) => {
+          const stageDiff = (orderMap[a.gtm_stage_id] ?? 999) - (orderMap[b.gtm_stage_id] ?? 999);
+          if (stageDiff !== 0) return stageDiff;
+          const statusDiff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+          if (statusDiff !== 0) return statusDiff;
+          const aDate = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
+          const bDate = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY;
+          if (aDate !== bDate) return aDate - bDate;
+          return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
+        });
+        sortedTasks.forEach((task) => {
+          const due = dueInfo(task);
+          const progress = taskProgress(task);
+          const toggleStatus = task.status === "done" ? "todo" : "done";
+          const toggleTitle = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
+          const toggleIcon = toggleStatus === "todo" ? "↺" : "✔";
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${task.title}</strong></td>
+            <td>${stageTitle(task.gtm_stage_id)}</td>
+            <td><span class="chip">${taskStatusLabel(task.status)}</span></td>
+            <td>${task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—"}</td>
+            <td>${task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—"}</td>
+            <td><span class="${due.className}">${due.text}</span></td>
+            <td>${progress.label}</td>
+              <td>
+              <div class="table-actions">
+                <button class="ghost" onclick="openTaskForm('${task.id}')">✏️</button>
+                <button class="ghost" onclick="openTaskDiscussion('${task.id}')">💬</button>
+                <button class="ghost" title="${toggleTitle}" onclick="changeTaskStatus('${task.id}', '${toggleStatus}')">${toggleIcon}</button>
+                <button class="ghost" title="Удалить" onclick="deleteTask('${task.id}')">🗑️</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function buildKanbanBoard() {
+        const board = document.createElement("div");
+        board.className = "kanban-board";
+        const grouped = { todo: [], in_progress: [], done: [] };
+        tasks.forEach((task) => {
+          const bucket = grouped[task.status] || grouped.todo;
+          bucket.push(task);
+        });
+        Object.keys(grouped).forEach((key) => {
+          grouped[key].sort((a, b) => {
+            const aDate = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
+            const bDate = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY;
+            if (aDate !== bDate) return aDate - bDate;
+            return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
           });
+        });
+        kanbanStatuses.forEach(({ key, label }) => {
+          const column = document.createElement("div");
+          column.className = "kanban-column";
+          const header = document.createElement("div");
+          header.className = "kanban-column-header";
+          header.innerHTML = `<span>${label}</span><span class="muted">${grouped[key]?.length || 0}</span>`;
+          const body = document.createElement("div");
+          body.className = "kanban-column-body";
+          body.dataset.status = key;
+          body.addEventListener("dragover", handleKanbanDragOver);
+          body.addEventListener("dragleave", handleKanbanDragLeave);
+          body.addEventListener("drop", handleKanbanDrop);
+          if (!grouped[key]?.length) {
+            const empty = document.createElement("p");
+            empty.className = "kanban-empty";
+            empty.textContent = "Нет задач";
+            body.appendChild(empty);
+          } else {
+            grouped[key].forEach((task) => body.appendChild(createKanbanCard(task)));
+          }
+          column.appendChild(header);
+          column.appendChild(body);
+          board.appendChild(column);
+        });
+        return board;
+      }
+
+      function createKanbanCard(task) {
+        const card = document.createElement("div");
+        card.className = "kanban-card";
+        card.draggable = true;
+        card.dataset.taskId = task.id;
+        card.addEventListener("dragstart", handleKanbanDragStart);
+        card.addEventListener("dragend", handleKanbanDragEnd);
+        card.addEventListener("dblclick", () => openTaskForm(task.id));
+        const title = document.createElement("strong");
+        title.textContent = task.title;
+        card.appendChild(title);
+        const meta = document.createElement("div");
+        meta.className = "kanban-meta";
+        meta.innerHTML = `<span>${stageTitle(task.gtm_stage_id)}</span>`;
+        const due = dueInfo(task);
+        meta.innerHTML += `<span class="${due.className}">${due.text}</span>`;
+        card.appendChild(meta);
+        const badges = document.createElement("div");
+        badges.className = "task-badges";
+        if (task.important) {
+          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
         }
-
-        block.appendChild(list);
-        block.appendChild(renderStageCommentComposer(stage.id));
-        return block;
+        if (task.urgency === "high") {
+          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
+        }
+        const statusChip = document.createElement("span");
+        statusChip.className = "chip";
+        statusChip.textContent = taskStatusLabel(task.status);
+        badges.appendChild(statusChip);
+        card.appendChild(badges);
+        return card;
       }
 
-      function renderStageCommentComposer(stageId) {
-        const composer = document.createElement("div");
-        composer.className = "comment-editor";
-        const editorId = `stage-comment-editor-${stageId}`;
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий к этапу", true);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Добавить";
-        saveBtn.addEventListener("click", () => addStageComment(stageId, editorHtml(area), area));
-        const clearBtn = document.createElement("button");
-        clearBtn.className = "ghost";
-        clearBtn.textContent = "Очистить";
-        clearBtn.addEventListener("click", () => {
-          area.innerHTML = "";
-        });
-        actions.appendChild(saveBtn);
-        actions.appendChild(clearBtn);
-        composer.appendChild(wrapper);
-        composer.appendChild(actions);
-        return composer;
+      function handleKanbanDragStart(event) {
+        const card = event.currentTarget;
+        draggedTaskId = card.dataset.taskId;
+        card.classList.add("dragging");
+        if (event.dataTransfer) {
+          event.dataTransfer.setData("text/plain", draggedTaskId);
+          event.dataTransfer.effectAllowed = "move";
+        }
       }
 
-      async function addStageComment(stageId, html, areaRef = null) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось добавить комментарий");
+      function handleKanbanDragEnd(event) {
+        event.currentTarget.classList.remove("dragging");
+        draggedTaskId = null;
+      }
+
+      function handleKanbanDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add("drop-ready");
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = "move";
+        }
+      }
+
+      function handleKanbanDragLeave(event) {
+        event.currentTarget.classList.remove("drop-ready");
+      }
+
+      async function handleKanbanDrop(event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove("drop-ready");
+        const status = event.currentTarget.dataset.status;
+        if (!draggedTaskId || !status) {
+          draggedTaskId = null;
           return;
         }
-        if (areaRef) areaRef.innerHTML = "";
-        await loadStages();
-      }
-
-      function openStageCommentEditor(stageId, comment) {
-        const item = document.getElementById(`stage-comment-${stageId}-${comment.id}`);
-        if (!item) return;
-        item.innerHTML = "";
-        const editorId = `stage-comment-edit-${stageId}-${comment.id}`;
-        const editor = document.createElement("div");
-        editor.className = "comment-editor";
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
-        area.innerHTML = comment.text || "";
-        editor.appendChild(wrapper);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Сохранить";
-        saveBtn.addEventListener("click", async () => {
-          const html = editorHtml(area);
-          if (!html) return;
-          await updateStageComment(stageId, comment.id, html);
-        });
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "ghost";
-        cancelBtn.textContent = "Отмена";
-        cancelBtn.addEventListener("click", () => renderStages());
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-        editor.appendChild(actions);
-        item.appendChild(editor);
-      }
-
-      async function updateStageComment(stageId, commentId, text) {
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось сохранить комментарий");
-          return;
-        }
-        await loadStages();
-      }
-
-      async function deleteStageComment(stageId, commentId) {
-        if (!confirm("Удалить комментарий этапа?")) return;
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, { method: "DELETE" });
-        if (!res.ok) {
-          alert("Не удалось удалить комментарий");
-          return;
-        }
-        await loadStages();
-      }
-
-      function focusStageCommentEditor(stageId) {
-        const area = document.getElementById(`stage-comment-editor-${stageId}`);
-        if (area) {
-          area.scrollIntoView({ behavior: "smooth", block: "center" });
-          area.focus();
+        const task = tasks.find((t) => String(t.id) === String(draggedTaskId));
+        draggedTaskId = null;
+        if (task && task.status !== status) {
+          await changeTaskStatus(task.id, status);
+        } else {
+          renderCompactTaskView();
         }
       }
+
       function taskProgressScore(task) {
         if (!task) return 0;
         const subtasks = task.subtasks || [];
@@ -2438,7 +3533,7 @@
           { label: "Редактировать", action: () => openStageForm(stage.id) },
           { label: stage.risk_flag ? "Снять риск" : "Отметить риск", action: () => toggleRisk(stage.id, !stage.risk_flag) },
           { label: "Добавить задачу", action: () => openTaskForm(null, stage.id) },
-          { label: "Добавить комментарий", action: () => focusStageCommentEditor(stage.id) },
+          { label: "Комментарии", action: () => openStageDiscussion(stage.id) },
           { label: "Переместить вверх", disabled: index === 0, action: () => moveStage(stage.id, -1) },
           { label: "Переместить вниз", disabled: index === gtmStages.length - 1, action: () => moveStage(stage.id, 1) },
           { label: "Удалить", action: () => deleteStage(stage.id) },
@@ -2658,10 +3753,12 @@
       }
 
       async function loadTasks() {
-        const res = await fetch(`/api/projects/${projectId}/tasks`);
+        const res = await fetch(`/api/projects/${projectId}/tasks`, { cache: "no-store" });
         tasks = res.ok ? await res.json() : [];
         renderStages();
         renderGtmProgress();
+        renderCompactTaskView();
+        focusTaskIfNeeded();
       }
 
       function renderTaskFilters() {
@@ -2811,83 +3908,262 @@
         return wrapper;
       }
 
-      function renderTaskCommentComposer(taskId) {
-        const editorId = `task-comment-editor-${taskId}`;
-        const composer = document.createElement("div");
-        composer.className = "comment-editor";
-        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
+      function openTaskDiscussion(taskId) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (!task || !discussionModal) return;
+        discussionContext = { type: "task", id: taskId };
+        discussionModal.style.display = "flex";
+        discussionModal.dataset.open = "true";
+        discussionTitle.textContent = `Комментарии к задаче: ${task.title}`;
+        renderDiscussionModalContent();
+      }
+
+      function openStageDiscussion(stageId) {
+        const stage = gtmStages.find((s) => s.id === stageId);
+        if (!stage || !discussionModal) return;
+        discussionContext = { type: "stage", id: stageId };
+        discussionModal.style.display = "flex";
+        discussionModal.dataset.open = "true";
+        discussionTitle.textContent = `Комментарии к этапу: ${stage.title}`;
+        renderDiscussionModalContent();
+      }
+
+      function closeDiscussionModal() {
+        if (!discussionModal) return;
+        discussionModal.style.display = "none";
+        discussionModal.dataset.open = "false";
+        discussionList.innerHTML = "";
+        discussionComposer.innerHTML = "";
+        discussionContext = null;
+      }
+
+      function getDiscussionOwner() {
+        if (!discussionContext) return null;
+        if (discussionContext.type === "task") {
+          return tasks.find((t) => t.id === discussionContext.id) || null;
+        }
+        if (discussionContext.type === "stage") {
+          return gtmStages.find((s) => s.id === discussionContext.id) || null;
+        }
+        return null;
+      }
+
+      function renderDiscussionModalContent() {
+        if (!discussionModal || !discussionContext) return;
+        const owner = getDiscussionOwner();
+        if (!owner) {
+          discussionList.innerHTML = "<li class='muted'>Комментарии недоступны</li>";
+          discussionComposer.innerHTML = "";
+          return;
+        }
+        const comments = owner.comments?.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) || [];
+        discussionList.innerHTML = "";
+        if (!comments.length) {
+          const empty = document.createElement("li");
+          empty.className = "muted";
+          empty.textContent = "Комментариев пока нет";
+          discussionList.appendChild(empty);
+        } else {
+          comments.forEach((comment) => {
+            const item = document.createElement("li");
+            item.className = "comment-item";
+            item.id = `discussion-comment-${comment.id}`;
+            const meta = document.createElement("div");
+            meta.className = "muted";
+            meta.style.fontSize = "0.85rem";
+            const edited = comment.edited_at
+              ? ` · изменено ${new Date(comment.edited_at).toLocaleString("ru-RU")}`
+              : "";
+            meta.textContent = `${new Date(comment.created_at).toLocaleString("ru-RU")}${edited}`;
+            const body = document.createElement("div");
+            body.innerHTML = comment.text || "";
+            const actions = document.createElement("div");
+            actions.className = "comment-actions";
+            const editBtn = document.createElement("button");
+            editBtn.className = "ghost";
+            editBtn.textContent = "Редактировать";
+            editBtn.addEventListener("click", () => startDiscussionEdit(comment.id));
+            const delBtn = document.createElement("button");
+            delBtn.className = "ghost";
+            delBtn.textContent = "Удалить";
+            delBtn.addEventListener("click", () => {
+              if (!discussionContext) return;
+              if (discussionContext.type === "task") {
+                deleteTaskComment(discussionContext.id, comment.id);
+              } else {
+                deleteStageComment(discussionContext.id, comment.id);
+              }
+            });
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+            item.appendChild(meta);
+            item.appendChild(body);
+            item.appendChild(actions);
+            discussionList.appendChild(item);
+          });
+        }
+
+        discussionComposer.innerHTML = "";
+        const editorContainer = document.createElement("div");
+        editorContainer.className = "comment-editor";
+        const editorId = `discussion-editor-${discussionContext.type}-${owner.id}`;
+        const { wrapper, area } = createRichEditor(editorId, "Новый комментарий", true);
+        editorContainer.appendChild(wrapper);
+        const composerActions = document.createElement("div");
+        composerActions.className = "comment-actions";
         const saveBtn = document.createElement("button");
         saveBtn.className = "primary";
         saveBtn.textContent = "Добавить";
-        saveBtn.addEventListener("click", () => addTaskComment(taskId, editorHtml(area), area));
+        saveBtn.addEventListener("click", () => {
+          if (!discussionContext) return;
+          const html = editorHtml(area);
+          if (discussionContext.type === "task") {
+            addTaskComment(owner.id, html, area);
+          } else {
+            addStageComment(owner.id, html, area);
+          }
+        });
         const clearBtn = document.createElement("button");
         clearBtn.className = "ghost";
         clearBtn.textContent = "Очистить";
         clearBtn.addEventListener("click", () => {
           area.innerHTML = "";
         });
-        actions.appendChild(saveBtn);
-        actions.appendChild(clearBtn);
-        composer.appendChild(wrapper);
-        composer.appendChild(actions);
-        return composer;
+        composerActions.appendChild(saveBtn);
+        composerActions.appendChild(clearBtn);
+        editorContainer.appendChild(composerActions);
+        discussionComposer.appendChild(editorContainer);
       }
 
-      function renderTaskComments(task) {
-        const block = document.createElement("div");
-        block.className = "comment-block";
-        const header = document.createElement("div");
-        header.className = "comment-block-header";
-        const title = document.createElement("strong");
-        title.textContent = "Комментарии";
-        header.appendChild(title);
-        block.appendChild(header);
-
-        const commentList = document.createElement("ul");
-        commentList.className = "comment-list";
-        if (!task.comments?.length) {
-          const empty = document.createElement("li");
-          empty.className = "muted";
-          empty.textContent = "Комментариев нет";
-          commentList.appendChild(empty);
-        } else {
-          task.comments
-            .slice()
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .forEach((comment) => {
-              const item = document.createElement("li");
-              item.className = "comment-item";
-              item.id = `task-comment-${task.id}-${comment.id}`;
-              const created = new Date(comment.created_at).toLocaleString("ru-RU");
-              const meta = document.createElement("div");
-              meta.className = "muted";
-              meta.style.fontSize = "0.85rem";
-              meta.textContent = `${created}${comment.edited_at ? " · изменено" : ""}`;
-              const body = document.createElement("div");
-              body.innerHTML = comment.text || "";
-              const actions = document.createElement("div");
-              actions.className = "comment-actions";
-              const editBtn = document.createElement("button");
-              editBtn.className = "ghost";
-              editBtn.textContent = "Редактировать";
-              editBtn.addEventListener("click", () => openTaskCommentEditor(task.id, comment));
-              const del = document.createElement("button");
-              del.className = "ghost";
-              del.textContent = "Удалить";
-              del.addEventListener("click", () => deleteTaskComment(task.id, comment.id));
-              actions.appendChild(editBtn);
-              actions.appendChild(del);
-              item.appendChild(meta);
-              item.appendChild(body);
-              item.appendChild(actions);
-              commentList.appendChild(item);
-            });
+      function refreshDiscussionModal() {
+        if (discussionModal?.dataset.open === "true" && discussionContext) {
+          renderDiscussionModalContent();
         }
-        block.appendChild(commentList);
-        block.appendChild(renderTaskCommentComposer(task.id));
-        return block;
+      }
+
+      function startDiscussionEdit(commentId) {
+        const owner = getDiscussionOwner();
+        if (!owner) return;
+        const comment = owner.comments?.find((c) => c.id === commentId);
+        if (!comment) return;
+        const item = document.getElementById(`discussion-comment-${commentId}`);
+        if (!item) return;
+        item.innerHTML = "";
+        const editorId = `discussion-edit-${commentId}`;
+        const { wrapper, area } = createRichEditor(editorId, "Комментарий", true);
+        area.innerHTML = comment.text || "";
+        item.appendChild(wrapper);
+        const actions = document.createElement("div");
+        actions.className = "comment-actions";
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "primary";
+        saveBtn.textContent = "Сохранить";
+        saveBtn.addEventListener("click", () => persistDiscussionUpdate(commentId, editorHtml(area)));
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "ghost";
+        cancelBtn.textContent = "Отмена";
+        cancelBtn.addEventListener("click", renderDiscussionModalContent);
+        actions.appendChild(saveBtn);
+        actions.appendChild(cancelBtn);
+        item.appendChild(actions);
+      }
+
+      async function persistDiscussionUpdate(commentId, html) {
+        const text = (html || "").trim();
+        if (!text || !discussionContext) return;
+        if (discussionContext.type === "task") {
+          await updateTaskComment(discussionContext.id, commentId, text);
+        } else {
+          await updateStageComment(discussionContext.id, commentId, text);
+        }
+      }
+
+      async function addTaskComment(taskId, html, areaRef = null) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        if (areaRef) areaRef.innerHTML = "";
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function updateTaskComment(taskId, commentId, html) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось обновить комментарий");
+          return;
+        }
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function deleteTaskComment(taskId, commentId) {
+        if (!confirm("Удалить комментарий?")) return;
+        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+          return;
+        }
+        await loadTasks();
+        refreshDiscussionModal();
+      }
+
+      async function addStageComment(stageId, html, areaRef = null) {
+        const text = (html || "").trim();
+        if (!text) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) {
+          alert("Не удалось добавить комментарий");
+          return;
+        }
+        if (areaRef) areaRef.innerHTML = "";
+        await loadStages();
+        refreshDiscussionModal();
+      }
+
+      async function updateStageComment(stageId, commentId, text) {
+        const prepared = (text || "").trim();
+        if (!prepared) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: prepared }),
+        });
+        if (!res.ok) {
+          alert("Не удалось сохранить комментарий");
+          return;
+        }
+        await loadStages();
+        refreshDiscussionModal();
+      }
+
+      async function deleteStageComment(stageId, commentId) {
+        if (!confirm("Удалить комментарий этапа?")) return;
+        const res = await fetch(`/api/projects/${projectId}/gtm-stages/${stageId}/comments/${commentId}`, { method: "DELETE" });
+        if (!res.ok) {
+          alert("Не удалось удалить комментарий");
+        return;
+        }
+        await loadStages();
+        refreshDiscussionModal();
       }
 
       function openTaskForm(taskId = null, defaultStageId = null) {
@@ -2900,6 +4176,9 @@
         document.getElementById("taskStatus").value = task?.status || "todo";
         document.getElementById("taskDueDate").value = task?.due_date || "";
         document.getElementById("taskImportant").checked = task?.important || false;
+        if (taskUrgencyField) {
+          taskUrgencyField.value = task?.urgency || "normal";
+        }
         if (task?.gtm_stage_id) {
           taskGtmStageSelect.value = task.gtm_stage_id;
         } else if (defaultStageId) {
@@ -2924,6 +4203,7 @@
           status: document.getElementById("taskStatus").value,
           due_date: document.getElementById("taskDueDate").value || null,
           important: document.getElementById("taskImportant").checked,
+          urgency: taskUrgencyField?.value || "normal",
           gtm_stage_id: document.getElementById("taskGtmStage").value || null,
           subtasks: [],
           comments: [],
@@ -3064,77 +4344,19 @@
         await loadTasks();
       }
 
-      async function addTaskComment(taskId, html, areaRef = null) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось добавить комментарий");
-          return;
-        }
-        if (areaRef) areaRef.innerHTML = "";
-        await loadTasks();
-      }
-
-      function openTaskCommentEditor(taskId, comment) {
-        const item = document.getElementById(`task-comment-${taskId}-${comment.id}`);
-        if (!item) return;
-        item.innerHTML = "";
-        const editorId = `task-comment-edit-${taskId}-${comment.id}`;
-        const { wrapper, area } = createRichEditor(editorId, "Текст комментария", true);
-        area.innerHTML = comment.text || "";
-        const actions = document.createElement("div");
-        actions.className = "comment-actions";
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "primary";
-        saveBtn.textContent = "Сохранить";
-        saveBtn.addEventListener("click", () => updateTaskComment(taskId, comment.id, editorHtml(area)));
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "ghost";
-        cancelBtn.textContent = "Отмена";
-        cancelBtn.addEventListener("click", () => loadTasks());
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-        item.appendChild(wrapper);
-        item.appendChild(actions);
-      }
-
-      async function updateTaskComment(taskId, commentId, html) {
-        const text = (html || "").trim();
-        if (!text) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) {
-          alert("Не удалось обновить комментарий");
-          return;
-        }
-        await loadTasks();
-      }
-
-      async function deleteTaskComment(taskId, commentId) {
-        if (!confirm("Удалить комментарий?")) return;
-        const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
-        if (!res.ok) {
-          alert("Не удалось удалить комментарий");
-          return;
-        }
-        await loadTasks();
-      }
-
       async function loadImages() {
-        const res = await fetch(`/api/projects/${projectId}/images`);
+        const res = await fetch(`/api/projects/${projectId}/images`, { cache: "no-store" });
         if (res.ok) {
           images = await res.json();
           renderGallery();
           renderCoverPanel();
         }
+      }
+
+      function imageDownloadUrl(image) {
+        if (!image) return "";
+        const cacheKey = encodeURIComponent(image.updated_at || image.uploaded_at || image.id || "0");
+        return `/api/projects/${projectId}/images/${image.id}/download?ts=${cacheKey}`;
       }
 
       function renderGallery() {
@@ -3151,7 +4373,7 @@
           card.className = "image-card";
           card.innerHTML = `
             ${img.is_cover ? '<span class="cover-chip">Обложка</span>' : ""}
-            <img class="image-thumb" src="/api/projects/${projectId}/images/${img.id}/download" alt="${img.filename}" onclick="openImage('${img.id}')" />
+            <img class="image-thumb" src="${imageDownloadUrl(img)}" alt="${img.filename}" onclick="openImage('${img.id}')" />
             <div class="image-meta">
               <div style="display:flex; flex-direction:column; gap:2px">
                 <strong>${img.filename}</strong>
@@ -3186,7 +4408,7 @@
       function renderCoverPanel() {
         const cover = getCoverImage();
         if (cover) {
-          coverImage.src = `/api/projects/${projectId}/images/${cover.id}/download`;
+          coverImage.src = imageDownloadUrl(cover);
           coverImage.style.display = "block";
           coverPlaceholder.style.display = "none";
           clearCoverButton.disabled = false;
@@ -3288,7 +4510,7 @@
       function showLightbox() {
         const current = lightboxOrder[lightboxIndex];
         if (!current) return;
-        lightboxImage.src = `/api/projects/${projectId}/images/${current.id}/download`;
+        lightboxImage.src = imageDownloadUrl(current);
         lightboxTitle.textContent = current.filename;
         lightboxCaption.textContent = current.caption || "";
         lightbox.dataset.open = "true";
@@ -3735,5 +4957,8 @@
 
 
     </script>
+    <footer class="site-footer">
+      <small>Made by Smuk Marian / 2025</small>
+    </footer>
   </body>
 </html>
