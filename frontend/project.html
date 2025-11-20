@@ -2398,13 +2398,20 @@
         const ctx = canvas.getContext("2d", { alpha: true });
         ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
 
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+        const originalType = (file.type || "image/jpeg").toLowerCase();
+        const isPng = originalType.includes("png");
+        const isWebp = originalType.includes("webp");
+        const outputType = isPng ? "image/png" : isWebp ? "image/webp" : "image/jpeg";
+        const quality = outputType === "image/jpeg" ? 0.82 : undefined;
+
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, outputType, quality));
         if (!blob || blob.size >= file.size * 0.95) {
           return file;
         }
 
-        const safeName = file.name.replace(/\.(png|jpg|jpeg|webp|bmp|gif)$/i, "") || "image";
-        return new File([blob], `${safeName}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+        const nameWithoutExt = file.name.replace(/\.[^.]+$/, "") || "image";
+        const extension = isPng ? "png" : isWebp ? "webp" : "jpg";
+        return new File([blob], `${nameWithoutExt}.${extension}`, { type: outputType, lastModified: Date.now() });
       }
       const kanbanStatuses = [
         { key: "todo", label: "ToDo" },
