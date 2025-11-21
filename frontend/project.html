@@ -1170,6 +1170,101 @@
         color: var(--flag-risk-text);
       }
 
+      .compact-row-title {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        word-break: break-word;
+      }
+
+      .priority-bar {
+        position: relative;
+        padding-inline-start: 12px;
+      }
+
+      .priority-bar::before {
+        content: "";
+        position: absolute;
+        inset: 2px auto 2px 0;
+        width: 6px;
+        border-radius: 999px;
+        background: var(--divider);
+      }
+
+      .priority-high::before {
+        background: linear-gradient(180deg, #f97316, #ea580c);
+      }
+
+      .priority-medium::before {
+        background: linear-gradient(180deg, #22c55e, #16a34a);
+      }
+
+      .priority-low::before {
+        background: linear-gradient(180deg, #0ea5e9, #0284c7);
+      }
+
+      .compact-actions-inline {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .micro-progress {
+        position: relative;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--surface-muted);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .micro-progress span {
+        position: absolute;
+        inset: 0;
+        display: block;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+        transition: width 0.2s ease;
+      }
+
+      .micro-progress.warn span {
+        background: linear-gradient(90deg, #f97316, #ea580c);
+      }
+
+      .micro-progress.danger span {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+      }
+
+      .tag-mini {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .tag-mini.positive {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent-strong);
+      }
+
+      .tag-mini.warn {
+        background: var(--flag-urgent-bg);
+        border-color: var(--flag-urgent-border);
+        color: var(--flag-urgent-text);
+      }
+
+      .tag-mini.negative {
+        background: var(--flag-risk-bg);
+        border-color: var(--flag-risk-border);
+        color: var(--flag-risk-text);
+      }
+
       .icon-button {
         display: inline-flex;
         align-items: center;
@@ -4154,6 +4249,7 @@
                 } title="Вниз">↓</button>
                 <button class="icon-button" data-stage-collapse="${stage.id}">${collapsed ? "▾" : "▴"}</button>
               </div>
+              <div class="stage-timeline-bar"><span style="width:${timeline.percent}%"></span></div>
             </div>
             <div class="stage-card-body">
               <div class="stage-card-grid">
