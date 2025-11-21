@@ -373,6 +373,8 @@
         margin-bottom: 12px;
         background: radial-gradient(circle at 12% 20%, var(--surface-muted) 0, var(--surface) 35%);
         box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+        position: relative;
+        overflow: hidden;
       }
 
       .stage-card.collapsed {
@@ -389,6 +391,37 @@
       .stage-card.collapsed .stage-metrics-grid,
       .stage-card.collapsed .stage-card-body {
         display: none;
+      }
+
+      .stage-ribbon {
+        position: absolute;
+        inset: 0 auto auto 0;
+        padding: 6px 12px;
+        border-bottom-right-radius: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #0f172a;
+        background: linear-gradient(90deg, #ffd166, #f97316);
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+      }
+
+      .stage-ribbon.warn {
+        background: linear-gradient(90deg, #fcd34d, #f59e0b);
+      }
+
+      .stage-ribbon.danger {
+        background: linear-gradient(90deg, #fca5a5, #ef4444);
+        color: #0f172a;
+      }
+
+      .stage-ribbon.soon {
+        background: linear-gradient(90deg, #bfdbfe, #60a5fa);
+        color: #0f172a;
+      }
+
+      [data-theme="dark"] .stage-ribbon {
+        color: #0b0f1a;
+        background: linear-gradient(90deg, #fcd34d, #f59e0b);
       }
 
       .stage-header {
@@ -745,8 +778,51 @@
         z-index: 2;
       }
 
+      .stage-table th:nth-child(3),
+      .stage-table td:nth-child(3) {
+        min-width: 220px;
+      }
+
+      .stage-table th:nth-child(4),
+      .stage-table td:nth-child(4) {
+        min-width: 180px;
+      }
+
       .stage-table-title {
         font-weight: 600;
+      }
+
+      .stage-dates-inline {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .stage-dates-inline .date-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .stage-dates-inline label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        min-width: 48px;
+      }
+
+      .stage-dates-inline input[type="date"] {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 4px 8px;
+        background: var(--surface);
+        color: inherit;
+      }
+
+      .stage-grid-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 6px;
       }
 
       .table-actions {
@@ -3683,9 +3759,9 @@
         if (dueState === "overdue") slaLabel = `Просрочено на ${Math.abs(endDelta)} д.`;
         if (dueState === "soon") slaLabel = `До срока ${endDelta} д.`;
 
-        const tagKind = dueState === "overdue" ? "danger" : dueState === "soon" ? "warn" : "";
+        const tagKind = dueState === "overdue" ? "negative" : dueState === "soon" ? "warn" : "";
 
-        return { percent, dueState, rangeLabel, slaLabel, tagKind };
+        return { percent, dueState, rangeLabel, slaLabel, tagKind, daysToEnd: endDelta };
       }
 
       function stageMetrics(stage) {
@@ -3776,10 +3852,21 @@
           const card = document.createElement("div");
           const metrics = stageMetrics(stage);
           const timeline = stageTimeline(stage);
+          const highlight = (() => {
+            if (stage.risk_flag) return { label: "⚠️ Риск/блокер", className: "warn" };
+            if (timeline.dueState === "overdue") {
+              return { label: `Просрочено ${Math.abs(timeline.daysToEnd || 0)} д.`, className: "danger" };
+            }
+            if (timeline.dueState === "soon") {
+              return { label: `Дедлайн через ${timeline.daysToEnd} д.`, className: "soon" };
+            }
+            return null;
+          })();
           const absoluteIndex = orderedStages.findIndex((item) => item.id === stage.id);
           card.className = `stage-card stage-track${collapsed ? " collapsed" : ""}`;
           card.dataset.stageId = stage.id;
           card.innerHTML = `
+            ${highlight ? `<div class="stage-ribbon ${highlight.className || ""}">${highlight.label}</div>` : ""}
             <div class="stage-card-head">
               <div class="stage-title-line">
                 <div class="stage-rank">${absoluteIndex + 1}</div>
@@ -3907,6 +3994,7 @@
               <th>#</th>
               <th>Этап</th>
               <th>Сроки</th>
+              <th>SLA / Риск</th>
               <th>Статус</th>
               <th>Прогресс</th>
               <th>Задачи</th>
@@ -3928,22 +4016,59 @@
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${absoluteIndex + 1}</td>
-            <td><div class="stage-table-title">${stage.title}</div></td>
             <td>
+              <div class="stage-table-title">${stage.title}</div>
               <div class="muted">${timeline.rangeLabel}</div>
-              <div><span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span></div>
             </td>
-            <td><span class="chip">${statusLabel(stage.status)}</span>${stage.risk_flag ? '<div class="tag-mini warn">⚠️ Риск</div>' : ""}</td>
             <td>
-              <div class="micro-progress"><span style="width:${metrics.progressPercent}%"></span></div>
+              <div class="stage-dates-inline">
+                <div class="date-row">
+                  <label>План</label>
+                  <input type="date" data-stage="${stage.id}" data-stage-date="planned_start" value="${stage.planned_start || ""}" />
+                  <span class="muted">→</span>
+                  <input type="date" data-stage="${stage.id}" data-stage-date="planned_end" value="${stage.planned_end || ""}" />
+                </div>
+                <div class="date-row">
+                  <label>Факт</label>
+                  <input type="date" data-stage="${stage.id}" data-stage-date="actual_end" value="${stage.actual_end || ""}" />
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="stage-grid-meta">
+                <span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
+                ${stage.risk_flag ? '<span class="tag-mini warn">⚠️ Риск</span>' : ""}
+                <span class="muted">Таймлайн: ${timeline.rangeLabel}</span>
+              </div>
+            </td>
+            <td>
+              <label class="inline-select">
+                <span class="muted">Статус</span>
+                <select data-stage-status="${stage.id}">
+                  <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                  <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                  <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                  <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                </select>
+              </label>
+              <label class="checkbox-lite">
+                <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
+              </label>
+            </td>
+            <td>
+              <div class="micro-progress${timeline.dueState === "overdue" ? " danger" : timeline.dueState === "soon" ? " warn" : ""}"><span style="width:${metrics.progressPercent}%"></span></div>
               <div class="muted">${metrics.progressPercent}%</div>
             </td>
-            <td>${metrics.doneTasks}/${taskCount[stage.id] || 0}</td>
-            <td>${metrics.comments}</td>
+            <td>
+              <div class="muted">Готово ${metrics.doneTasks}/${taskCount[stage.id] || 0}</div>
+              <div class="muted">Подзадачи ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</div>
+            </td>
+            <td>
+              <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬 ${metrics.comments}</button>
+            </td>
             <td>
               <div class="table-actions">
                 <button class="ghost" onclick="openStageForm('${stage.id}')">✏️</button>
-                <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬</button>
                 <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
               </div>
             </td>
@@ -3951,6 +4076,17 @@
           row.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             openStageContextMenu(event, stage, absoluteIndex);
+          });
+          const statusSelect = row.querySelector(`[data-stage-status='${stage.id}']`);
+          statusSelect?.addEventListener("change", (event) => updateStageInline(stage.id, { status: event.target.value }));
+          const riskToggle = row.querySelector(`[data-stage-risk='${stage.id}']`);
+          riskToggle?.addEventListener("change", (event) => updateStageInline(stage.id, { risk_flag: event.target.checked }));
+          row.querySelectorAll(`input[data-stage='${stage.id}'][data-stage-date]`).forEach((input) => {
+            input.addEventListener("change", (event) => {
+              const prop = event.target.dataset.stageDate;
+              const value = event.target.value || null;
+              updateStageInline(stage.id, { [prop]: value });
+            });
           });
           tbody.appendChild(row);
         });
@@ -4411,18 +4547,20 @@
         }
       });
 
-      async function changeStatus(stageId, value) {
+      async function updateStageInline(stageId, patch) {
         const stage = gtmStages.find((s) => s.id === stageId);
         if (!stage) return;
-        stage.status = value;
+        Object.assign(stage, patch);
         await saveStage(stage);
+        renderStages();
+      }
+
+      async function changeStatus(stageId, value) {
+        await updateStageInline(stageId, { status: value });
       }
 
       async function toggleRisk(stageId, value) {
-        const stage = gtmStages.find((s) => s.id === stageId);
-        if (!stage) return;
-        stage.risk_flag = value;
-        await saveStage(stage);
+        await updateStageInline(stageId, { risk_flag: value });
       }
 
       async function moveStage(stageId, delta) {
