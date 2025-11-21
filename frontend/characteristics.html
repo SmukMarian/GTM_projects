@@ -319,6 +319,13 @@
         width: 18%;
       }
 
+      .fields-table th:last-child,
+      .fields-table td:last-child {
+        width: 140px;
+        min-width: 120px;
+        text-align: right;
+      }
+
       th:nth-child(3),
       td:nth-child(3),
       th:nth-child(4),
@@ -428,14 +435,26 @@
         align-items: end;
       }
 
-      .field-editor .inline-editor-grid {
-        grid-template-columns: repeat(3, minmax(200px, 1fr));
+      .char-field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 12px;
         align-items: end;
       }
 
+      .char-field-grid label {
+        font-weight: 600;
+        font-size: 0.92rem;
+      }
+
+      .char-field-grid .full-span {
+        grid-column: 1 / -1;
+      }
+
       .field-editor .inline-editor-grid .inline-input,
-      .field-editor .inline-editor-grid select {
+      .field-editor .inline-editor-grid select,
+      .field-editor .char-field-grid .inline-input,
+      .field-editor .char-field-grid select {
         width: auto;
         max-width: 100%;
       }
@@ -466,6 +485,8 @@
 
       .field-actions {
         gap: 6px;
+        min-width: 120px;
+        justify-content: flex-end;
       }
 
       .icon-button {
@@ -997,6 +1018,7 @@
           }
 
           const table = document.createElement("table");
+          table.className = "fields-table";
           table.innerHTML = `<thead><tr>
               <th>Label RU</th>
               <th>Label EN</th>
@@ -1093,12 +1115,14 @@
         const moveFieldUp = document.createElement("button");
         moveFieldUp.className = "ghost icon-button";
         moveFieldUp.textContent = "↑";
+        moveFieldUp.title = "Переместить выше";
         moveFieldUp.disabled = index === 0;
         moveFieldUp.addEventListener("click", () => moveField(section.id, field.id, -1));
 
         const moveFieldDown = document.createElement("button");
         moveFieldDown.className = "ghost icon-button";
         moveFieldDown.textContent = "↓";
+        moveFieldDown.title = "Переместить ниже";
         moveFieldDown.disabled = index === total - 1;
         moveFieldDown.addEventListener("click", () => moveField(section.id, field.id, 1));
 
@@ -1319,7 +1343,7 @@
         const editor = document.createElement("div");
         editor.className = "inline-editor section-editor";
         const grid = document.createElement("div");
-        grid.className = "inline-editor-grid";
+        grid.className = "char-field-grid";
         const titleLabel = document.createElement("label");
         titleLabel.textContent = "Название секции";
         const titleInput = document.createElement("input");
@@ -1438,6 +1462,7 @@
 
         const typeLabel = document.createElement("label");
         typeLabel.textContent = "Тип поля";
+        typeLabel.classList.add("full-span");
         const typeSelect = document.createElement("select");
         [
           { value: "text", label: "Текст" },
@@ -1598,6 +1623,7 @@
           editingSectionId = null;
           fieldEditor = null;
           renderCharacteristics();
+          await loadCharacteristicTemplates();
           showToast(locale.success.templateApplied);
         } else {
           showToast("Не удалось применить шаблон", "error");
