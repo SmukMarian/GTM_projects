@@ -172,6 +172,16 @@
         border: 1px solid var(--border);
       }
 
+      .soft-wrap {
+        white-space: pre-line;
+        word-break: break-word;
+        hyphens: auto;
+      }
+
+      .balanced-measure {
+        max-width: min(78ch, 100%);
+      }
+
       .inline-chip-btn {
         display: inline-flex;
         align-items: center;
@@ -591,6 +601,47 @@
         background: var(--surface);
       }
 
+      @media (max-width: 1080px) {
+        .stage-card-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .stage-card-actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .stage-timeline-row {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .stage-card {
+          padding: 12px;
+        }
+
+        .stage-metrics-grid {
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+
+        .stage-task-head,
+        .stage-task-meta {
+          flex-wrap: wrap;
+          align-items: flex-start;
+        }
+
+        .stage-task-actions {
+          width: 100%;
+        }
+
+        .stage-task-meta {
+          flex-direction: column;
+        }
+      }
+
       .chip.warn {
         background: var(--flag-risk-bg);
         color: var(--flag-risk-text);
@@ -633,6 +684,11 @@
         margin-top: 4px;
         color: var(--muted);
         font-size: 0.9rem;
+        line-height: 1.55;
+        white-space: pre-line;
+        word-break: break-word;
+        hyphens: auto;
+        max-width: min(78ch, 100%);
       }
 
       .stage-description.empty {
@@ -790,6 +846,7 @@
 
       .stage-table-title {
         font-weight: 600;
+        word-break: break-word;
       }
 
       .stage-dates-inline {
@@ -835,6 +892,8 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        min-width: 0;
+        word-break: break-word;
       }
 
       .priority-bar {
@@ -1421,6 +1480,7 @@
         flex-direction: column;
         gap: 4px;
         flex: 1;
+        min-width: 0;
       }
 
       .stage-task-meta {
@@ -1456,6 +1516,7 @@
         display: flex;
         align-items: flex-start;
         gap: 10px;
+        min-width: 0;
       }
 
       .task-rank {
@@ -1487,6 +1548,11 @@
         color: var(--muted);
         font-size: 0.94rem;
         margin-bottom: 4px;
+        line-height: 1.55;
+        white-space: pre-line;
+        word-break: break-word;
+        hyphens: auto;
+        max-width: min(78ch, 100%);
       }
 
       .task-details {
@@ -3876,7 +3942,7 @@
                     <span class="chip pill">${statusLabel(stage.status)}</span>
                     ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
                   </div>
-                  <div class="stage-description" id="stage-desc-${stage.id}"></div>
+                  <div class="stage-description balanced-measure" id="stage-desc-${stage.id}"></div>
                 </div>
               </div>
               <div class="stage-card-actions">
@@ -3893,6 +3959,7 @@
                 } title="Вниз">↓</button>
                 <button class="icon-button" data-stage-collapse="${stage.id}">${collapsed ? "▾" : "▴"}</button>
               </div>
+              <div class="stage-timeline-bar"><span style="width:${timeline.percent}%"></span></div>
             </div>
             <div class="stage-timeline-block">
               <div class="stage-timeline-row">
@@ -4830,7 +4897,7 @@
         const titleEl = document.createElement("strong");
         titleEl.textContent = task.title;
         const metaLine = document.createElement("div");
-        metaLine.className = "muted";
+        metaLine.className = "muted soft-wrap balanced-measure";
         metaLine.textContent = task.description?.trim() || "Описание не задано";
         titleWrap.append(titleEl, metaLine);
 
