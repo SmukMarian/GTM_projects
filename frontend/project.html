@@ -4033,6 +4033,7 @@
                 } title="Вниз">↓</button>
                 <button class="icon-button" data-stage-collapse="${stage.id}">${collapsed ? "▾" : "▴"}</button>
               </div>
+              <div class="stage-timeline-bar"><span style="width:${timeline.percent}%"></span></div>
             </div>
             <div class="stage-timeline-block">
               <div class="stage-timeline-row">
@@ -4059,6 +4060,32 @@
                 <span class="muted">Комментарии</span>
                 <strong>${metrics.comments}</strong>
               </div>
+              <div class="metric-tile">
+                <span class="muted">Подзадачи</span>
+                <strong>${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</strong>
+              </div>
+              <div class="metric-tile">
+                <span class="muted">Комментарии</span>
+                <strong>${metrics.comments}</strong>
+              </div>
+            </div>
+            <div class="stage-card-body">
+              <div class="stage-inline-controls">
+                <label class="inline-select">
+                  Статус
+                  <select data-stage-status="${stage.id}">
+                    <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                    <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                    <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                    <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                  </select>
+                </label>
+                <label class="checkbox-lite">
+                  <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
+                </label>
+                <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
+              </div>
+              <div id="stage-tasks-${stage.id}"></div>
             </div>
             <div class="stage-card-body">
               <div class="stage-inline-controls">
