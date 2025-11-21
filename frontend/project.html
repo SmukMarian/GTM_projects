@@ -725,16 +725,17 @@
 
       .compact-toolbar {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 12px;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
 
       .compact-toolbar .chip-row {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        align-items: center;
       }
 
       .filter-chip {
@@ -768,6 +769,42 @@
         justify-content: flex-end;
       }
 
+      .compact-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 4px 0 12px;
+      }
+
+      .summary-tile {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .summary-tile strong {
+        font-size: 1.08rem;
+      }
+
+      .summary-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+      }
+
+      .summary-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
       .pill-input {
         display: inline-flex;
         align-items: center;
@@ -788,30 +825,47 @@
         color: var(--muted);
       }
 
+      .table-shell {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+      }
+
+      .table-scroll {
+        overflow: auto;
+        border-radius: inherit;
+      }
+
       .compact-table {
         width: 100%;
-        border-collapse: collapse;
-        min-width: 640px;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 820px;
       }
 
       .compact-table th,
       .compact-table td {
-        padding: 10px 12px;
+        padding: 12px 14px;
         border-bottom: 1px solid var(--border);
         text-align: left;
         vertical-align: top;
+        background: var(--surface);
       }
 
       .compact-table th {
-        font-size: 0.85rem;
+        position: sticky;
+        top: 0;
+        font-size: 0.84rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--muted);
-        background: var(--surface-muted);
+        background: linear-gradient(180deg, var(--surface-muted), var(--surface));
+        z-index: 3;
       }
 
-      .compact-table tbody tr:nth-child(even) {
-        background: rgba(148, 163, 184, 0.08);
+      .compact-table tbody tr:hover td {
+        background: rgba(16, 163, 127, 0.05);
       }
 
       .compact-table .chip {
@@ -822,7 +876,7 @@
       .stage-table td:first-child {
         position: sticky;
         left: 0;
-        background: var(--surface);
+        background: linear-gradient(90deg, var(--surface), rgba(255, 255, 255, 0.9));
         z-index: 2;
       }
 
@@ -830,7 +884,7 @@
       .stage-table td:nth-child(2) {
         position: sticky;
         left: 60px;
-        background: var(--surface);
+        background: linear-gradient(90deg, var(--surface), rgba(255, 255, 255, 0.9));
         z-index: 2;
       }
 
@@ -847,6 +901,24 @@
       .stage-table-title {
         font-weight: 600;
         word-break: break-word;
+      }
+
+      .cell-meta-stack {
+        display: grid;
+        gap: 6px;
+        align-items: start;
+      }
+
+      .cell-tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .cell-quiet {
+        color: var(--muted);
+        font-size: 0.9rem;
       }
 
       .stage-dates-inline {
@@ -2582,6 +2654,7 @@
       <p class="muted" style="margin-top: 0">
         Переключайте таблицу и канбан, чтобы быстро приоритизировать задачи вне карточек этапов.
       </p>
+      <div id="taskSummaryBar" class="compact-summary" aria-live="polite"></div>
       <div class="compact-toolbar">
         <div class="chip-row" id="taskFilterChips">
           <button class="filter-chip" data-filter-group="status" data-value="todo">ToDo</button>
@@ -2602,7 +2675,7 @@
         </div>
       </div>
       <div class="muted" id="taskFilterSummary" style="margin: 4px 0 8px"></div>
-      <div id="taskCompactContent" class="table-scroll"></div>
+      <div id="taskCompactContent"></div>
     </div>
 
     <div class="card">
@@ -2985,6 +3058,7 @@
       const gtmDoneCount = document.getElementById("gtm-done-count");
       const taskViewSwitch = document.getElementById("taskViewSwitch");
       const taskCompactContent = document.getElementById("taskCompactContent");
+      const taskSummaryBar = document.getElementById("taskSummaryBar");
 
       const galleryContainer = document.getElementById("gallery");
       const imageUploadInput = document.getElementById("imageUploadInput");
@@ -3986,6 +4060,32 @@
                 <span class="muted">Комментарии</span>
                 <strong>${metrics.comments}</strong>
               </div>
+              <div class="metric-tile">
+                <span class="muted">Подзадачи</span>
+                <strong>${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</strong>
+              </div>
+              <div class="metric-tile">
+                <span class="muted">Комментарии</span>
+                <strong>${metrics.comments}</strong>
+              </div>
+            </div>
+            <div class="stage-card-body">
+              <div class="stage-inline-controls">
+                <label class="inline-select">
+                  Статус
+                  <select data-stage-status="${stage.id}">
+                    <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                    <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                    <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                    <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                  </select>
+                </label>
+                <label class="checkbox-lite">
+                  <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
+                </label>
+                <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
+              </div>
+              <div id="stage-tasks-${stage.id}"></div>
             </div>
             <div class="stage-card-body">
               <div class="stage-inline-controls">
@@ -4051,6 +4151,8 @@
 
       function renderStageTable(list = gtmStages, orderedList = gtmStages) {
         stagesContainer.innerHTML = "";
+        const shell = document.createElement("div");
+        shell.className = "table-shell";
         const wrapper = document.createElement("div");
         wrapper.className = "table-scroll";
         const table = document.createElement("table");
@@ -4085,7 +4187,7 @@
             <td>${absoluteIndex + 1}</td>
             <td>
               <div class="stage-table-title">${stage.title}</div>
-              <div class="muted">${timeline.rangeLabel}</div>
+              <div class="cell-quiet">${timeline.rangeLabel}</div>
             </td>
             <td>
               <div class="stage-dates-inline">
@@ -4102,33 +4204,41 @@
               </div>
             </td>
             <td>
-              <div class="stage-grid-meta">
-                <span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
-                ${stage.risk_flag ? '<span class="tag-mini warn">⚠️ Риск</span>' : ""}
-                <span class="muted">Таймлайн: ${timeline.rangeLabel}</span>
+              <div class="cell-meta-stack">
+                <div class="cell-tag-row">
+                  <span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
+                  ${stage.risk_flag ? '<span class="tag-mini warn">⚠️ Риск</span>' : ""}
+                </div>
+                <div class="cell-quiet">Таймлайн: ${timeline.rangeLabel}</div>
               </div>
             </td>
             <td>
-              <label class="inline-select">
-                <span class="muted">Статус</span>
-                <select data-stage-status="${stage.id}">
-                  <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
-                  <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
-                  <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
-                  <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
-                </select>
-              </label>
-              <label class="checkbox-lite">
-                <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
-              </label>
+              <div class="cell-meta-stack">
+                <label class="inline-select">
+                  <span class="muted">Статус</span>
+                  <select data-stage-status="${stage.id}">
+                    <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                    <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                    <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                    <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                  </select>
+                </label>
+                <label class="checkbox-lite">
+                  <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
+                </label>
+              </div>
             </td>
             <td>
-              <div class="micro-progress${timeline.dueState === "overdue" ? " danger" : timeline.dueState === "soon" ? " warn" : ""}"><span style="width:${metrics.progressPercent}%"></span></div>
-              <div class="muted">${metrics.progressPercent}%</div>
+              <div class="cell-meta-stack">
+                <div class="micro-progress${timeline.dueState === "overdue" ? " danger" : timeline.dueState === "soon" ? " warn" : ""}"><span style="width:${metrics.progressPercent}%"></span></div>
+                <div class="cell-quiet">${metrics.progressPercent}%</div>
+              </div>
             </td>
             <td>
-              <div class="muted">Готово ${metrics.doneTasks}/${taskCount[stage.id] || 0}</div>
-              <div class="muted">Подзадачи ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</div>
+              <div class="cell-meta-stack">
+                <div class="cell-quiet">Готово ${metrics.doneTasks}/${taskCount[stage.id] || 0}</div>
+                <div class="cell-quiet">Подзадачи ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</div>
+              </div>
             </td>
             <td>
               <button class="ghost" onclick="openStageDiscussion('${stage.id}')">💬 ${metrics.comments}</button>
@@ -4159,7 +4269,8 @@
         });
         table.appendChild(tbody);
         wrapper.appendChild(table);
-        stagesContainer.appendChild(wrapper);
+        shell.appendChild(wrapper);
+        stagesContainer.appendChild(shell);
       }
 
       function renderStageTasks(stage) {
@@ -4209,9 +4320,9 @@
         if (!taskCompactContent) return;
         updateTaskViewSwitch();
         taskCompactContent.innerHTML = "";
-        taskCompactContent.classList.toggle("table-scroll", taskViewMode === "table");
         const filteredTasks = applyTaskFilters(tasks);
         updateTaskFilterSummary(filteredTasks.length, tasks.length);
+        renderTaskSummary(filteredTasks, tasks.length);
         if (!filteredTasks.length) {
           const reason = tasks.length
             ? "По активным фильтрам ничего не найдено. Сбросьте фильтры."
@@ -4220,10 +4331,51 @@
           return;
         }
         if (taskViewMode === "table") {
-          taskCompactContent.appendChild(buildTaskTable(filteredTasks));
+          const shell = document.createElement("div");
+          shell.className = "table-shell";
+          const scroll = document.createElement("div");
+          scroll.className = "table-scroll";
+          scroll.appendChild(buildTaskTable(filteredTasks));
+          shell.appendChild(scroll);
+          taskCompactContent.appendChild(shell);
         } else {
           taskCompactContent.appendChild(buildKanbanBoard(filteredTasks));
         }
+      }
+
+      function renderTaskSummary(filteredTasks, totalTasks) {
+        if (!taskSummaryBar) return;
+        const total = filteredTasks.length;
+        const done = filteredTasks.filter((task) => task.status === "done").length;
+        const overdue = filteredTasks.filter((task) => dueInfo(task).state === "overdue").length;
+        const soon = filteredTasks.filter((task) => dueInfo(task).state === "soon").length;
+        const avgProgress = total
+          ? Math.round(
+              filteredTasks.reduce((acc, task) => acc + taskProgress(task).percent, 0) / total
+            )
+          : 0;
+        taskSummaryBar.innerHTML = `
+          <div class="summary-tile">
+            <div class="summary-meta"><span class="summary-dot"></span> В выборке</div>
+            <strong>${total} задач</strong>
+            <div class="cell-quiet">из ${totalTasks} всего</div>
+          </div>
+          <div class="summary-tile">
+            <div class="summary-meta"><span class="summary-dot" style="background:#10a37f"></span> Готово</div>
+            <strong>${done}</strong>
+            <div class="cell-quiet">Выполнено в фильтре</div>
+          </div>
+          <div class="summary-tile">
+            <div class="summary-meta"><span class="summary-dot" style="background:#f97316"></span> Сроки</div>
+            <strong>${overdue} проср., ${soon} скоро</strong>
+            <div class="cell-quiet">Мгновенная оценка риска</div>
+          </div>
+          <div class="summary-tile">
+            <div class="summary-meta"><span class="summary-dot" style="background:#0ea5e9"></span> Прогресс</div>
+            <strong>${avgProgress}%</strong>
+            <div class="cell-quiet">Средний прогресс задач</div>
+          </div>
+        `;
       }
 
       function buildTaskTable(items) {
