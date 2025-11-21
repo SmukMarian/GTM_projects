@@ -252,9 +252,8 @@
       .filter-panel {
         position: fixed;
         inset: 0;
-        display: flex;
-        justify-content: flex-end;
-        align-items: stretch;
+        display: grid;
+        place-items: center;
         z-index: 1100;
       }
 
@@ -270,11 +269,11 @@
 
       .filter-card {
         position: relative;
-        margin-left: auto;
-        width: min(680px, 92vw);
+        margin: 0 auto;
+        width: min(650px, 95vw);
         max-height: 100vh;
         background: var(--surface);
-        border-radius: 16px 0 0 16px;
+        border-radius: 16px;
         border: 1px solid var(--border);
         box-shadow: var(--shadow);
         display: flex;
@@ -413,39 +412,19 @@
       input,
       textarea,
       select {
+        width: 100%;
         border-radius: 12px;
         border: 1px solid var(--border);
         padding: 10px 12px;
         font: inherit;
         background: var(--surface-muted);
         color: var(--text);
-        min-height: 40px;
-        box-sizing: border-box;
       }
 
       .form-dialog input,
       .form-dialog textarea,
       .form-dialog select {
-        min-width: 0;
-      }
-
-      .detail-panel label > input,
-      .detail-panel label > textarea,
-      .detail-panel label > select {
-        width: 100%;
-      }
-
-      .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 12px;
-        align-items: end;
-      }
-
-      .form-grid input,
-      .form-grid textarea,
-      .form-grid select {
-        width: 100%;
+        width: auto;
         min-width: 0;
       }
 
@@ -783,7 +762,7 @@
             <span>Показывать архивные</span>
           </label>
           <div class="filter-trigger">
-            <button id="openCustomFilters" class="ghost">⚲ Фильтры</button>
+            <button id="openCustomFilters" class="ghost">Фильтры</button>
             <span id="customFiltersBadge" class="badge-dot" hidden>0</span>
           </div>
           <div class="filter-buttons">
@@ -827,7 +806,7 @@
           </div>
           <button id="closeDialog" class="ghost">✕</button>
         </div>
-        <form id="groupForm" class="detail-panel form-grid">
+        <form id="groupForm" class="detail-panel">
           <label>Название <input name="name" required /></label>
           <label>Описание <textarea name="description" rows="3"></textarea></label>
           <label>
@@ -938,7 +917,6 @@
       const initialGroupId = urlParams.get("group");
       let editingGroupId = null;
       let groupFilterMeta = [];
-      let groupFilterMetaAll = [];
       let customFieldFilters = [];
       const coverPlaceholder =
         "data:image/svg+xml;utf8," +
@@ -1474,24 +1452,12 @@
         }
       }
 
-      function filterMetaByUsage(meta, items) {
-        if (!Array.isArray(meta) || !items?.length) return meta || [];
-        const usage = new Map();
-        items.forEach((item) => {
-          (item.custom_fields || []).forEach((cf) => {
-            usage.set(cf.field_id, (usage.get(cf.field_id) || 0) + 1);
-          });
-        });
-        return meta.filter((m) => (usage.get(m.field_id) || 0) > 1);
-      }
-
       async function loadGroupFilterMeta(force = false) {
         if (groupFilterMeta.length && !force) return;
         try {
           const res = await fetch("/api/groups/custom-fields/filters");
           if (!res.ok) throw new Error("Не удалось загрузить кастомные поля групп");
-          groupFilterMetaAll = await res.json();
-          groupFilterMeta = filterMetaByUsage(groupFilterMetaAll, groups);
+          groupFilterMeta = await res.json();
         } catch (err) {
           console.warn(err);
           groupFilterMeta = [];
@@ -1670,11 +1636,6 @@
             return;
           }
           groups = await res.json();
-          groupFilterMeta = filterMetaByUsage(groupFilterMetaAll, groups);
-          customFieldFilters = customFieldFilters.filter((f) =>
-            groupFilterMeta.some((m) => m.field_id === f.field_id)
-          );
-          updateCustomFiltersBadge();
           localStorage.setItem(groupsCacheKey, JSON.stringify(groups));
           renderGroupsState();
         } catch (err) {

@@ -225,9 +225,8 @@
       .filter-panel {
         position: fixed;
         inset: 0;
-        display: flex;
-        justify-content: flex-end;
-        align-items: stretch;
+        display: grid;
+        place-items: center;
         z-index: 1100;
       }
 
@@ -243,11 +242,11 @@
 
       .filter-card {
         position: relative;
-        margin-left: auto;
-        width: min(680px, 92vw);
+        margin: 0 auto;
+        width: min(650px, 95vw);
         max-height: 100vh;
         background: var(--surface);
-        border-radius: 16px 0 0 16px;
+        border-radius: 16px;
         border: 1px solid var(--border);
         box-shadow: var(--shadow);
         display: flex;
@@ -501,44 +500,20 @@
       input,
       textarea,
       select {
+        width: 100%;
         border-radius: 12px;
         border: 1px solid var(--border);
         padding: 10px 12px;
         font: inherit;
         background: var(--surface-muted);
         color: var(--text);
-        min-height: 40px;
-        box-sizing: border-box;
       }
 
       .form-dialog input,
       .form-dialog textarea,
       .form-dialog select {
+        width: auto;
         min-width: 0;
-      }
-
-      .detail-panel label > input,
-      .detail-panel label > textarea,
-      .detail-panel label > select {
-        width: 100%;
-      }
-
-      .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 12px;
-        align-items: end;
-      }
-
-      .form-grid input,
-      .form-grid textarea,
-      .form-grid select {
-        width: 100%;
-        min-width: 0;
-      }
-
-      .form-grid .row {
-        grid-column: 1 / -1;
       }
 
       select {
@@ -825,7 +800,7 @@
       </div>
     <div class="filter-actions">
       <div class="filter-trigger">
-        <button id="openCustomFilters" class="ghost">⚲ Фильтры</button>
+        <button id="openCustomFilters" class="ghost">Фильтры</button>
         <span id="customFiltersBadge" class="badge-dot" hidden>0</span>
       </div>
       <div class="filter-buttons">
@@ -902,7 +877,7 @@
           </div>
           <button id="closeDialog" class="ghost">✕</button>
         </div>
-        <form id="projectForm" class="detail-panel form-grid">
+        <form id="projectForm" class="detail-panel">
           <label>Название <input name="name" required /></label>
           <label>
             Продуктовая группа
@@ -1035,7 +1010,6 @@
       const PAGE_SIZE = 30;
       let visibleProjects = PAGE_SIZE;
       let projectFilterMeta = [];
-      let projectFilterMetaAll = [];
       let customFieldFilters = [];
 
       closeDetailsBtn.addEventListener("click", (e) => {
@@ -1119,25 +1093,13 @@
         }
       }
 
-      function filterProjectMetaByUsage(meta, items) {
-        if (!Array.isArray(meta) || !items?.length) return meta || [];
-        const usage = new Map();
-        items.forEach((item) => {
-          (item.custom_fields || []).forEach((cf) => {
-            usage.set(cf.field_id, (usage.get(cf.field_id) || 0) + 1);
-          });
-        });
-        return meta.filter((m) => (usage.get(m.field_id) || 0) > 1);
-      }
-
       async function loadProjectFilterMeta(force = false) {
         if (projectFilterMeta.length && !force) return;
         const res = await fetch("/api/projects/custom-fields/filters");
         if (!res.ok) {
           throw new Error("Не удалось загрузить кастомные поля");
         }
-        projectFilterMetaAll = await res.json();
-        projectFilterMeta = filterProjectMetaByUsage(projectFilterMetaAll, projects);
+        projectFilterMeta = await res.json();
         customFieldFilters = customFieldFilters.filter((f) =>
           projectFilterMeta.some((m) => m.field_id === f.field_id)
         );
@@ -1710,11 +1672,6 @@
           return;
         }
         projects = await res.json();
-        projectFilterMeta = filterProjectMetaByUsage(projectFilterMetaAll, projects);
-        customFieldFilters = customFieldFilters.filter((f) =>
-          projectFilterMeta.some((m) => m.field_id === f.field_id)
-        );
-        updateCustomFiltersBadge();
         visibleProjects = PAGE_SIZE;
         renderStageFilter();
         renderSummary();
