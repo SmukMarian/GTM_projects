@@ -293,13 +293,29 @@
       input,
       textarea,
       select {
-        width: 100%;
         border-radius: 12px;
         border: 1px solid var(--border);
         padding: 10px 12px;
         font: inherit;
         background: var(--surface-muted);
         color: var(--text);
+      }
+
+      .modal input,
+      .modal textarea,
+      .modal select,
+      .modal-form input,
+      .modal-form textarea,
+      .modal-form select,
+      .gtm-inline-edit input,
+      .gtm-inline-edit textarea,
+      .gtm-inline-edit select,
+      .stage-row-edit input,
+      .stage-row-edit select,
+      .stage-row-edit textarea {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       textarea {
@@ -940,420 +956,6 @@
         color: var(--muted);
       }
 
-      .table-shell {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background: var(--surface);
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-      }
-
-      .table-scroll {
-        overflow: auto;
-        border-radius: inherit;
-      }
-
-      .compact-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        min-width: 820px;
-      }
-
-      .compact-table th,
-      .compact-table td {
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--border);
-        text-align: left;
-        vertical-align: top;
-        background: var(--surface);
-      }
-
-      .compact-table th {
-        position: sticky;
-        top: 0;
-        font-size: 0.84rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted);
-        background: linear-gradient(180deg, var(--surface-muted), var(--surface));
-        z-index: 3;
-      }
-
-      .compact-table tbody tr:hover td {
-        background: rgba(16, 163, 127, 0.05);
-      }
-
-      .compact-table .chip {
-        margin-right: 4px;
-      }
-
-      .stage-table th:first-child,
-      .stage-table td:first-child {
-        position: sticky;
-        left: 0;
-        background: linear-gradient(90deg, var(--surface), rgba(255, 255, 255, 0.9));
-        z-index: 2;
-      }
-
-      .stage-table th:nth-child(2),
-      .stage-table td:nth-child(2) {
-        position: sticky;
-        left: 60px;
-        background: linear-gradient(90deg, var(--surface), rgba(255, 255, 255, 0.9));
-        z-index: 2;
-      }
-
-      .stage-table th:nth-child(3),
-      .stage-table td:nth-child(3) {
-        min-width: 220px;
-      }
-
-      .stage-table th:nth-child(4),
-      .stage-table td:nth-child(4) {
-        min-width: 180px;
-      }
-
-      .stage-table-title {
-        font-weight: 600;
-        word-break: break-word;
-      }
-
-      .cell-meta-stack {
-        display: grid;
-        gap: 6px;
-        align-items: start;
-      }
-
-      .cell-tag-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        align-items: center;
-      }
-
-      .cell-quiet {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .stage-dates-inline {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
-
-      .stage-dates-inline .date-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      .stage-dates-inline label {
-        font-size: 0.8rem;
-        color: var(--muted);
-        min-width: 48px;
-      }
-
-      .stage-dates-inline input[type="date"] {
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 4px 8px;
-        background: var(--surface);
-        color: inherit;
-      }
-
-      .stage-grid-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 6px;
-      }
-
-      .table-actions {
-        display: inline-flex;
-        gap: 6px;
-        flex-wrap: initial;
-      }
-
-      .compact-row-title {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 0;
-        word-break: break-word;
-      }
-
-      .priority-bar {
-        position: relative;
-        padding-inline-start: 12px;
-      }
-
-      .priority-bar::before {
-        content: "";
-        position: absolute;
-        inset: 2px auto 2px 0;
-        width: 6px;
-        border-radius: 999px;
-        background: var(--divider);
-      }
-
-      .priority-high::before {
-        background: linear-gradient(180deg, #f97316, #ea580c);
-      }
-
-      .priority-medium::before {
-        background: linear-gradient(180deg, #22c55e, #16a34a);
-      }
-
-      .priority-low::before {
-        background: linear-gradient(180deg, #0ea5e9, #0284c7);
-      }
-
-      .compact-actions-inline {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .micro-progress {
-        position: relative;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--surface-muted);
-        overflow: hidden;
-        border: 1px solid var(--border);
-      }
-
-      @media (max-width: 1080px) {
-        .stage-card-head {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .stage-card-actions {
-          width: 100%;
-          justify-content: flex-start;
-        }
-
-        .stage-timeline-row {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-      }
-
-      @media (max-width: 760px) {
-        .stage-card {
-          padding: 12px;
-        }
-
-        .stage-metrics-grid {
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        }
-
-        .stage-task-head,
-        .stage-task-meta {
-          flex-wrap: wrap;
-          align-items: flex-start;
-        }
-
-        .stage-task-actions {
-          width: 100%;
-        }
-
-        .stage-task-meta {
-          flex-direction: column;
-        }
-      }
-
-      .chip.warn {
-        background: var(--flag-risk-bg);
-        color: var(--flag-risk-text);
-        border-color: var(--flag-risk-border);
-        font-weight: 600;
-      }
-
-      .micro-progress.warn span {
-        background: linear-gradient(90deg, #f97316, #ea580c);
-      }
-
-      .micro-progress.danger span {
-        background: linear-gradient(90deg, #ef4444, #dc2626);
-      }
-
-      .tag-mini {
-        padding: 4px 8px;
-        border-radius: 999px;
-        background: var(--surface-muted);
-        border: 1px solid var(--border);
-        font-size: 0.82rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .flag-important {
-        background: var(--flag-important-bg);
-        color: var(--flag-important-text);
-        border-color: var(--flag-important-border);
-      }
-
-      .flag-urgent {
-        background: var(--flag-urgent-bg);
-        color: var(--flag-urgent-text);
-        border-color: var(--flag-urgent-border);
-      }
-
-      .flag-risk {
-        background: var(--flag-risk-bg);
-        color: var(--flag-risk-text);
-        border-color: var(--flag-risk-border);
-      }
-
-      .stage-description {
-        margin-top: 4px;
-        color: var(--muted);
-        font-size: 0.9rem;
-        line-height: 1.55;
-        white-space: pre-line;
-        word-break: break-word;
-        hyphens: auto;
-        max-width: min(78ch, 100%);
-      }
-
-      .stage-description.empty {
-        font-style: italic;
-      }
-
-      .stage-progress {
-        margin-top: 10px;
-      }
-
-      .stage-meta-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-      }
-
-      .stage-controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 12px;
-        align-items: center;
-      }
-
-      .stage-task-list {
-        margin-top: 16px;
-        padding-top: 12px;
-        border-top: 1px solid var(--divider);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .compact-toolbar {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .compact-toolbar .chip-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .filter-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--surface-muted);
-        color: var(--text);
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-
-      .filter-chip strong {
-        font-weight: 700;
-      }
-
-      .filter-chip.active {
-        border-color: var(--accent);
-        background: var(--accent-soft);
-        color: var(--accent-strong);
-        box-shadow: 0 4px 14px rgba(16, 163, 127, 0.18);
-      }
-
-      .compact-toolbar-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: flex-end;
-      }
-
-      .compact-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        margin: 4px 0 12px;
-      }
-
-      .summary-tile {
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: linear-gradient(180deg, var(--surface), var(--surface-muted));
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .summary-tile strong {
-        font-size: 1.08rem;
-      }
-
-      .summary-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9rem;
-      }
-
-      .summary-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: var(--accent);
-      }
-
-      .pill-input {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--surface-muted);
-      }
-
-      .pill-input input {
-        border: none;
-        outline: none;
-        background: transparent;
-      }
-
-      .pill-input input::placeholder {
-        color: var(--muted);
-      }
-
 
       .table-shell {
         border: 1px solid var(--border);
@@ -1413,12 +1015,14 @@
       .gtm-table td {
         padding: 6px 8px;
         border-bottom: 1px solid var(--border);
-        vertical-align: top;
+        vertical-align: middle;
         min-width: 0;
+        overflow: hidden;
       }
 
-      .gtm-table tr.stage-row-view {
-        height: 46px;
+      .gtm-table tr.stage-row-view,
+      .gtm-table tr.stage-row-edit {
+        height: 44px;
       }
 
       .stage-name-cell {
@@ -1486,6 +1090,7 @@
       .stage-table th:nth-child(9),
       .stage-table td:nth-child(9) {
         min-width: 150px;
+        max-width: 160px;
       }
 
       .stage-table-title {
@@ -1765,6 +1370,29 @@
         height: 42px;
       }
 
+      .task-title-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .tasks-cell-title {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tasks-cell-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       .tasks-table th:nth-child(1),
       .tasks-table td:nth-child(1) {
         min-width: 260px;
@@ -1851,6 +1479,183 @@
         background: #f8fafc;
         border-color: #cbd5e1;
         color: #94a3b8;
+      }
+
+      .gtm-stage-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 10px 10px;
+        margin: 10px 0;
+        box-shadow: var(--shadow-small);
+      }
+
+      .gtm-stage-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 10px;
+      }
+
+      .gtm-stage-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+
+      .gtm-stage-index {
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .gtm-stage-name {
+        font-weight: 600;
+        font-size: 1rem;
+        max-width: 420px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .gtm-stage-dates {
+        font-size: 0.85rem;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .gtm-stage-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .gtm-stage-card.collapsed .gtm-stage-body {
+        display: none;
+      }
+
+      .gtm-stage-meta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 6px 0 2px;
+      }
+
+      .gtm-chip {
+        font-size: 0.82rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        white-space: nowrap;
+      }
+
+      .gtm-chip-status {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+      }
+
+      .gtm-chip-risk {
+        background: var(--flag-risk-bg);
+        border-color: var(--flag-risk-border);
+        color: var(--flag-risk-text);
+      }
+
+      .gtm-stage-quick {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 6px;
+      }
+
+      .gtm-stage-status-select {
+        min-width: 150px;
+      }
+
+      .btn-small {
+        height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+      }
+
+      .gtm-stage-body {
+        padding: 0 10px 6px;
+      }
+
+      .gtm-stage-tasks {
+        margin-top: 8px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .gtm-task-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        border-radius: 12px;
+      }
+
+      .gtm-task-left {
+        min-width: 0;
+      }
+
+      .gtm-task-line1 {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        flex-wrap: nowrap;
+      }
+
+      .gtm-task-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        max-width: 520px;
+      }
+
+      .gtm-task-subtitle {
+        font-size: 0.85rem;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        max-width: 360px;
+      }
+
+      .gtm-task-line2 {
+        margin-top: 4px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .gtm-task-progress {
+        white-space: nowrap;
+      }
+
+      .gtm-task-right {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .gtm-task-row .icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
       }
 
       .stage-row-edit {
@@ -4810,165 +4615,70 @@
         stagesContainer.innerHTML = "";
         filteredStages.forEach((stage) => {
           const collapsed = isStageCollapsed(stage.id);
-          const card = document.createElement("div");
+          const card = document.createElement("section");
           const metrics = stageMetrics(stage);
           const timeline = stageTimeline(stage);
-          const highlight = (() => {
-            if (stage.risk_flag) return { label: "⚠️ Риск/блокер", className: "warn" };
-            if (timeline.dueState === "overdue") {
-              return { label: `Просрочено ${Math.abs(timeline.daysToEnd || 0)} д.`, className: "danger" };
-            }
-            if (timeline.dueState === "soon") {
-              return { label: `Дедлайн через ${timeline.daysToEnd} д.`, className: "soon" };
-            }
-            return null;
-          })();
           const absoluteIndex = orderedStages.findIndex((item) => item.id === stage.id);
-          card.className = `stage-card stage-track${collapsed ? " collapsed" : ""}`;
+          card.className = `gtm-stage-card${collapsed ? " collapsed" : ""}`;
           card.dataset.stageId = stage.id;
           card.innerHTML = `
-            ${highlight ? `<div class="stage-ribbon ${highlight.className || ""}">${highlight.label}</div>` : ""}
-            <div class="stage-card-head">
-              <div class="stage-headline">
-                <div class="stage-rank">${absoluteIndex + 1}</div>
-                <div class="stage-head-info">
-                  <div class="stage-title-row">
-                    <strong>${stage.title}</strong>
-                    <span class="chip pill">${statusLabel(stage.status)}</span>
-                    ${stage.risk_flag ? '<span class="chip warn">⚠️ Риск</span>' : ""}
-                  </div>
-                  <div class="stage-meta-line">
-                    <span class="meta-chip muted">${timeline.rangeLabel}</span>
-                    <span class="meta-chip tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
-                    <span class="meta-chip">Задачи ${metrics.doneTasks}/${metrics.taskCount}</span>
-                    <span class="meta-chip">Подзадачи ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</span>
-                    <span class="meta-chip">Комментарии ${metrics.comments}</span>
-                  </div>
-                </div>
+            <header class="gtm-stage-header">
+              <div class="gtm-stage-title">
+                <span class="gtm-stage-index">${absoluteIndex + 1}</span>
+                <span class="gtm-stage-name" title="${stage.title}">${stage.title}</span>
+                <span class="gtm-chip gtm-chip-status">${statusLabel(stage.status)}</span>
+                ${stage.risk_flag ? '<span class="gtm-chip gtm-chip-risk">Риск</span>' : ""}
+                <span class="gtm-stage-dates">${timeline.rangeLabel}</span>
               </div>
-              <div class="stage-card-actions">
-                <button class="icon-button comment-trigger" data-stage-comments="${stage.id}" aria-label="Комментарии этапа">
-                  💬 <span class="count">${metrics.comments}</span>
-                </button>
-                <button class="ghost icon-only" onclick="openTaskForm(null, '${stage.id}')" title="Добавить задачу">+
-                  Задача
-                </button>
-                <button class="ghost icon-only" onclick="openStageForm('${stage.id}')" title="Редактировать этап">✏️</button>
-                <button class="ghost icon-only" onclick="moveStage('${stage.id}', -1)" ${absoluteIndex === 0 ? "disabled" : ""} title="Вверх">↑</button>
-                <button class="ghost icon-only" onclick="moveStage('${stage.id}', 1)" ${
-                  absoluteIndex === orderedStages.length - 1 ? "disabled" : ""
-                } title="Вниз">↓</button>
-                <button class="icon-button" data-stage-collapse="${stage.id}">${collapsed ? "▾" : "▴"}</button>
+              <div class="gtm-stage-actions">
+                <button class="icon-btn" data-stage-edit="${stage.id}" title="Редактировать">✏️</button>
+                <button class="icon-btn" data-stage-move-up="${stage.id}" ${absoluteIndex === 0 ? "disabled" : ""} title="Вверх">↑</button>
+                <button class="icon-btn" data-stage-move-down="${stage.id}" ${absoluteIndex === orderedStages.length - 1 ? "disabled" : ""} title="Вниз">↓</button>
+                <button class="icon-btn" data-stage-collapse="${stage.id}" title="Свернуть/развернуть">${collapsed ? "⌄" : "⌃"}</button>
               </div>
-              <div class="stage-timeline-bar"><span style="width:${timeline.percent}%"></span></div>
-            </div>
-            <div class="stage-card-body">
-              <div class="stage-card-grid">
-                <div class="stage-main">
-                  <div class="stage-description balanced-measure soft-wrap" id="stage-desc-${stage.id}"></div>
-                  <div class="stage-timeline-block">
-                    <div class="stage-timeline-row">
-                      <div class="muted">${timeline.rangeLabel}</div>
-                      <span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
-                    </div>
-                    <div class="stage-timeline-bar"><span style="width:${timeline.percent}%"></span></div>
-                  </div>
-                  <div class="stage-metrics-grid stage-metrics-compact">
-                    <div class="metric-tile compact">
-                      <span class="muted">Прогресс этапа</span>
-                      <div class="micro-progress"><span style="width:${metrics.progressPercent}%"></span></div>
-                      <div class="cell-quiet">${metrics.progressPercent}% готово</div>
-                    </div>
-                    <div class="metric-tile compact">
-                      <span class="muted">Задачи</span>
-                      <strong>${metrics.doneTasks}/${metrics.taskCount}</strong>
-                      <div class="cell-quiet">по этапу</div>
-                    </div>
-                    <div class="metric-tile compact">
-                      <span class="muted">Подзадачи</span>
-                      <strong>${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</strong>
-                      <div class="cell-quiet">детализация</div>
-                    </div>
-                    <div class="metric-tile compact">
-                      <span class="muted">Комментарии</span>
-                      <strong>${metrics.comments}</strong>
-                      <div class="cell-quiet">обсуждение</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="stage-side">
-                  <div class="stage-side-panel">
-                    <div class="muted">Краткий статус</div>
-                    <div class="micro-progress"><span style="width:${metrics.progressPercent}%"></span></div>
-                    <div class="cell-quiet">${metrics.progressPercent}% выполнено</div>
-                  </div>
-                  <div class="stage-side-panel stage-inline-panel">
-                    <div class="muted">Быстрые действия</div>
-                    <div class="stage-inline-controls">
-                      <label class="inline-select">
-                        Статус
-                        <select data-stage-status="${stage.id}">
-                          <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
-                          <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
-                          <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
-                          <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
-                        </select>
-                      </label>
-                      <label class="checkbox-lite">
-                        <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
-                      </label>
-                      <button class="ghost" onclick="openTaskForm(null, '${stage.id}')">+ Задача</button>
-                    </div>
-                  </div>
-                </div>
+            </header>
+            <div class="gtm-stage-body">
+              <div class="gtm-stage-meta">
+                <span class="gtm-chip">Прогресс: ${metrics.progressPercent}%</span>
+                <span class="gtm-chip">Задачи: ${metrics.doneTasks}/${metrics.taskCount}</span>
+                <span class="gtm-chip">Подзадачи: ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</span>
+                <span class="gtm-chip">Комментарии: ${metrics.comments}</span>
               </div>
-              <div class="stage-task-board">
-                <div id="stage-tasks-${stage.id}"></div>
+              <div class="gtm-stage-quick">
+                <select class="gtm-stage-status-select" data-stage-status-quick="${stage.id}">
+                  <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
+                  <option value="in_progress" ${stage.status === "in_progress" ? "selected" : ""}>В работе</option>
+                  <option value="done" ${stage.status === "done" ? "selected" : ""}>Завершён</option>
+                  <option value="cancelled" ${stage.status === "cancelled" ? "selected" : ""}>Отменён</option>
+                </select>
+                <label class="gtm-stage-risk-toggle">
+                  <input type="checkbox" data-stage-risk-quick="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
+                </label>
+                <button class="btn-small" data-stage-add-task="${stage.id}">+ Задача</button>
               </div>
+              <div class="gtm-stage-tasks" data-stage-tasks="${stage.id}"></div>
             </div>
           `;
-          const desc = card.querySelector(`#stage-desc-${stage.id}`);
-          if (desc) {
-            if (stage.description) {
-              desc.innerHTML = stage.description;
-              desc.classList.remove("empty");
-            } else {
-              desc.innerHTML = '<span class="muted">Описание не заполнено</span>';
-              desc.classList.add("empty");
-            }
-          }
-          const taskSlot = card.querySelector(`#stage-tasks-${stage.id}`);
-          if (taskSlot) {
-            taskSlot.replaceWith(renderStageTasks(stage));
-          }
-          const stageCommentBtn = card.querySelector(`[data-stage-comments='${stage.id}']`);
-          stageCommentBtn?.addEventListener("click", () => openStageDiscussion(stage.id));
-          const collapseBtn = card.querySelector(`[data-stage-collapse='${stage.id}']`);
-          if (collapseBtn) {
-            collapseBtn.title = collapsed ? "Развернуть этап" : "Свернуть этап";
-            collapseBtn.setAttribute("aria-label", collapsed ? "Развернуть этап" : "Свернуть этап");
-            collapseBtn.addEventListener("click", () => {
-              const nextCollapsed = !card.classList.contains("collapsed");
-              card.classList.toggle("collapsed", nextCollapsed);
-              collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
-              const label = nextCollapsed ? "Развернуть этап" : "Свернуть этап";
-              collapseBtn.title = label;
-              collapseBtn.setAttribute("aria-label", label);
-              setStageCollapsed(stage.id, nextCollapsed);
-            });
-          }
-          const statusSelect = card.querySelector(`[data-stage-status='${stage.id}']`);
-          statusSelect?.addEventListener("change", (event) => changeStatus(stage.id, event.target.value));
-          const riskToggle = card.querySelector(`[data-stage-risk='${stage.id}']`);
-          riskToggle?.addEventListener("change", (event) => toggleRisk(stage.id, event.target.checked));
-          card.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-            openStageContextMenu(event, stage, absoluteIndex);
+          card.querySelector(`[data-stage-collapse='${stage.id}']`)?.addEventListener("click", () => {
+            const nextCollapsed = !card.classList.contains("collapsed");
+            card.classList.toggle("collapsed", nextCollapsed);
+            setStageCollapsed(stage.id, nextCollapsed);
           });
-
+          card.querySelector(`[data-stage-edit='${stage.id}']`)?.addEventListener("click", () => openStageForm(stage.id));
+          card.querySelector(`[data-stage-move-up='${stage.id}']`)?.addEventListener("click", () => moveStage(stage.id, -1));
+          card.querySelector(`[data-stage-move-down='${stage.id}']`)?.addEventListener("click", () => moveStage(stage.id, 1));
+          card.querySelector(`[data-stage-status-quick='${stage.id}']`)?.addEventListener("change", (event) =>
+            updateStageInline(stage.id, { status: event.target.value })
+          );
+          card.querySelector(`[data-stage-risk-quick='${stage.id}']`)?.addEventListener("change", (event) =>
+            updateStageInline(stage.id, { risk_flag: event.target.checked })
+          );
+          card.querySelector(`[data-stage-add-task='${stage.id}']`)?.addEventListener("click", () => openTaskForm(null, stage.id));
+          const tasksBlock = card.querySelector(`[data-stage-tasks='${stage.id}']`);
+          if (tasksBlock) tasksBlock.appendChild(renderStageTasks(stage));
           stagesContainer.appendChild(card);
         });
-      }
+
 
       function renderStageTable(list = gtmStages, orderedList = gtmStages) {
         stagesContainer.innerHTML = "";
@@ -5149,20 +4859,8 @@
           });
 
         const wrapper = document.createElement("div");
-        wrapper.className = "stage-task-list";
+        wrapper.className = "gtm-stage-tasks";
         wrapper.dataset.stageId = stage.id;
-
-        const header = document.createElement("div");
-        header.className = "stage-task-header";
-        const title = document.createElement("strong");
-        title.textContent = `Задачи этапа (${stageTasks.length})`;
-        const addBtn = document.createElement("button");
-        addBtn.className = "ghost";
-        addBtn.textContent = "+ Задача";
-        addBtn.addEventListener("click", () => openTaskForm(null, stage.id));
-        header.appendChild(title);
-        header.appendChild(addBtn);
-        wrapper.appendChild(header);
 
         if (!stageTasks.length) {
           const empty = document.createElement("p");
@@ -5172,10 +4870,68 @@
           return wrapper;
         }
 
-        const stack = document.createElement("div");
-        stack.className = "stage-task-stack";
-        stageTasks.forEach((task) => stack.appendChild(createCompactTaskRow(task, "stage")));
-        wrapper.appendChild(stack);
+        stageTasks.forEach((task) => {
+          const row = document.createElement("div");
+          row.className = "gtm-task-row";
+          row.dataset.taskId = task.id;
+          row.addEventListener("dblclick", () => openTaskForm(task.id));
+
+          const left = document.createElement("div");
+          left.className = "gtm-task-left";
+          const line1 = document.createElement("div");
+          line1.className = "gtm-task-line1";
+          const statusChip = document.createElement("span");
+          statusChip.className = "gtm-chip gtm-chip-status";
+          statusChip.textContent = taskStatusLabel(task.status);
+          const title = document.createElement("span");
+          title.className = "gtm-task-title";
+          title.textContent = task.title;
+          line1.append(statusChip, title);
+          const subtitleText = (task.description || "").trim();
+          if (subtitleText) {
+            const subtitle = document.createElement("span");
+            subtitle.className = "gtm-task-subtitle";
+            subtitle.textContent = subtitleText;
+            line1.appendChild(subtitle);
+          }
+          left.appendChild(line1);
+
+          const due = dueInfo(task);
+          const progress = taskProgress(task);
+          const metaParts = [];
+          if (due.text) metaParts.push(due.text);
+          if (progress.label) metaParts.push(`${progress.percent}% • ${progress.label}`);
+          if (metaParts.length) {
+            const line2 = document.createElement("div");
+            line2.className = "gtm-task-line2";
+            line2.appendChild(document.createTextNode(metaParts.join(" · ")));
+            left.appendChild(line2);
+          }
+
+          const right = document.createElement("div");
+          right.className = "gtm-task-right";
+          const toggleStatus = task.status === "done" ? "todo" : "done";
+          const toggleIcon = task.status === "done" ? "↺" : "✓";
+          const actions = [
+            { icon: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
+            { icon: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
+            { icon: toggleIcon, title: toggleStatus === "done" ? "Готово" : "Вернуть", onClick: () => changeTaskStatus(task.id, toggleStatus) },
+            { icon: "🗑", title: "Удалить", onClick: () => deleteTask(task.id) },
+          ];
+          actions.forEach((cfg) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "icon-btn";
+            btn.textContent = cfg.icon;
+            btn.title = cfg.title;
+            btn.addEventListener("click", cfg.onClick);
+            right.appendChild(btn);
+          });
+
+          row.append(left, right);
+          wrapper.appendChild(row);
+        });
+
         return wrapper;
       }
 
@@ -5997,103 +5753,21 @@
         const progress = taskProgress(task);
 
         const titleWrap = document.createElement("div");
-        titleWrap.className = "compact-row-title";
-        const titleEl = document.createElement("strong");
-        titleEl.className = "task-name";
+        titleWrap.className = "task-title-stack";
+        const titleEl = document.createElement("span");
+        titleEl.className = "tasks-cell-title";
         titleEl.textContent = task.title;
         const metaLine = document.createElement("div");
-        metaLine.className = variant === "table" ? "task-secondary" : "muted soft-wrap balanced-measure";
+        metaLine.className = variant === "table" ? "tasks-cell-sub" : "muted soft-wrap balanced-measure";
         metaLine.textContent =
           variant === "table"
-            ? `${stageTitle(task.gtm_stage_id)} · ${due.text}`
+            ? `${stageTitle(task.gtm_stage_id)} • ${due.text}`
             : task.description?.trim() || "Описание не задано";
         titleWrap.append(titleEl, metaLine);
 
         const statusControl = buildInlineStatusControl(task);
         const dueControl = buildInlineDueControl(task);
 
-        if (variant === "stage") {
-          const collapsed = isTaskCollapsed(task.id);
-          const row = document.createElement("div");
-          row.className = `stage-task-row priority-bar${collapsed ? " collapsed" : ""}`;
-          if (rowPriorityClass) row.classList.add(rowPriorityClass);
-          row.dataset.taskId = task.id;
-          row.addEventListener("dblclick", () => openTaskForm(task.id));
-
-          const head = document.createElement("div");
-          head.className = "stage-task-head";
-          const collapseBtn = document.createElement("button");
-          collapseBtn.type = "button";
-          collapseBtn.className = "icon-button";
-          collapseBtn.dataset.taskCollapse = task.id;
-          collapseBtn.textContent = collapsed ? "▾" : "▴";
-          collapseBtn.title = collapsed ? "Развернуть задачу" : "Свернуть задачу";
-          collapseBtn.addEventListener("click", () => {
-            const nextCollapsed = !row.classList.contains("collapsed");
-            row.classList.toggle("collapsed", nextCollapsed);
-            collapseBtn.textContent = nextCollapsed ? "▾" : "▴";
-            collapseBtn.title = nextCollapsed ? "Развернуть задачу" : "Свернуть задачу";
-            setTaskCollapsed(task.id, nextCollapsed);
-          });
-
-          const titleBlock = document.createElement("div");
-          titleBlock.className = "stage-task-main";
-          titleBlock.appendChild(statusControl);
-          titleBlock.appendChild(titleWrap);
-          const badgeLine = document.createElement("div");
-          badgeLine.className = "compact-actions-inline";
-          if (task.important) badgeLine.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
-          if (task.urgency === "high") badgeLine.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
-          titleBlock.appendChild(badgeLine);
-
-          head.append(collapseBtn, titleBlock);
-          row.appendChild(head);
-
-          const meta = document.createElement("div");
-          meta.className = "stage-task-meta";
-          meta.appendChild(dueControl);
-          const progressLabel = document.createElement("span");
-          progressLabel.className = "muted";
-          progressLabel.textContent = `${progress.percent}% · ${progress.label}`;
-          const micro = document.createElement("div");
-          micro.className = "micro-progress";
-          if (due.state === "overdue") micro.classList.add("danger");
-          if (due.state === "soon") micro.classList.add("warn");
-          const fill = document.createElement("span");
-          fill.style.width = `${progress.percent}%`;
-          micro.appendChild(fill);
-          meta.append(progressLabel, micro);
-          row.appendChild(meta);
-
-          const actions = document.createElement("div");
-          actions.className = "stage-task-actions";
-          const toggleStatus = task.status === "done" ? "todo" : "done";
-          const toggleIcon = task.status === "done" ? "↺" : "✔";
-          const toggleTitle = task.status === "done" ? "Вернуть" : "Готово";
-          const actionButtons = [
-            { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
-            { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
-            { label: toggleIcon, title: toggleTitle, onClick: () => changeTaskStatus(task.id, toggleStatus) },
-            { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
-          ];
-          actionButtons.forEach((cfg) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
-            btn.textContent = cfg.label;
-            btn.title = cfg.title;
-            btn.addEventListener("click", cfg.onClick);
-            actions.appendChild(btn);
-          });
-          row.appendChild(actions);
-
-          const details = document.createElement("div");
-          details.className = "stage-task-details";
-          details.appendChild(renderSubtasksSection(task));
-          row.appendChild(details);
-
-          return row;
-        }
         if (variant === "kanban") {
           const card = document.createElement("div");
           card.className = "kanban-card compact priority-bar";
