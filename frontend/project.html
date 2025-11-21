@@ -239,8 +239,15 @@
 
       .stack {
         display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stack--col {
         flex-direction: column;
-        gap: 10px;
+        align-items: stretch;
+        gap: 6px;
       }
 
       .badge {
@@ -1232,10 +1239,29 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        position: relative;
       }
 
       .icon-btn:hover {
         background: var(--surface-hover);
+      }
+
+      .comment-badge {
+        position: absolute;
+        top: -4px;
+        right: -6px;
+        min-width: 14px;
+        min-height: 14px;
+        padding: 0 3px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 10px;
+        line-height: 1.2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 1px var(--surface);
       }
 
       .gtm-toolbar {
@@ -1562,15 +1588,32 @@
         display: flex;
         justify-content: space-between;
         gap: 10px;
-        align-items: center;
+        align-items: flex-start;
       }
 
       .gtm-stage-left {
         display: flex;
-        gap: 8px;
-        align-items: center;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
         min-width: 0;
         flex: 1;
+      }
+
+      .gtm-stage-topline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+
+      .gtm-stage-stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
       }
 
       .gtm-stage-name {
@@ -1657,9 +1700,42 @@
       .gtm-stage-quick {
         display: flex;
         gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         margin-top: 6px;
+        overflow: hidden;
+      }
+
+      .gtm-stage-quick > * {
+        flex-shrink: 0;
+      }
+
+      .gtm-stage-risk-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+
+      .gtm-stage-risk-toggle input {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+      }
+
+      .gtm-risk-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+
+      .gtm-risk-toggle input {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
       }
 
       .gtm-risk-toggle {
@@ -1681,7 +1757,11 @@
       }
 
       .gtm-stage-status-select {
-        min-width: 150px;
+        min-width: 115px;
+        padding: 4px 7px;
+        border-radius: 7px;
+        font-size: 12px;
+        line-height: 1.4;
       }
 
       .btn-small {
@@ -1782,6 +1862,7 @@
         color: var(--muted);
         cursor: pointer;
         transition: background 0.15s ease, color 0.15s ease;
+        position: relative;
       }
 
       .icon-button:hover {
@@ -2482,6 +2563,10 @@
         gap: 8px;
         align-items: center;
         padding: 2px 0 0 4px;
+      }
+
+      .subtask-inline.hidden {
+        display: none;
       }
 
       .subtask-inline .inline-input {
@@ -4568,6 +4653,18 @@
         }[value] || "status-neutral";
       }
 
+      function applyCommentBadge(button, count) {
+        if (!button) return;
+        let badge = button.querySelector(".comment-badge");
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "comment-badge";
+          button.appendChild(badge);
+        }
+        badge.textContent = count;
+        badge.hidden = !(count > 0);
+      }
+
       function formatCustomFieldCount(count) {
         if (!count) return "Нет значений";
         const mod10 = count % 10;
@@ -4799,11 +4896,19 @@
           card.innerHTML = `
             <div class="gtm-stage-header">
               <div class="gtm-stage-left">
-                <span class="gtm-badge">${absoluteIndex + 1}</span>
-                <span class="gtm-stage-name" title="${stage.title}">${stage.title}</span>
-                <span class="status-badge ${statusClass(stage.status)}">${statusLabel(stage.status)}</span>
-                <span class="gtm-chip gtm-chip-risk" ${stage.risk_flag ? "" : "hidden"}>Риск</span>
-                <span class="gtm-stage-dates">${timeline.rangeLabel}</span>
+                <div class="gtm-stage-topline">
+                  <span class="gtm-badge">${absoluteIndex + 1}</span>
+                  <span class="gtm-stage-name" title="${stage.title}">${stage.title}</span>
+                  <span class="status-badge ${statusClass(stage.status)}">${statusLabel(stage.status)}</span>
+                  <span class="gtm-chip gtm-chip-risk" ${stage.risk_flag ? "" : "hidden"}>Риск</span>
+                  <span class="gtm-stage-dates">${timeline.rangeLabel}</span>
+                </div>
+                <div class="gtm-stage-stats">
+                  <span class="gtm-chip">Прогресс: ${metrics.progressPercent}%</span>
+                  <span class="gtm-chip">Задачи: ${metrics.doneTasks}/${metrics.taskCount}</span>
+                  <span class="gtm-chip">Подзадачи: ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</span>
+                  <span class="gtm-chip">Комментарии: ${metrics.comments}</span>
+                </div>
               </div>
 
               <div class="gtm-stage-right">
@@ -4814,18 +4919,16 @@
                   <button class="icon-btn" data-action="down" title="Вниз" ${
                     absoluteIndex === orderedStages.length - 1 ? "disabled" : ""
                   }>↓</button>
+                  <button class="icon-btn" data-action="comments" title="Комментарии">
+                    💬
+                    <span class="comment-badge" ${metrics.comments ? "" : "hidden"}>${metrics.comments}</span>
+                  </button>
                   <button class="icon-btn" data-action="toggle" title="Свернуть/развернуть">${collapsed ? "⌄" : "⌃"}</button>
                 </div>
               </div>
             </div>
 
             <div class="gtm-stage-body" ${collapsed ? "hidden" : ""}>
-              <div class="gtm-stage-meta stack">
-                <span class="gtm-chip">Прогресс: ${metrics.progressPercent}%</span>
-                <span class="gtm-chip">Задачи: ${metrics.doneTasks}/${metrics.taskCount}</span>
-                <span class="gtm-chip">Подзадачи: ${metrics.subtasksDone}/${metrics.subtasksTotal || 0}</span>
-                <span class="gtm-chip">Комментарии: ${metrics.comments}</span>
-              </div>
               <div class="gtm-stage-quick">
                 <select class="gtm-stage-status-select" data-stage-status-quick="${stage.id}">
                   <option value="not_started" ${stage.status === "not_started" ? "selected" : ""}>Не начат</option>
@@ -4852,6 +4955,9 @@
             setStageCollapsed(stage.id, nextHidden);
             updateStageCollapseToggle(orderedStages);
           });
+          card.querySelector("[data-action='comments']")?.addEventListener("click", () =>
+            openStageDiscussion(stage.id)
+          );
           card.querySelector("[data-action='edit']")?.addEventListener("click", () => openStageForm(stage.id));
           card.querySelector("[data-action='up']")?.addEventListener("click", () => moveStage(stage.id, -1));
           card.querySelector("[data-action='down']")?.addEventListener("click", () => moveStage(stage.id, 1));
@@ -4948,7 +5054,10 @@
               <div class="table-actions">
                 <button class="icon-btn" onclick="enterStageEdit('${stage.id}')">✏️</button>
                 <button class="icon-btn" onclick="openTaskForm(null, '${stage.id}')">➕</button>
-                <button class="icon-btn" onclick="openStageDiscussion('${stage.id}')">💬</button>
+                <button class="icon-btn" onclick="openStageDiscussion('${stage.id}')">
+                  💬
+                  <span class="comment-badge" ${metrics.comments ? "" : "hidden"}>${metrics.comments}</span>
+                </button>
               </div>
             </td>
           `;
@@ -5086,12 +5195,19 @@
           const toggleIcon = task.status === "done" ? "↺" : "✓";
 
           const subtaskPanel = buildSubtaskPanel(task);
-          const subtaskInput = subtaskPanel.querySelector("input");
+          const taskComments = task.comments?.length || 0;
+          const showSubtaskComposer = () => {
+            if (subtaskPanel.showComposer) {
+              subtaskPanel.showComposer();
+            } else {
+              subtaskPanel.querySelector("input")?.focus();
+            }
+          };
 
           [
-            { icon: "＋", title: "Добавить подзадачу", onClick: () => subtaskInput?.focus() },
+            { icon: "＋", title: "Добавить подзадачу", onClick: showSubtaskComposer },
             { icon: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
-            { icon: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
+            { icon: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id), commentCount: taskComments },
             { icon: toggleIcon, title: toggleStatus === "done" ? "Вернуть" : "Готово", onClick: () => changeTaskStatus(task.id, toggleStatus) },
             { icon: "🗑", title: "Удалить", onClick: () => deleteTask(task.id) },
           ].forEach((cfg) => {
@@ -5101,6 +5217,7 @@
             btn.textContent = cfg.icon;
             btn.title = cfg.title;
             btn.addEventListener("click", cfg.onClick);
+            if (cfg.commentCount !== undefined) applyCommentBadge(btn, cfg.commentCount);
             actions.appendChild(btn);
           });
 
@@ -5164,6 +5281,13 @@
 
               const actions = document.createElement("div");
               actions.className = "subtask-actions";
+              const subComments = sub.comments?.length || sub.commentCount || 0;
+              const commentBtn = document.createElement("button");
+              commentBtn.className = "icon-btn";
+              commentBtn.title = "Комментарии";
+              commentBtn.textContent = "💬";
+              applyCommentBadge(commentBtn, subComments);
+              commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
               const editBtn = document.createElement("button");
               editBtn.className = "icon-btn";
               editBtn.title = "Редактировать";
@@ -5177,7 +5301,7 @@
               delBtn.title = "Удалить";
               delBtn.textContent = "🗑";
               delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
-              actions.append(editBtn, delBtn);
+              actions.append(commentBtn, editBtn, delBtn);
 
               row.append(checkbox, title, actions);
               panel.appendChild(row);
@@ -5185,25 +5309,48 @@
         }
 
         const composer = document.createElement("div");
-        composer.className = "subtask-inline";
+        composer.className = "subtask-inline hidden";
+        composer.hidden = true;
         composer.innerHTML = `
           <input class="inline-input" placeholder="Новая подзадача" />
-          <button class="icon-btn" title="Добавить">＋</button>
+          <div class="subtask-actions" style="gap:4px;">
+            <button class="icon-btn" title="Добавить">＋</button>
+            <button class="icon-btn" title="Отменить">✕</button>
+          </div>
         `;
-        const [input, addBtn] = composer.querySelectorAll("input, button");
-        const submit = () => {
+        const input = composer.querySelector("input");
+        const addBtn = composer.querySelector('button[title="Добавить"]');
+        const cancelBtn = composer.querySelector('button[title="Отменить"]');
+        const hideComposer = () => {
+          composer.hidden = true;
+          composer.classList.add("hidden");
+          if (input) input.value = "";
+        };
+        const showComposer = () => {
+          composer.hidden = false;
+          composer.classList.remove("hidden");
+          input?.focus();
+        };
+        const submit = async () => {
           const title = input.value.trim();
           if (!title) return;
-          addSubtask(task.id, title);
-          input.value = "";
+          await addSubtask(task.id, title);
+          hideComposer();
         };
-        addBtn.addEventListener("click", submit);
-        input.addEventListener("keydown", (event) => {
+        addBtn?.addEventListener("click", submit);
+        cancelBtn?.addEventListener("click", hideComposer);
+        input?.addEventListener("keydown", (event) => {
           if (event.key === "Enter") {
             event.preventDefault();
             submit();
           }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            hideComposer();
+          }
         });
+        panel.showComposer = showComposer;
+        panel.hideComposer = hideComposer;
         panel.appendChild(composer);
         return panel;
       }
@@ -6037,6 +6184,7 @@
         const rowPriorityClass = task.priority ? `priority-${task.priority}` : "";
         const due = dueInfo(task);
         const progress = taskProgress(task);
+        const commentCount = task.comments?.length || 0;
 
         const titleWrap = document.createElement("div");
         titleWrap.className = "task-title-stack";
@@ -6097,6 +6245,7 @@
           commentBtn.className = "icon-button";
           commentBtn.textContent = "💬";
           commentBtn.title = "Комментарии";
+          applyCommentBadge(commentBtn, commentCount);
           commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
           badges.appendChild(commentBtn);
           card.appendChild(badges);
@@ -6156,7 +6305,7 @@
 
         const actionButtons = [
           { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
-          { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
+          { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id), commentCount },
           { label: toggleIcon, title: toggleTitle, onClick: () => changeTaskStatus(task.id, toggleStatus) },
           { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
         ];
@@ -6168,6 +6317,7 @@
           btn.textContent = cfg.label;
           btn.title = cfg.title;
           btn.addEventListener("click", cfg.onClick);
+          if (cfg.commentCount !== undefined) applyCommentBadge(btn, cfg.commentCount);
           actionWrap.appendChild(btn);
         });
 
