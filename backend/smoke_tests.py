@@ -70,6 +70,9 @@ def run_smoke() -> Path:
         "create project",
     )
     project_id = UUID(project["id"])
+    fetched = _assert_ok(client.get(f"/api/projects/{project_id}"), "get project")
+    if fetched.get("name") != "Smoke Project":
+        raise AssertionError("project payload mismatch")
 
     # GTM этапы
     stage = _assert_ok(
