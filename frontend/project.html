@@ -856,7 +856,7 @@
         gap: 6px;
         padding: 3px 10px;
         border-radius: 999px;
-        font-size: 0.78rem;
+        font-size: 0.59rem;
         font-weight: 600;
         border: 1px solid transparent;
         text-transform: uppercase;
@@ -1464,7 +1464,7 @@
         padding: 8px 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 40px;
         border-bottom: 1px solid var(--border);
         align-items: center;
       }
@@ -1735,7 +1735,7 @@
         gap: 8px;
         flex-wrap: nowrap;
         align-items: center;
-        margin-top: 6px;
+        margin-top: -6px;
         overflow: hidden;
       }
 
@@ -1822,6 +1822,7 @@
         border: 1px solid var(--border);
         border-radius: var(--radius-m);
         background: var(--surface);
+		box-shadow: 0 2px 7px rgb(15 23 42 / 16%);
       }
 
       .gtm-task-header {
@@ -2611,6 +2612,12 @@
 		  cursor: pointer;
 		}
 
+		.icon-btn.danger {
+		  color: var(--danger);
+		}
+		.icon-btn.danger:hover {
+		  background: rgb(239 68 68 / 24%);
+		}
 
 
       .subtask-row .subtask-title {
@@ -4974,18 +4981,20 @@
 
               <div class="gtm-stage-right">
                 <div class="gtm-mini-progress"><div style="width: ${metrics.progressPercent}%"></div></div>
-                <div class="gtm-stage-actions">
-                  <button class="icon-btn" data-action="edit" title="Редактировать">✏️</button>
-                  <button class="icon-btn" data-action="up" title="Вверх" ${absoluteIndex === 0 ? "disabled" : ""}>↑</button>
-                  <button class="icon-btn" data-action="down" title="Вниз" ${
-                    absoluteIndex === orderedStages.length - 1 ? "disabled" : ""
-                  }>↓</button>
-                  <button class="icon-btn" data-action="comments" title="Комментарии">
-                    💬
-                    <span class="comment-badge" ${metrics.comments ? "" : "hidden"}>${metrics.comments}</span>
-                  </button>
-                  <button class="icon-btn" data-action="toggle" title="Свернуть/развернуть">${collapsed ? "⌄" : "⌃"}</button>
-                </div>
+             <div class="gtm-stage-actions">
+				  <button class="icon-btn" data-action="edit" title="Редактировать">✏️</button>
+				  <button class="icon-btn" data-action="up" title="Вверх" ${absoluteIndex === 0 ? "disabled" : ""}>↑</button>
+				  <button class="icon-btn" data-action="down" title="Вниз" ${absoluteIndex === orderedStages.length - 1 ? "disabled" : ""}>↓</button>
+				  <button class="icon-btn" data-action="comments" title="Комментарии">
+					💬
+					<span class="comment-badge" ${metrics.comments ? "" : "hidden"}>${metrics.comments}</span>
+				  </button>
+
+				  <!-- ВОТ ЭТА НОВАЯ КНОПКА -->
+				  <button class="icon-btn danger" data-action="delete" title="Удалить этап">🗑️</button>
+
+				  <button class="icon-btn" data-action="toggle" title="Свернуть/развернуть">${collapsed ? "⌄" : "⌃"}</button>
+				</div>
               </div>
             </div>
 
@@ -5016,18 +5025,27 @@
             setStageCollapsed(stage.id, nextHidden);
             updateStageCollapseToggle(orderedStages);
           });
-          card.querySelector("[data-action='comments']")?.addEventListener("click", () =>
-            openStageDiscussion(stage.id)
-          );
-          card.querySelector("[data-action='edit']")?.addEventListener("click", () => openStageForm(stage.id));
-          card.querySelector("[data-action='up']")?.addEventListener("click", () => moveStage(stage.id, -1));
-          card.querySelector("[data-action='down']")?.addEventListener("click", () => moveStage(stage.id, 1));
-          card.querySelector(`[data-stage-status-quick='${stage.id}']`)?.addEventListener("change", (event) =>
-            updateStageInline(stage.id, { status: event.target.value })
-          );
-          card.querySelector(`[data-stage-risk-quick='${stage.id}']`)?.addEventListener("change", (event) =>
-            updateStageInline(stage.id, { risk_flag: event.target.checked })
-          );
+		  
+			card.querySelector("[data-action='comments']")?.addEventListener("click", () =>
+			  openStageDiscussion(stage.id)
+			);
+			card.querySelector("[data-action='edit']")?.addEventListener("click", () => openStageForm(stage.id));
+			card.querySelector("[data-action='up']")?.addEventListener("click", () => moveStage(stage.id, -1));
+			card.querySelector("[data-action='down']")?.addEventListener("click", () => moveStage(stage.id, 1));
+
+			card.querySelector("[data-action='delete']")?.addEventListener("click", (e) => {
+			  e.stopPropagation();
+			  deleteStage(stage.id);
+			});
+
+			card.querySelector(`[data-stage-status-quick='${stage.id}']`)?.addEventListener("change", (event) =>
+			  updateStageInline(stage.id, { status: event.target.value })
+			);
+			card.querySelector(`[data-stage-risk-quick='${stage.id}']`)?.addEventListener("change", (event) =>
+			  updateStageInline(stage.id, { risk_flag: event.target.checked })
+			);
+
+		  
           card.querySelector(`[data-stage-add-task='${stage.id}']`)?.addEventListener("click", () => openTaskForm(null, stage.id));
           const tasksBlock = card.querySelector(`[data-stage-tasks='${stage.id}']`);
           if (tasksBlock) tasksBlock.appendChild(renderStageTasks(stage));
