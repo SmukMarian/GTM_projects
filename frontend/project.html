@@ -449,6 +449,24 @@
         color: #92400e;
       }
 
+      .fatal-banner {
+        margin: 16px 0;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid #fecdd3;
+        background: #fff1f2;
+        color: #7f1d1d;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .fatal-banner strong {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
       .pill.due-overdue {
         background: #fef2f2;
         color: #991b1b;
@@ -559,6 +577,437 @@
 
       .focus-banner {
         display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-md);
+        margin: 8px 0 0;
+      }
+
+      .focus-banner strong {
+        font-weight: 700;
+      }
+
+      .focus-banner button {
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+      }
+
+      .stage-card {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        margin: 12px 0 4px;
+        background: linear-gradient(135deg, var(--surface), var(--surface-2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-soft);
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .stage-card:hover {
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .stage-index {
+        display: inline-flex;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        color: var(--text);
+        font-weight: 700;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+      }
+
+      .stage-main {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .stage-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: space-between;
+        min-width: 0;
+      }
+
+      .stage-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .stage-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: var(--surface-2);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        border: 1px solid var(--border);
+        font-weight: 600;
+      }
+
+      .chip.warn {
+        background: var(--flag-risk-bg);
+        color: var(--flag-risk-text);
+        border-color: var(--flag-risk-border);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+        letter-spacing: 0.02em;
+      }
+
+      .pill.small {
+        font-size: 0.78rem;
+        padding: 4px 8px;
+      }
+
+      .pill.muted {
+        color: var(--muted);
+      }
+
+      .pill.risk {
+        background: rgba(245, 158, 11, 0.12);
+        color: #92400e;
+      }
+
+      .stage-description {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .pill.due-soon {
+        background: #fffbeb;
+        color: #92400e;
+        border-color: #fcd34d;
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .task-row {
+        display: grid;
+        grid-template-columns: 32px 1fr auto;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .task-row:hover {
+        background: var(--surface-hover);
+      }
+
+      .task-status {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+      }
+
+      .task-status:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .task-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .task-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .task-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .task-actions .icon-btn {
+        width: 30px;
+        height: 30px;
+      }
+
+      .task-body {
+        margin: -2px 0 10px 42px;
+        padding: 8px 10px 4px;
+        border-left: 2px solid var(--border);
+        transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease, padding 0.2s ease;
+        max-height: 1200px;
+        opacity: 1;
+      }
+
+      .task-body[hidden] {
+        display: block !important;
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        pointer-events: none;
+      }
+
+      .subtasks {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .subtask-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid transparent;
+        transition: background 0.12s ease, border-color 0.12s ease;
+      }
+
+      .subtask-row:hover {
+        background: var(--surface-hover);
+        border-color: var(--border);
+      }
+
+      .subtask-input {
+        border: none;
+        background: transparent;
+        padding: 4px 0;
+        font-size: 0.95rem;
+        width: 100%;
+      }
+
+      .subtask-row.done {
+        background: var(--surface-2);
+      }
+
+      .subtask-row.done .subtask-input {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      .subtask-input:focus {
+        outline: none;
+      }
+
+      .subtask-actions {
+        display: none;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .subtask-row:hover .subtask-actions {
+        display: inline-flex;
+      }
+
+      .subtask-add {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+
+      .inline-input {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .task-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.12s ease, border-color 0.12s ease;
+      }
+
+      .filter-chip.active {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .filter-chip .count {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .life-bar {
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+
+      .life-bar .fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+        transition: width 0.2s ease;
+      }
+
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: var(--surface-2);
+        border-radius: 12px;
+        min-height: 48px;
+      }
+
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 1.4s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .icon-btn:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .compact-table th,
+      .compact-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .icon-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: var(--danger);
+      }
+
+      .stage-life-line {
+        grid-column: 1 / -1;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        overflow: hidden;
+        margin: 2px 0 0;
+      }
+
+      .compact-table tbody tr:hover {
+        background: var(--surface-hover);
+      }
+
+      .stage-table-row {
+        position: relative;
+        height: 44px;
+      }
+
+      .compact-table .chip {
+        margin-right: 4px;
+      }
+
+      .stage-life-line.muted .fill {
+        background: var(--border);
+      }
+
+      .inline-save-bar {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 4px 6px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      tr.inline-dirty .inline-save-bar {
+        display: inline-flex;
+      }
+
+      .icon-button {
+        display: inline-flex;
         align-items: center;
         gap: 10px;
         padding: 10px 12px;
@@ -3556,7 +4005,10 @@
       if (!projectId) {
         stagesContainer.innerHTML = "<p>Не указан идентификатор проекта в параметрах ?id=</p>";
       } else {
-        loadData();
+        loadData().catch((error) => {
+          console.error("Критическая ошибка загрузки проекта", error);
+          renderFatalError("Не удалось загрузить данные проекта. Обновите страницу или проверьте соединение.");
+        });
       }
 
       if (historyAccordion) {
@@ -3692,6 +4144,45 @@
         setTimeout(() => row.classList.remove("task-highlight"), 4000);
       }
 
+      function renderFatalError(message) {
+        const container = document.querySelector(".page");
+        if (!container) return;
+        const banner = document.createElement("div");
+        banner.className = "fatal-banner";
+        banner.innerHTML = `<strong>⚠️ Ошибка загрузки</strong><span>${message}</span>`;
+        container.prepend(banner);
+        if (stagesContainer) {
+          stagesContainer.innerHTML = `<p class="muted">${message}</p>`;
+        }
+      }
+
+      async function safeJson(response, scope) {
+        try {
+          return await response.json();
+        } catch (error) {
+          console.error(`Не удалось прочитать ответ ${scope}`, error);
+          renderFatalError(`Не удалось прочитать данные (${scope}). Обновите страницу.`);
+          throw error;
+        }
+      }
+
+      async function guardedFetch(url, scope) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            renderFatalError(`Не удалось загрузить ${scope}. Статус ${res.status}.`);
+            throw new Error(`${scope} fetch failed: ${res.status}`);
+          }
+          return await safeJson(res, scope);
+        } catch (error) {
+          console.error(`Ошибка загрузки ${scope}`, error);
+          if (!(error instanceof Error)) {
+            renderFatalError(`Не удалось загрузить ${scope}. Проверьте соединение.`);
+          }
+          throw error;
+        }
+      }
+
       async function loadData() {
         await loadGroupList();
         await Promise.all([
@@ -3714,12 +4205,13 @@
       }
 
       async function loadProject() {
-        const res = await fetch(`/api/projects/${projectId}`, { cache: "no-store" });
-        if (!res.ok) {
+        const payload = await guardedFetch(`/api/projects/${projectId}`, "проект").catch((error) => {
+          console.error("Проект не найден или недоступен", error);
           stagesContainer.innerHTML = "<p>Проект не найден</p>";
-          return;
-        }
-        project = await res.json();
+          throw error;
+        });
+        if (!payload) return;
+        project = payload;
         project.custom_fields = project.custom_fields || {};
         await loadGroupInfo();
         renderProject();
@@ -3727,21 +4219,33 @@
 
       async function loadGroupInfo() {
         if (!project?.group_id) return;
-        const res = await fetch(`/api/groups/${project.group_id}`, { cache: "no-store" });
-        groupInfo = res.ok ? await res.json() : null;
+        try {
+          groupInfo = await guardedFetch(`/api/groups/${project.group_id}`, "группу");
+        } catch (error) {
+          console.error("Группа проекта недоступна", error);
+          groupInfo = null;
+        }
       }
 
       async function loadGroupList() {
-        const res = await fetch("/api/groups?include_archived=true", { cache: "no-store" });
-        groups = res.ok ? await res.json() : [];
+        try {
+          groups = await guardedFetch("/api/groups?include_archived=true", "группы");
+        } catch (error) {
+          console.error("Не удалось загрузить список групп", error);
+          groups = [];
+        }
         basicGroup.innerHTML = groups
           .map((g) => `<option value="${g.id}">${g.name}</option>`)
           .join("");
       }
 
       async function loadTemplates() {
-        const res = await fetch("/api/gtm-templates", { cache: "no-store" });
-        gtmTemplates = res.ok ? await res.json() : [];
+        try {
+          gtmTemplates = await guardedFetch("/api/gtm-templates", "шаблоны GTM");
+        } catch (error) {
+          console.error("Шаблоны GTM недоступны", error);
+          gtmTemplates = [];
+        }
         renderTemplates();
       }
 
@@ -3771,8 +4275,12 @@
       async function loadStages() {
         stagesLoaded = false;
         showStageSkeleton();
-        const res = await fetch(`/api/projects/${projectId}/gtm-stages`, { cache: "no-store" });
-        gtmStages = res.ok ? await res.json() : [];
+        try {
+          gtmStages = await guardedFetch(`/api/projects/${projectId}/gtm-stages`, "GTM-этапы");
+        } catch (error) {
+          console.error("Не удалось загрузить этапы", error);
+          gtmStages = [];
+        }
         stagesLoaded = true;
         renderStages();
         renderGtmProgress();
@@ -3781,8 +4289,12 @@
       async function loadTasks() {
         tasksLoaded = false;
         showTaskSkeleton();
-        const res = await fetch(`/api/projects/${projectId}/tasks`, { cache: "no-store" });
-        tasks = res.ok ? await res.json() : [];
+        try {
+          tasks = await guardedFetch(`/api/projects/${projectId}/tasks`, "задачи");
+        } catch (error) {
+          console.error("Не удалось загрузить задачи", error);
+          tasks = [];
+        }
         tasksLoaded = true;
         renderTaskFilterChips();
         renderCompactTaskView();
@@ -5662,11 +6174,14 @@
       }
 
       async function loadImages() {
-        const res = await fetch(`/api/projects/${projectId}/images`, { cache: "no-store" });
-        if (res.ok) {
-          images = await res.json();
+        try {
+          images = await guardedFetch(`/api/projects/${projectId}/images`, "галерею");
           renderGallery();
           renderCoverPanel();
+        } catch (error) {
+          console.error("Не удалось загрузить галерею", error);
+          images = [];
+          renderGallery();
         }
       }
 
@@ -5982,11 +6497,13 @@
       }
 
       async function loadFiles() {
-        const res = await fetch(`/api/projects/${projectId}/files`);
-        if (res.ok) {
-          files = await res.json();
-          renderFiles();
+        try {
+          files = await guardedFetch(`/api/projects/${projectId}/files`, "файлы");
+        } catch (error) {
+          console.error("Не удалось загрузить файлы", error);
+          files = [];
         }
+        renderFiles();
       }
 
       function renderFiles() {
@@ -6141,11 +6658,13 @@
       }
 
       async function loadProjectComments() {
-        const res = await fetch(`/api/projects/${projectId}/comments`);
-        if (res.ok) {
-          projectComments = await res.json();
-          renderProjectComments();
+        try {
+          projectComments = await guardedFetch(`/api/projects/${projectId}/comments`, "комментарии проекта");
+        } catch (error) {
+          console.error("Не удалось загрузить комментарии проекта", error);
+          projectComments = [];
         }
+        renderProjectComments();
       }
 
       function renderProjectComments() {
@@ -6272,11 +6791,13 @@
       }
 
       async function loadHistory() {
-        const res = await fetch(`/api/projects/${projectId}/history`);
-        if (res.ok) {
-          historyEvents = await res.json();
-          renderHistory();
+        try {
+          historyEvents = await guardedFetch(`/api/projects/${projectId}/history`, "историю изменений");
+        } catch (error) {
+          console.error("Не удалось загрузить историю", error);
+          historyEvents = [];
         }
+        renderHistory();
       }
 
       function renderHistory() {
