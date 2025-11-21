@@ -4075,6 +4075,103 @@
         taskFilterSummary.textContent = active.length ? `${base} · ${active.join(" · ")}` : base;
       }
 
+      function handleFilterChipClick(event) {
+        const btn = event.target.closest("[data-filter-group]");
+        if (!btn) return;
+        const group = btn.dataset.filterGroup;
+        const value = btn.dataset.value;
+        if (!group || !value) return;
+        if (group === "status") {
+          toggleFilterSet(taskFilterState.statuses, value, btn);
+        } else if (group === "due") {
+          toggleFilterSet(taskFilterState.due, value, btn);
+        } else if (group === "flag") {
+          taskFilterState.flags[value] = !taskFilterState.flags[value];
+          btn.classList.toggle("active", taskFilterState.flags[value]);
+        }
+        renderCompactTaskView();
+      }
+
+      function toggleFilterSet(set, value, btn) {
+        if (!set || !value) return;
+        if (set.has(value)) {
+          set.delete(value);
+          btn?.classList.remove("active");
+        } else {
+          set.add(value);
+          btn?.classList.add("active");
+        }
+      }
+
+      function resetTaskFilters() {
+        taskFilterState.statuses.clear();
+        taskFilterState.due.clear();
+        taskFilterState.flags = { important: false, urgent: false };
+        taskFilterState.stageId = "";
+        taskFilterState.search = "";
+        taskFilterChips?.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("active"));
+        if (taskStageFilter) taskStageFilter.value = "";
+        if (taskSearchInput) taskSearchInput.value = "";
+        renderCompactTaskView();
+      }
+
+      function applyTaskFilters(list) {
+        if (!Array.isArray(list)) return [];
+        const search = taskFilterState.search;
+        const stageId = taskFilterState.stageId;
+        const statuses = taskFilterState.statuses;
+        const dueFilters = taskFilterState.due;
+        const { important, urgent } = taskFilterState.flags;
+        return list.filter((task) => {
+          if (statuses.size && !statuses.has(task.status)) return false;
+          if (important && !task.important) return false;
+          if (urgent && task.urgency !== "high") return false;
+          if (stageId && String(task.gtm_stage_id) !== stageId) return false;
+          if (search) {
+            const haystack = `${task.title} ${task.description || ""}`.toLowerCase();
+            if (!haystack.includes(search)) return false;
+          }
+          if (dueFilters.size) {
+            const due = dueInfo(task);
+            const states = new Set([
+              due.state,
+              due.state === "none" && !task.due_date ? "none" : null,
+              due.state === "done" ? "done" : null,
+            ].filter(Boolean));
+            const intersects = Array.from(dueFilters).some((val) => states.has(val));
+            if (!intersects) return false;
+          }
+          return true;
+        });
+      }
+
+      function updateTaskFilterSummary(filteredCount, totalCount) {
+        if (!taskFilterSummary) return;
+        const active = [];
+        if (taskFilterState.statuses.size) {
+          const labels = Array.from(taskFilterState.statuses)
+            .map((s) => taskStatusLabel(s))
+            .join(", ");
+          active.push(`Статусы: ${labels}`);
+        }
+        if (taskFilterState.due.size) {
+          const dueLabels = Array.from(taskFilterState.due)
+            .map((d) => (d === "soon" ? "7 дней" : d === "overdue" ? "Просрочено" : d))
+            .join(", ");
+          active.push(`Сроки: ${dueLabels}`);
+        }
+        if (taskFilterState.flags.important) active.push("Важно");
+        if (taskFilterState.flags.urgent) active.push("Срочно");
+        if (taskFilterState.stageId) {
+          active.push(`Этап: ${stageTitle(taskFilterState.stageId)}`);
+        }
+        if (taskFilterState.search) {
+          active.push(`Поиск: “${taskFilterState.search}”`);
+        }
+        const base = `Показано ${filteredCount} из ${totalCount || 0}`;
+        taskFilterSummary.textContent = active.length ? `${base} · ${active.join(" · ")}` : base;
+      }
+
       function handleKanbanDragStart(event) {
         const card = event.currentTarget;
         draggedTaskId = card.dataset.taskId;
