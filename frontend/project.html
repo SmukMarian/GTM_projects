@@ -172,6 +172,39 @@
         border: 1px solid var(--border);
       }
 
+      .inline-chip-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .inline-chip-btn:hover,
+      .inline-chip-btn:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .inline-edit-input {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px 10px;
+        background: var(--surface);
+        color: inherit;
+      }
+
+      .inline-edit-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
       .card {
         background: var(--surface);
         border-radius: 16px;
@@ -654,6 +687,12 @@
 
       .priority-low::before {
         background: linear-gradient(180deg, #0ea5e9, #0284c7);
+      }
+
+      .compact-actions-inline {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
       }
 
       .micro-progress {
@@ -3887,88 +3926,7 @@
           if (aDate !== bDate) return aDate - bDate;
           return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
         });
-        sortedTasks.forEach((task) => {
-          const due = dueInfo(task);
-          const progress = taskProgress(task);
-          const toggleStatus = task.status === "done" ? "todo" : "done";
-          const toggleTitle = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
-          const toggleIcon = toggleStatus === "todo" ? "↺" : "✔";
-          const row = document.createElement("tr");
-
-          const titleCell = document.createElement("td");
-          titleCell.className = "priority-bar";
-          if (task.priority) titleCell.classList.add(`priority-${task.priority}`);
-          const titleWrap = document.createElement("div");
-          titleWrap.className = "compact-row-title";
-          const titleEl = document.createElement("strong");
-          titleEl.textContent = task.title;
-          const metaLine = document.createElement("div");
-          metaLine.className = "muted";
-          metaLine.textContent = task.description?.trim() || "Описание не задано";
-          titleWrap.append(titleEl, metaLine);
-          titleCell.appendChild(titleWrap);
-          row.appendChild(titleCell);
-
-          const stageCell = document.createElement("td");
-          stageCell.innerHTML = `<span class="tag-mini">${stageTitle(task.gtm_stage_id)}</span>`;
-          row.appendChild(stageCell);
-
-          const statusCell = document.createElement("td");
-          statusCell.innerHTML = `<span class="chip pill">${taskStatusLabel(task.status)}</span>`;
-          row.appendChild(statusCell);
-
-          const importanceCell = document.createElement("td");
-          importanceCell.innerHTML = task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—";
-          row.appendChild(importanceCell);
-
-          const urgencyCell = document.createElement("td");
-          urgencyCell.innerHTML = task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—";
-          row.appendChild(urgencyCell);
-
-          const dueCell = document.createElement("td");
-          dueCell.innerHTML = `<span class="tag-mini ${due.tagKind}">${due.text}</span>`;
-          row.appendChild(dueCell);
-
-          const progressCell = document.createElement("td");
-          const micro = document.createElement("div");
-          micro.className = "micro-progress";
-          if (due.state === "overdue") micro.classList.add("danger");
-          if (due.state === "soon") micro.classList.add("warn");
-          const fill = document.createElement("span");
-          fill.style.width = `${progress.percent}%`;
-          micro.appendChild(fill);
-          const progressLabel = document.createElement("div");
-          progressLabel.className = "muted";
-          progressLabel.textContent = `${progress.percent}% (${progress.label})`;
-          progressCell.append(micro, progressLabel);
-          row.appendChild(progressCell);
-
-          const actionsCell = document.createElement("td");
-          const actionWrap = document.createElement("div");
-          actionWrap.className = "table-actions";
-
-          const actionButtons = [
-            { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
-            { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
-            { label: toggleIcon, title: toggleTitle, onClick: () => changeTaskStatus(task.id, toggleStatus) },
-            { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
-          ];
-
-          actionButtons.forEach((cfg) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = cfg.danger ? "icon-button danger" : "icon-button";
-            btn.textContent = cfg.label;
-            btn.title = cfg.title;
-            btn.addEventListener("click", cfg.onClick);
-            actionWrap.appendChild(btn);
-          });
-
-          actionsCell.appendChild(actionWrap);
-          row.appendChild(actionsCell);
-
-          tbody.appendChild(row);
-        });
+        sortedTasks.forEach((task) => tbody.appendChild(createCompactTaskRow(task, "table")));
         table.appendChild(tbody);
         return table;
       }
@@ -4007,7 +3965,7 @@
             empty.textContent = "Нет задач";
             body.appendChild(empty);
           } else {
-            grouped[key].forEach((task) => body.appendChild(createKanbanCard(task)));
+            grouped[key].forEach((task) => body.appendChild(createCompactTaskRow(task, "kanban")));
           }
           column.appendChild(header);
           column.appendChild(body);
@@ -4017,36 +3975,104 @@
       }
 
       function createKanbanCard(task) {
-        const card = document.createElement("div");
-        card.className = "kanban-card";
-        card.draggable = true;
-        card.dataset.taskId = task.id;
-        card.addEventListener("dragstart", handleKanbanDragStart);
-        card.addEventListener("dragend", handleKanbanDragEnd);
-        card.addEventListener("dblclick", () => openTaskForm(task.id));
-        const title = document.createElement("strong");
-        title.textContent = task.title;
-        card.appendChild(title);
-        const meta = document.createElement("div");
-        meta.className = "kanban-meta";
-        meta.innerHTML = `<span>${stageTitle(task.gtm_stage_id)}</span>`;
-        const due = dueInfo(task);
-        meta.innerHTML += `<span class="tag-mini ${due.tagKind}">${due.text}</span>`;
-        card.appendChild(meta);
-        const badges = document.createElement("div");
-        badges.className = "task-badges";
-        if (task.important) {
-          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
+        return createCompactTaskRow(task, "kanban");
+      }
+
+      function handleFilterChipClick(event) {
+        const btn = event.target.closest("[data-filter-group]");
+        if (!btn) return;
+        const group = btn.dataset.filterGroup;
+        const value = btn.dataset.value;
+        if (!group || !value) return;
+        if (group === "status") {
+          toggleFilterSet(taskFilterState.statuses, value, btn);
+        } else if (group === "due") {
+          toggleFilterSet(taskFilterState.due, value, btn);
+        } else if (group === "flag") {
+          taskFilterState.flags[value] = !taskFilterState.flags[value];
+          btn.classList.toggle("active", taskFilterState.flags[value]);
         }
-        if (task.urgency === "high") {
-          badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
+        renderCompactTaskView();
+      }
+
+      function toggleFilterSet(set, value, btn) {
+        if (!set || !value) return;
+        if (set.has(value)) {
+          set.delete(value);
+          btn?.classList.remove("active");
+        } else {
+          set.add(value);
+          btn?.classList.add("active");
         }
-        const statusChip = document.createElement("span");
-        statusChip.className = "chip";
-        statusChip.textContent = taskStatusLabel(task.status);
-        badges.appendChild(statusChip);
-        card.appendChild(badges);
-        return card;
+      }
+
+      function resetTaskFilters() {
+        taskFilterState.statuses.clear();
+        taskFilterState.due.clear();
+        taskFilterState.flags = { important: false, urgent: false };
+        taskFilterState.stageId = "";
+        taskFilterState.search = "";
+        taskFilterChips?.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("active"));
+        if (taskStageFilter) taskStageFilter.value = "";
+        if (taskSearchInput) taskSearchInput.value = "";
+        renderCompactTaskView();
+      }
+
+      function applyTaskFilters(list) {
+        if (!Array.isArray(list)) return [];
+        const search = taskFilterState.search;
+        const stageId = taskFilterState.stageId;
+        const statuses = taskFilterState.statuses;
+        const dueFilters = taskFilterState.due;
+        const { important, urgent } = taskFilterState.flags;
+        return list.filter((task) => {
+          if (statuses.size && !statuses.has(task.status)) return false;
+          if (important && !task.important) return false;
+          if (urgent && task.urgency !== "high") return false;
+          if (stageId && String(task.gtm_stage_id) !== stageId) return false;
+          if (search) {
+            const haystack = `${task.title} ${task.description || ""}`.toLowerCase();
+            if (!haystack.includes(search)) return false;
+          }
+          if (dueFilters.size) {
+            const due = dueInfo(task);
+            const states = new Set([
+              due.state,
+              due.state === "none" && !task.due_date ? "none" : null,
+              due.state === "done" ? "done" : null,
+            ].filter(Boolean));
+            const intersects = Array.from(dueFilters).some((val) => states.has(val));
+            if (!intersects) return false;
+          }
+          return true;
+        });
+      }
+
+      function updateTaskFilterSummary(filteredCount, totalCount) {
+        if (!taskFilterSummary) return;
+        const active = [];
+        if (taskFilterState.statuses.size) {
+          const labels = Array.from(taskFilterState.statuses)
+            .map((s) => taskStatusLabel(s))
+            .join(", ");
+          active.push(`Статусы: ${labels}`);
+        }
+        if (taskFilterState.due.size) {
+          const dueLabels = Array.from(taskFilterState.due)
+            .map((d) => (d === "soon" ? "7 дней" : d === "overdue" ? "Просрочено" : d))
+            .join(", ");
+          active.push(`Сроки: ${dueLabels}`);
+        }
+        if (taskFilterState.flags.important) active.push("Важно");
+        if (taskFilterState.flags.urgent) active.push("Срочно");
+        if (taskFilterState.stageId) {
+          active.push(`Этап: ${stageTitle(taskFilterState.stageId)}`);
+        }
+        if (taskFilterState.search) {
+          active.push(`Поиск: “${taskFilterState.search}”`);
+        }
+        const base = `Показано ${filteredCount} из ${totalCount || 0}`;
+        taskFilterSummary.textContent = active.length ? `${base} · ${active.join(" · ")}` : base;
       }
 
       function handleFilterChipClick(event) {
@@ -4555,6 +4581,212 @@
         return { text: `Срок: ${task.due_date}`, className: "tag", tagKind: "", state: "scheduled" };
       }
 
+      function buildInlineStatusControl(task) {
+        const wrapper = document.createElement("div");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "inline-chip-btn";
+        btn.textContent = taskStatusLabel(task.status);
+
+        const openSelect = () => {
+          if (wrapper.querySelector("select")) return;
+          const select = document.createElement("select");
+          select.className = "inline-edit-input";
+          [
+            { value: "todo", label: "ToDo" },
+            { value: "in_progress", label: "В работе" },
+            { value: "done", label: "Готово" },
+          ].forEach(({ value, label }) => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = label;
+            if (value === task.status) option.selected = true;
+            select.appendChild(option);
+          });
+          const close = () => {
+            wrapper.replaceChildren(btn);
+          };
+          select.addEventListener("change", async () => {
+            await updateTaskInline(task.id, { status: select.value });
+          });
+          select.addEventListener("blur", close);
+          wrapper.replaceChildren(select);
+          select.focus();
+        };
+
+        btn.addEventListener("click", openSelect);
+        wrapper.appendChild(btn);
+        return wrapper;
+      }
+
+      function buildInlineDueControl(task) {
+        const wrapper = document.createElement("div");
+        const due = dueInfo(task);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `inline-chip-btn tag-mini ${due.tagKind}`.trim();
+        btn.textContent = due.text;
+
+        const openDate = () => {
+          if (wrapper.querySelector("input")) return;
+          const input = document.createElement("input");
+          input.type = "date";
+          input.className = "inline-edit-input";
+          input.value = task.due_date || "";
+          const close = () => wrapper.replaceChildren(btn);
+          input.addEventListener("change", async () => {
+            const nextValue = input.value || null;
+            await updateTaskInline(task.id, { due_date: nextValue });
+          });
+          input.addEventListener("blur", close);
+          wrapper.replaceChildren(input);
+          input.focus();
+          if (input.showPicker) input.showPicker();
+        };
+
+        btn.addEventListener("click", openDate);
+        wrapper.appendChild(btn);
+        return wrapper;
+      }
+
+      function createCompactTaskRow(task, variant = "table") {
+        const rowPriorityClass = task.priority ? `priority-${task.priority}` : "";
+        const due = dueInfo(task);
+        const progress = taskProgress(task);
+
+        const titleWrap = document.createElement("div");
+        titleWrap.className = "compact-row-title";
+        const titleEl = document.createElement("strong");
+        titleEl.textContent = task.title;
+        const metaLine = document.createElement("div");
+        metaLine.className = "muted";
+        metaLine.textContent = task.description?.trim() || "Описание не задано";
+        titleWrap.append(titleEl, metaLine);
+
+        const statusControl = buildInlineStatusControl(task);
+        const dueControl = buildInlineDueControl(task);
+
+        if (variant === "kanban") {
+          const card = document.createElement("div");
+          card.className = "kanban-card compact priority-bar";
+          if (rowPriorityClass) card.classList.add(rowPriorityClass);
+          card.draggable = true;
+          card.dataset.taskId = task.id;
+          card.addEventListener("dragstart", handleKanbanDragStart);
+          card.addEventListener("dragend", handleKanbanDragEnd);
+          card.addEventListener("dblclick", () => openTaskForm(task.id));
+
+          const titleBlock = document.createElement("div");
+          titleBlock.appendChild(titleWrap);
+          card.appendChild(titleBlock);
+
+          const meta = document.createElement("div");
+          meta.className = "kanban-meta";
+          meta.innerHTML = `<span>${stageTitle(task.gtm_stage_id)}</span>`;
+          meta.appendChild(dueControl);
+          card.appendChild(meta);
+
+          const progressBar = document.createElement("div");
+          progressBar.className = "micro-progress";
+          if (due.state === "overdue") progressBar.classList.add("danger");
+          if (due.state === "soon") progressBar.classList.add("warn");
+          const fill = document.createElement("span");
+          fill.style.width = `${progress.percent}%`;
+          progressBar.appendChild(fill);
+          card.appendChild(progressBar);
+
+          const badges = document.createElement("div");
+          badges.className = "compact-actions-inline";
+          if (task.important) {
+            badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-important">Важно</span>');
+          }
+          if (task.urgency === "high") {
+            badges.insertAdjacentHTML("beforeend", '<span class="flag-badge flag-urgent">Срочно</span>');
+          }
+          badges.appendChild(statusControl);
+          const commentBtn = document.createElement("button");
+          commentBtn.type = "button";
+          commentBtn.className = "icon-button";
+          commentBtn.textContent = "💬";
+          commentBtn.title = "Комментарии";
+          commentBtn.addEventListener("click", () => openTaskDiscussion(task.id));
+          badges.appendChild(commentBtn);
+          card.appendChild(badges);
+          return card;
+        }
+
+        const row = document.createElement("tr");
+
+        const titleCell = document.createElement("td");
+        titleCell.className = "priority-bar";
+        if (rowPriorityClass) titleCell.classList.add(rowPriorityClass);
+        titleCell.appendChild(titleWrap);
+        row.appendChild(titleCell);
+
+        const stageCell = document.createElement("td");
+        stageCell.innerHTML = `<span class="tag-mini">${stageTitle(task.gtm_stage_id)}</span>`;
+        row.appendChild(stageCell);
+
+        const statusCell = document.createElement("td");
+        statusCell.appendChild(statusControl);
+        row.appendChild(statusCell);
+
+        const importanceCell = document.createElement("td");
+        importanceCell.innerHTML = task.important ? '<span class="flag-badge flag-important">Важно</span>' : "—";
+        row.appendChild(importanceCell);
+
+        const urgencyCell = document.createElement("td");
+        urgencyCell.innerHTML = task.urgency === "high" ? '<span class="flag-badge flag-urgent">Срочно</span>' : "—";
+        row.appendChild(urgencyCell);
+
+        const dueCell = document.createElement("td");
+        dueCell.appendChild(dueControl);
+        row.appendChild(dueCell);
+
+        const progressCell = document.createElement("td");
+        const micro = document.createElement("div");
+        micro.className = "micro-progress";
+        if (due.state === "overdue") micro.classList.add("danger");
+        if (due.state === "soon") micro.classList.add("warn");
+        const fill = document.createElement("span");
+        fill.style.width = `${progress.percent}%`;
+        micro.appendChild(fill);
+        const progressLabel = document.createElement("div");
+        progressLabel.className = "muted";
+        progressLabel.textContent = `${progress.percent}% (${progress.label})`;
+        progressCell.append(micro, progressLabel);
+        row.appendChild(progressCell);
+
+        const actionsCell = document.createElement("td");
+        const actionWrap = document.createElement("div");
+        actionWrap.className = "table-actions";
+
+        const toggleStatus = task.status === "done" ? "todo" : "done";
+        const toggleTitle = task.status === "done" ? "Вернуть в работу" : "Отметить выполненной";
+        const toggleIcon = toggleStatus === "todo" ? "↺" : "✔";
+
+        const actionButtons = [
+          { label: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
+          { label: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
+          { label: toggleIcon, title: toggleTitle, onClick: () => changeTaskStatus(task.id, toggleStatus) },
+          { label: "🗑️", title: "Удалить", onClick: () => deleteTask(task.id), danger: true },
+        ];
+
+        actionButtons.forEach((cfg) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = cfg.danger ? "icon-button danger" : "icon-button";
+          btn.textContent = cfg.label;
+          btn.title = cfg.title;
+          btn.addEventListener("click", cfg.onClick);
+          actionWrap.appendChild(btn);
+        });
+
+        actionsCell.appendChild(actionWrap);
+        row.appendChild(actionsCell);
+        return row;
+      }
+
       function createSubtaskComposer(taskId) {
         const composer = document.createElement("div");
         composer.className = "subtask-inline";
@@ -4997,20 +5229,24 @@
         await loadTasks();
       });
 
-      async function changeTaskStatus(taskId, status) {
+      async function updateTaskInline(taskId, patch) {
         const existing = tasks.find((t) => t.id === taskId);
         if (!existing) return;
-        const payload = { ...existing, status };
+        const payload = { ...existing, ...patch };
         const res = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
-          alert("Не удалось обновить статус");
+          alert("Не удалось обновить задачу");
           return;
         }
         await loadTasks();
+      }
+
+      async function changeTaskStatus(taskId, status) {
+        await updateTaskInline(taskId, { status });
       }
 
       async function toggleImportant(taskId) {
