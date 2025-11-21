@@ -195,13 +195,16 @@
       .inline-chip-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
+        padding: 4px 8px;
+        border-radius: 8px;
         border: 1px solid var(--border);
         background: var(--surface-muted);
         color: inherit;
         cursor: pointer;
+        font-size: 12px;
+        min-height: 30px;
       }
 
       .inline-chip-btn:hover,
@@ -494,6 +497,14 @@
         justify-content: space-between;
         gap: 10px;
         align-items: center;
+      }
+
+      .stage-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .stage-title-line {
@@ -934,6 +945,14 @@
         justify-content: flex-end;
       }
 
+      .compact-toolbar-actions select,
+      .compact-toolbar-actions input[type="search"] {
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-size: 0.92rem;
+        height: 34px;
+      }
+
       .compact-summary {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -999,7 +1018,8 @@
       }
 
       .table-scroll {
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
         border-radius: inherit;
       }
 
@@ -1007,16 +1027,18 @@
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        min-width: 820px;
+        table-layout: fixed;
+        min-width: 0;
       }
 
       .compact-table th,
       .compact-table td {
-        padding: 12px 14px;
+        padding: 10px 12px;
         border-bottom: 1px solid var(--border);
         text-align: left;
         vertical-align: top;
         background: var(--surface);
+        word-break: break-word;
       }
 
       .compact-table th {
@@ -1277,8 +1299,9 @@
 
       .table-actions {
         display: inline-flex;
-        gap: 6px;
+        gap: 4px;
         flex-wrap: initial;
+        align-items: center;
       }
 
       .stage-table .table-actions {
@@ -1327,7 +1350,7 @@
 
       .micro-progress {
         position: relative;
-        height: 8px;
+        height: 4px;
         border-radius: 999px;
         background: var(--surface-muted);
         overflow: hidden;
@@ -1405,7 +1428,7 @@
       }
 
       .tasks-table tr {
-        height: 44px;
+        height: 40px;
       }
 
       .task-title-stack {
@@ -1417,36 +1440,21 @@
 
       .tasks-cell-title {
         font-weight: 600;
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
       }
 
       .tasks-cell-sub {
         font-size: 12px;
         color: var(--muted);
         margin-top: 2px;
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .tasks-table th:nth-child(1),
-      .tasks-table td:nth-child(1) {
-        min-width: 320px;
-        position: sticky;
-        left: 0;
-        background: var(--surface);
-        z-index: 2;
-      }
-
-      .tasks-table th:nth-child(2),
-      .tasks-table td:nth-child(2) {
-        min-width: 120px;
-        position: sticky;
-        left: 320px;
-        background: var(--surface);
-        z-index: 2;
+        gap: 4px;
       }
 
       .task-progress-text {
@@ -1490,33 +1498,51 @@
         color: var(--flag-risk-text);
       }
 
-      .status-chip {
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-weight: 600;
-        background: var(--surface-muted);
-        border: 1px solid var(--border);
+      .status-chip,
+      .status-badge {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
+        padding: 4px 7px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 115px;
+        line-height: 1.2;
+        text-align: center;
       }
 
-      .status-chip.status-in_progress {
-        background: #ecfeff;
-        border-color: #06b6d4;
-        color: #0e7490;
+      .status-neutral {
+        background: #f2f4f7;
+        color: #475467;
+        border-color: #e4e7ec;
       }
 
-      .status-chip.status-done {
+      .status-progress {
+        background: #e0f2fe;
+        color: #075985;
+        border-color: #bae6fd;
+      }
+
+      .status-success {
         background: #ecfdf3;
-        border-color: #22c55e;
         color: #15803d;
+        border-color: #bbf7d0;
       }
 
-      .status-chip.status-cancelled {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-        color: #94a3b8;
+      .status-warning {
+        background: #fff7e6;
+        color: #92400e;
+        border-color: #fcd34d;
+      }
+
+      .status-danger {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecdd3;
       }
 
       .gtm-stage-card {
@@ -1568,14 +1594,18 @@
       }
 
       .gtm-badge {
-        min-width: 28px;
-        height: 28px;
-        display: grid;
-        place-items: center;
-        border-radius: 9px;
+        min-width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
         border: 1px solid var(--accent);
         color: var(--accent);
-        font-weight: 700;
+        background: var(--accent-soft);
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        padding: 0 10px;
       }
 
       .gtm-stage-card.collapsed .gtm-stage-body {
@@ -1592,16 +1622,16 @@
       }
 
       .gtm-mini-progress {
-        width: 90px;
-        height: 6px;
+        width: 84px;
+        height: 4px;
         background: var(--surface-soft);
-        border-radius: 6px;
+        border-radius: 999px;
         overflow: hidden;
       }
 
       .gtm-mini-progress > div {
         height: 100%;
-        background: var(--accent);
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
       }
 
       .gtm-chip {
@@ -1632,6 +1662,24 @@
         margin-top: 6px;
       }
 
+      .gtm-risk-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface-muted);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .gtm-risk-toggle input {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+      }
+
       .gtm-stage-status-select {
         min-width: 150px;
       }
@@ -1654,15 +1702,20 @@
       }
 
       .gtm-task-row {
-        display: grid;
-        grid-template-columns: auto auto 1fr auto auto;
-        align-items: center;
-        gap: 10px;
-        padding: 6px 10px;
-        min-height: 44px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 10px;
         border: 1px solid var(--border);
         border-radius: var(--radius-m);
         background: var(--surface);
+      }
+
+      .gtm-task-header {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
       }
 
       .gtm-task-title {
@@ -1672,10 +1725,20 @@
         font-weight: 600;
       }
 
+      .gtm-task-title-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
       .gtm-task-meta {
         font-size: 0.82rem;
         color: var(--text-muted);
-        white-space: nowrap;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
       }
 
       .gtm-task-actions {
@@ -1695,6 +1758,8 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        padding-left: 14px;
+        border-left: 2px solid var(--surface-muted);
       }
 
       .stage-row-edit {
@@ -2304,29 +2369,22 @@
         font-size: 0.92rem;
       }
 
-      .status-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 8px;
-        background: var(--surface-muted);
-        border-radius: 10px;
-        font-size: 0.85rem;
-      }
-
       .status-chip.todo {
-        background: #eef2ff;
-        color: #312e81;
+        background: #f2f4f7;
+        color: #475467;
+        border-color: #e4e7ec;
       }
 
       .status-chip.in_progress {
         background: #e0f2fe;
         color: #075985;
+        border-color: #bae6fd;
       }
 
       .status-chip.done {
         background: #ecfdf3;
         color: #166534;
+        border-color: #bbf7d0;
       }
 
       .task-board {
@@ -2368,6 +2426,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        font-size: 13px;
       }
 
       .subtasks li {
@@ -2376,10 +2435,10 @@
         display: flex;
         gap: 10px;
         align-items: center;
-        padding: 10px 12px;
-        border-radius: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
         background: var(--surface-muted);
-        border: 1px solid var(--border);
+        border: 1px dashed var(--border);
       }
 
       .subtasks li input[type="checkbox"] {
@@ -2390,9 +2449,10 @@
 
       .subtask-title {
         flex: 1;
-        padding: 4px 6px;
+        padding: 2px 4px;
         border-radius: 6px;
         min-height: 20px;
+        font-size: 13px;
       }
 
       .subtask-actions {
@@ -2405,10 +2465,10 @@
         grid-template-columns: auto 1fr auto;
         align-items: center;
         gap: 8px;
-        padding: 6px 8px;
-        border: 1px dashed var(--border);
+        padding: 4px 8px;
+        border: 1px solid var(--border);
         border-radius: 10px;
-        background: var(--surface-muted);
+        background: var(--surface-soft);
       }
 
       .subtask-row .subtask-title {
@@ -2421,7 +2481,7 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        padding: 4px 0;
+        padding: 2px 0 0 4px;
       }
 
       .subtask-inline .inline-input {
@@ -3273,9 +3333,12 @@
               <span class="muted">Рабочий план вывода продукта, этапы и задачи</span>
             </div>
           </div>
-          <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
-            <button type="button" data-stage-view="cards">Карточки</button>
-            <button type="button" data-stage-view="table">Таблица</button>
+          <div class="stage-controls">
+            <button type="button" class="ghost" id="stageCollapseToggle" title="Свернуть/развернуть все этапы">Свернуть все</button>
+            <div class="view-switch" id="stageViewSwitch" role="group" aria-label="Вид этапов">
+              <button type="button" data-stage-view="cards">Карточки</button>
+              <button type="button" data-stage-view="table">Таблица</button>
+            </div>
           </div>
         </div>
 
@@ -3733,6 +3796,7 @@
       const discussionComposer = document.getElementById("discussionComposer");
       const closeDiscussionButton = document.getElementById("closeDiscussionButton");
       const stageViewSwitch = document.getElementById("stageViewSwitch");
+      const stageCollapseToggle = document.getElementById("stageCollapseToggle");
       const stageFilterChips = document.getElementById("stageFilterChips");
       const stageFilterSummary = document.getElementById("stageFilterSummary");
       const gtmStageCount = document.getElementById("gtm-stage-count");
@@ -3918,7 +3982,7 @@
         flags: { important: false, urgent: false },
         stageId: "",
         search: "",
-        sort: "due",
+        sort: "stage",
       };
       try {
         const storedStages = JSON.parse(localStorage.getItem(collapsedStagesKey) || "[]");
@@ -3964,6 +4028,11 @@
           localStorage.setItem(stageViewKey, stageViewMode);
           renderStages();
         }
+      });
+      stageCollapseToggle?.addEventListener("click", () => {
+        const anyExpanded = gtmStages.some((stage) => !isStageCollapsed(stage.id));
+        setAllStagesCollapsed(anyExpanded);
+        renderStages();
       });
       stageFilterChips?.addEventListener("click", (event) => {
         const target = event.target.closest("[data-stage-filter]");
@@ -4488,6 +4557,17 @@
         }[value] || value;
       }
 
+      function statusClass(value) {
+        return {
+          not_started: "status-neutral",
+          todo: "status-neutral",
+          in_progress: "status-progress",
+          done: "status-success",
+          cancelled: "status-neutral",
+          blocker: "status-danger",
+        }[value] || "status-neutral";
+      }
+
       function formatCustomFieldCount(count) {
         if (!count) return "Нет значений";
         const mod10 = count % 10;
@@ -4520,6 +4600,21 @@
         });
       }
 
+      function updateStageCollapseToggle(list = gtmStages) {
+        if (!stageCollapseToggle) return;
+        const total = list.length;
+        if (!total) {
+          stageCollapseToggle.textContent = "Свернуть все";
+          stageCollapseToggle.disabled = true;
+          return;
+        }
+        stageCollapseToggle.disabled = false;
+        const allCollapsed = list.every((stage) => isStageCollapsed(stage.id));
+        const label = allCollapsed ? "Развернуть все" : "Свернуть все";
+        stageCollapseToggle.textContent = label;
+        stageCollapseToggle.title = label;
+      }
+
       function updateTaskViewSwitch() {
         taskViewSwitch?.querySelectorAll("[data-task-view]").forEach((btn) => {
           const isActive = btn.dataset.taskView === taskViewMode;
@@ -4538,6 +4633,19 @@
           collapsedStages.add(normalizedId);
         } else {
           collapsedStages.delete(normalizedId);
+        }
+        try {
+          localStorage.setItem(collapsedStagesKey, JSON.stringify(Array.from(collapsedStages)));
+        } catch (error) {
+          console.warn("Не удалось сохранить состояние этапов", error);
+        }
+      }
+
+      function setAllStagesCollapsed(collapsed) {
+        if (collapsed) {
+          collapsedStages = new Set(gtmStages.map((stage) => String(stage.id)));
+        } else {
+          collapsedStages = new Set();
         }
         try {
           localStorage.setItem(collapsedStagesKey, JSON.stringify(Array.from(collapsedStages)));
@@ -4660,6 +4768,7 @@
         if (gtmDoneCount) {
           gtmDoneCount.textContent = doneTasks ? `${doneTasks} готово` : "Ничего не завершено";
         }
+        updateStageCollapseToggle(orderedStages);
         if (!orderedStages.length) {
           stagesContainer.innerHTML = `<p class="muted">Этапы ещё не добавлены.</p>`;
           updateStageFilterSummary(0, 0);
@@ -4692,7 +4801,7 @@
               <div class="gtm-stage-left">
                 <span class="gtm-badge">${absoluteIndex + 1}</span>
                 <span class="gtm-stage-name" title="${stage.title}">${stage.title}</span>
-                <span class="gtm-chip gtm-chip-status">${statusLabel(stage.status)}</span>
+                <span class="status-badge ${statusClass(stage.status)}">${statusLabel(stage.status)}</span>
                 <span class="gtm-chip gtm-chip-risk" ${stage.risk_flag ? "" : "hidden"}>Риск</span>
                 <span class="gtm-stage-dates">${timeline.rangeLabel}</span>
               </div>
@@ -4705,7 +4814,7 @@
                   <button class="icon-btn" data-action="down" title="Вниз" ${
                     absoluteIndex === orderedStages.length - 1 ? "disabled" : ""
                   }>↓</button>
-                  <button class="icon-btn" data-action="toggle" title="Свернуть/развернуть">${collapsed ? "▸" : "▾"}</button>
+                  <button class="icon-btn" data-action="toggle" title="Свернуть/развернуть">${collapsed ? "⌄" : "⌃"}</button>
                 </div>
               </div>
             </div>
@@ -4739,8 +4848,9 @@
             const nextHidden = !stageBody.hasAttribute("hidden");
             stageBody.toggleAttribute("hidden", nextHidden);
             card.classList.toggle("collapsed", nextHidden);
-            toggleBtn.textContent = nextHidden ? "▸" : "▾";
+            toggleBtn.textContent = nextHidden ? "⌄" : "⌃";
             setStageCollapsed(stage.id, nextHidden);
+            updateStageCollapseToggle(orderedStages);
           });
           card.querySelector("[data-action='edit']")?.addEventListener("click", () => openStageForm(stage.id));
           card.querySelector("[data-action='up']")?.addEventListener("click", () => moveStage(stage.id, -1));
@@ -4818,7 +4928,7 @@
                 ${stage.risk_flag ? '<span class="tag-mini warn">⚠️ Риск</span>' : ""}
               </div>
             </td>
-            <td><span class="status-chip status-${stage.status}">${stageStatusLabel(stage.status)}</span></td>
+            <td><span class="status-badge ${statusClass(stage.status)}">${stageStatusLabel(stage.status)}</span></td>
             <td>
               <div class="stage-progress-line">
                 <div class="bar${progressClass}">${
@@ -4874,7 +4984,7 @@
               <div class="cell-meta-stack">
                 <div class="cell-tag-row">
                   <span class="tag-mini ${timeline.tagKind}">${timeline.slaLabel}</span>
-                  <label class="checkbox-lite" style="margin:0">
+                  <label class="gtm-risk-toggle" style="margin:0">
                     <input type="checkbox" data-stage-risk="${stage.id}" ${stage.risk_flag ? "checked" : ""} /> Риск
                   </label>
                 </div>
@@ -4956,38 +5066,30 @@
           row.dataset.taskId = task.id;
           row.addEventListener("dblclick", () => openTaskForm(task.id));
 
-          const toggleSubtasksBtn = document.createElement("button");
-          toggleSubtasksBtn.type = "button";
-          toggleSubtasksBtn.className = "icon-btn";
-          toggleSubtasksBtn.dataset.action = "toggle-subtasks";
-          toggleSubtasksBtn.title = "Подзадачи";
-          toggleSubtasksBtn.textContent = "▾";
+          const header = document.createElement("div");
+          header.className = "gtm-task-header";
 
           const statusChip = document.createElement("span");
-          statusChip.className = "gtm-chip gtm-chip-status";
+          statusChip.className = `status-badge ${statusClass(task.status)}`;
           statusChip.textContent = taskStatusLabel(task.status);
 
+          const titleWrap = document.createElement("div");
+          titleWrap.className = "gtm-task-title-wrap";
           const title = document.createElement("div");
           title.className = "gtm-task-title";
           title.textContent = task.title;
-
-          const due = dueInfo(task);
-          const progress = taskProgress(task);
-          const totalSubs = task.subtasks?.length || 0;
-          const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
-          const metaParts = [];
-          if (due.text) metaParts.push(due.text.startsWith("Срок") ? due.text : `Срок: ${due.text}`);
-          metaParts.push(`Прогресс: ${progress.percent}%`);
-          metaParts.push(`Подзадачи: ${doneSubs}/${totalSubs}`);
-          const meta = document.createElement("div");
-          meta.className = "gtm-task-meta";
-          meta.textContent = metaParts.join(" · ");
+          titleWrap.appendChild(title);
 
           const actions = document.createElement("div");
           actions.className = "gtm-task-actions";
           const toggleStatus = task.status === "done" ? "todo" : "done";
           const toggleIcon = task.status === "done" ? "↺" : "✓";
+
+          const subtaskPanel = buildSubtaskPanel(task);
+          const subtaskInput = subtaskPanel.querySelector("input");
+
           [
+            { icon: "＋", title: "Добавить подзадачу", onClick: () => subtaskInput?.focus() },
             { icon: "✏️", title: "Редактировать", onClick: () => openTaskForm(task.id) },
             { icon: "💬", title: "Комментарии", onClick: () => openTaskDiscussion(task.id) },
             { icon: toggleIcon, title: toggleStatus === "done" ? "Вернуть" : "Готово", onClick: () => changeTaskStatus(task.id, toggleStatus) },
@@ -5002,15 +5104,34 @@
             actions.appendChild(btn);
           });
 
-          const subtaskPanel = buildSubtaskPanel(task);
+          header.append(statusChip, titleWrap, actions);
 
-          toggleSubtasksBtn.addEventListener("click", () => {
-            const nextHidden = !subtaskPanel.hidden;
-            subtaskPanel.hidden = nextHidden;
-            toggleSubtasksBtn.textContent = nextHidden ? "▾" : "▴";
-          });
+          const due = dueInfo(task);
+          const progress = taskProgress(task);
+          const totalSubs = task.subtasks?.length || 0;
+          const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
+          const meta = document.createElement("div");
+          meta.className = "gtm-task-meta";
+          const dueSpan = document.createElement("span");
+          dueSpan.textContent = due.text.startsWith("Срок") ? due.text : `Срок: ${due.text}`;
+          meta.appendChild(dueSpan);
+          const subsSpan = document.createElement("span");
+          subsSpan.textContent = `Подзадачи: ${doneSubs}/${totalSubs}`;
+          meta.appendChild(subsSpan);
+          const progressSpan = document.createElement("span");
+          progressSpan.textContent = `Прогресс: ${progress.percent}%`;
+          meta.appendChild(progressSpan);
 
-          row.append(toggleSubtasksBtn, statusChip, title, meta, actions, subtaskPanel);
+          if (totalSubs > 0) {
+            const bar = document.createElement("div");
+            bar.className = "micro-progress";
+            const fill = document.createElement("span");
+            fill.style.width = `${progress.percent}%`;
+            bar.appendChild(fill);
+            meta.appendChild(bar);
+          }
+
+          row.append(header, meta, subtaskPanel);
           wrapper.appendChild(row);
         });
 
@@ -5020,15 +5141,10 @@
       function buildSubtaskPanel(task) {
         const panel = document.createElement("div");
         panel.className = "subtask-panel";
-        panel.hidden = true;
+        panel.hidden = false;
 
         const subtasks = getSubtasksForTask(task.id);
-        if (!subtasks || !subtasks.length) {
-          const empty = document.createElement("p");
-          empty.className = "muted";
-          empty.textContent = "Подзадачи пока не добавлены";
-          panel.appendChild(empty);
-        } else {
+        if (subtasks && subtasks.length) {
           subtasks
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .forEach((sub) => {
@@ -5156,16 +5272,16 @@
       }
 
       function buildTaskTable(items) {
-        const table = document.createElement("table");
-        table.className = "compact-table tasks-table gtm-table";
-        table.innerHTML = `
+          const table = document.createElement("table");
+          table.className = "compact-table tasks-table gtm-table";
+          table.innerHTML = `
           <colgroup>
-            <col style="min-width:320px" />
-            <col style="width:120px" />
-            <col style="width:200px" />
-            <col style="width:110px" />
-            <col style="width:110px" />
+            <col style="min-width:260px" />
+            <col style="width:130px" />
             <col style="width:160px" />
+            <col style="width:90px" />
+            <col style="width:90px" />
+            <col style="width:140px" />
             <col style="width:110px" />
             <col style="width:120px" />
           </colgroup>
@@ -5305,10 +5421,10 @@
         taskFilterState.flags = { important: false, urgent: false };
         taskFilterState.stageId = "";
         taskFilterState.search = "";
-        taskFilterState.sort = "due";
+        taskFilterState.sort = "stage";
         taskFilterChips?.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("active"));
         if (taskStageFilter) taskStageFilter.value = "";
-        if (taskSortSelect) taskSortSelect.value = "due";
+        if (taskSortSelect) taskSortSelect.value = "stage";
         if (taskSearchInput) taskSearchInput.value = "";
         renderCompactTaskView();
       }
@@ -5782,16 +5898,19 @@
         if (taskStageFilter) {
           const current = taskStageFilter.value;
           taskStageFilter.innerHTML = '<option value="">Все этапы</option>';
-          sorted.forEach((stage) => {
-            const option = document.createElement("option");
-            option.value = stage.id;
-            option.textContent = `${stage.order}. ${stage.title}`;
-            taskStageFilter.appendChild(option);
-          });
-          if (current) {
-            const match = Array.from(taskStageFilter.options).some((opt) => opt.value === current);
-            taskStageFilter.value = match ? current : "";
-          }
+        sorted.forEach((stage) => {
+          const option = document.createElement("option");
+          option.value = stage.id;
+          option.textContent = `${stage.order}. ${stage.title}`;
+          taskStageFilter.appendChild(option);
+        });
+        if (current) {
+          const match = Array.from(taskStageFilter.options).some((opt) => opt.value === current);
+          taskStageFilter.value = match ? current : "";
+        }
+        }
+        if (taskSortSelect) {
+          taskSortSelect.value = taskFilterState.sort;
         }
       }
 
@@ -5850,7 +5969,7 @@
         const wrapper = document.createElement("div");
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "inline-chip-btn";
+        btn.className = `inline-chip-btn status-badge ${statusClass(task.status)}`;
         btn.textContent = taskStatusLabel(task.status);
 
         const openSelect = () => {
@@ -6017,6 +6136,14 @@
         progressLabel.className = "task-progress-text";
         progressLabel.textContent = progress.label;
         progressCell.append(progressLabel);
+        if (task.subtasks?.length) {
+          const micro = document.createElement("div");
+          micro.className = "micro-progress";
+          const fill = document.createElement("span");
+          fill.style.width = `${progress.percent}%`;
+          micro.appendChild(fill);
+          progressCell.appendChild(micro);
+        }
         row.appendChild(progressCell);
 
         const actionsCell = document.createElement("td");
