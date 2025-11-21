@@ -598,18 +598,16 @@
         cursor: pointer;
       }
 
-      .stage-header {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        align-items: center;
+      .stage-heading .muted {
+        font-size: 0.92rem;
       }
 
-      .stage-title-line {
+      .stage-info-row {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         align-items: center;
-        flex-wrap: wrap;
+        margin-top: 8px;
       }
 
       .chip {
@@ -665,8 +663,108 @@
         font-size: 0.92rem;
       }
 
-      .stage-description.empty {
-        font-style: italic;
+      .life-bar {
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .task-row {
+        display: grid;
+        grid-template-columns: 32px 1fr auto;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .task-row:hover {
+        background: var(--surface-hover);
+      }
+
+      .task-status {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+      }
+
+      .task-status:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .task-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .task-row {
+        display: grid;
+        grid-template-columns: 32px 1fr auto;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .task-row:hover {
+        background: var(--surface-hover);
+      }
+
+      .task-status {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+      }
+
+      .task-status:hover {
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .task-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
       }
 
       .task-list {
@@ -4316,7 +4414,7 @@
           return wrapper;
         }
 
-        stageTasks.forEach((task) => {
+        stageTasks.forEach((task, idx) => {
           const collapsed = isTaskCollapsed(task.id);
           const totalSubs = task.subtasks?.length || 0;
           const doneSubs = task.subtasks?.filter((s) => s.done).length || 0;
@@ -4780,7 +4878,46 @@
                 e.preventDefault();
                 title.blur();
               }
+              title.addEventListener("blur", () => updateSubtaskTitle(task.id, sub.id, title.innerText));
+              title.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  title.blur();
+                }
+              });
+
+              const actions = document.createElement("div");
+              actions.className = "subtask-actions";
+              const editBtn = document.createElement("button");
+              editBtn.className = "ghost";
+              editBtn.textContent = "✏️";
+              editBtn.title = "Редактировать";
+              editBtn.addEventListener("click", () => title.focus());
+              const delBtn = document.createElement("button");
+              delBtn.className = "ghost";
+              delBtn.textContent = "🗑️";
+              delBtn.addEventListener("click", () => deleteSubtask(task.id, sub.id));
+              actions.appendChild(editBtn);
+              actions.appendChild(delBtn);
+
+              li.appendChild(checkbox);
+              li.appendChild(title);
+              li.appendChild(actions);
+              li.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                const itemsMenu = [
+                  { label: sub.done ? "Сделать активной" : "Отметить выполненной", action: () => toggleSubtask(task.id, sub.id, !sub.done) },
+                  { label: "Переименовать", action: () => title.focus() },
+                  { label: "Удалить", action: () => deleteSubtask(task.id, sub.id) },
+                ];
+                openContextMenu(event, itemsMenu);
+              });
+              list.appendChild(li);
             });
+          }
+          block.appendChild(list);
+          return block;
+        };
 
             const actions = document.createElement("div");
             actions.className = "subtask-actions";
