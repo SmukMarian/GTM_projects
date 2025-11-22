@@ -180,7 +180,7 @@ def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) ->
     if flt.type == "number":
         target = _normalize_number(fields.get(flt.field_id))
         if target is None:
-            return False
+            return flt.value_from is None and flt.value_to is None
         if flt.value_from is not None and target < flt.value_from:
             return False
         if flt.value_to is not None and target > flt.value_to:
@@ -202,7 +202,7 @@ def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) ->
     if flt.type == "date":
         target = _normalize_date(fields.get(flt.field_id))
         if target is None:
-            return False
+            return flt.date_from is None and flt.date_to is None
         if flt.date_from and target < flt.date_from:
             return False
         if flt.date_to and target > flt.date_to:
@@ -331,7 +331,7 @@ class LocalRepository:
     ) -> list[Project]:
         projects: Iterable[Project] = self.store.projects
         if not include_archived:
-            projects = [p for p in projects if p.status.value != "archived"]
+            projects = [p for p in projects if p.status != ProjectStatus.ARCHIVED]
         if group_id:
             projects = [p for p in projects if p.group_id == group_id]
         if statuses:
@@ -396,6 +396,27 @@ class LocalRepository:
                 self.save()
                 return
         raise KeyError(f"Project {project_id} not found")
+
+    def import_projects(self, projects: list[Project]) -> list[Project]:
+        """Импортировать или обновить список проектов из Excel."""
+
+        existing_map = {p.id: idx for idx, p in enumerate(self.store.projects)}
+        updated_projects = list(self.store.projects)
+
+        for project in projects:
+            if project.id in existing_map:
+                idx = existing_map[project.id]
+                updated_projects[idx] = project
+            else:
+                if project.short_id is None:
+                    project.short_id = self.store.next_project_short_id
+                    self.store.next_project_short_id += 1
+                updated_projects.append(project)
+
+        self.store.projects = updated_projects
+        self._ensure_project_short_ids()
+        self.save()
+        return updated_projects
 
     def _get_project_with_index(self, project_id: UUID) -> tuple[int, Project]:
         for idx, project in enumerate(self.store.projects):
@@ -1145,10 +1166,14 @@ class LocalRepository:
 
         status_summary = StatusSummary()
         for project in filtered_projects:
-            if project.status == ProjectStatus.ACTIVE:
-                status_summary.active += 1
+            if project.status == ProjectStatus.IN_PROGRESS:
+                status_summary.in_progress += 1
+            elif project.status == ProjectStatus.LAUNCHED:
+                status_summary.launched += 1
             elif project.status == ProjectStatus.CLOSED:
                 status_summary.closed += 1
+            elif project.status == ProjectStatus.EOL:
+                status_summary.eol += 1
             elif project.status == ProjectStatus.ARCHIVED:
                 status_summary.archived += 1
 
@@ -1284,8 +1309,11 @@ class LocalRepository:
         active_groups = len(groups)
         risky_groups = len([g for g in group_cards if g.risk])
         completion_rate = 0.0
-        if status_summary.active + status_summary.closed:
-            completion_rate = status_summary.closed / (status_summary.active + status_summary.closed)
+        in_work_total = (
+            status_summary.in_progress + status_summary.launched + status_summary.eol + status_summary.closed
+        )
+        if in_work_total:
+            completion_rate = (status_summary.closed + status_summary.eol) / in_work_total
         overdue_rate = 0.0
         if total_projects:
             overdue_rate = overdue_projects / total_projects
@@ -1295,8 +1323,10 @@ class LocalRepository:
             groups=group_cards,
             kpis=DashboardKPI(
                 total_projects=total_projects,
-                active=status_summary.active,
+                in_progress=status_summary.in_progress,
+                launched=status_summary.launched,
                 closed=status_summary.closed,
+                eol=status_summary.eol,
                 archived=status_summary.archived,
                 completion_rate=round(completion_rate, 3),
                 overdue_projects=overdue_projects,
