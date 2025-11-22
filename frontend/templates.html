@@ -185,6 +185,28 @@
         background: var(--surface-muted);
       }
 
+      .tab-switch {
+        display: inline-flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .tab-switch button {
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .tab-switch button[aria-selected="true"] {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
       nav a:hover {
         box-shadow: var(--shadow);
       }
@@ -566,6 +588,7 @@
           <a href="/projects.html">Проекты</a>
           <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <a href="/characteristics-board.html">Характеристики</a>
           <details class="theme-menu">
             <summary aria-label="Сменить тему">
               <span aria-hidden="true">🌗</span>
@@ -590,14 +613,20 @@
               Создавайте, редактируйте и переиспользуйте готовые структуры этапов и характеристик.
             </p>
           </div>
-          <div class="toolbar">
-            <button class="primary" id="newGtm">+ Шаблон GTM</button>
-            <button class="primary" id="newChar">+ Шаблон характеристик</button>
+          <div class="toolbar" style="flex-wrap: wrap; justify-content: flex-end; gap: 8px">
+            <div class="tab-switch" id="templateTabs" role="tablist" aria-label="Разделы шаблонов">
+              <button type="button" data-tab="gtm" aria-selected="true">Шаблоны GTM</button>
+              <button type="button" data-tab="characteristics" aria-selected="false">Характеристики</button>
+            </div>
+            <div class="toolbar" style="gap: 6px; flex-wrap: wrap">
+              <button class="primary" id="newGtm">+ Шаблон GTM</button>
+              <button class="primary" id="newChar">+ Шаблон характеристик</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <section class="card template-section">
+      <section class="card template-section" data-tab-panel="gtm">
         <div class="stage-card-header">
           <div>
             <h2 style="margin: 0">Шаблоны GTM-этапов</h2>
@@ -613,7 +642,7 @@
         </div>
       </section>
 
-      <section class="card template-section">
+      <section class="card template-section" data-tab-panel="characteristics" hidden>
         <div class="stage-card-header">
           <div>
             <h2 style="margin: 0">Шаблоны характеристик</h2>
@@ -635,10 +664,30 @@
       const gtmDetail = document.getElementById("gtmDetail");
       const charList = document.getElementById("charList");
       const charDetail = document.getElementById("charDetail");
+      const tabSwitch = document.getElementById("templateTabs");
+      const tabPanels = document.querySelectorAll("[data-tab-panel]");
       const newGtmBtn = document.getElementById("newGtm");
       const newCharBtn = document.getElementById("newChar");
       document.getElementById("refreshGtm").addEventListener("click", () => loadTemplates(gtmState.activeId, charState.activeId));
       document.getElementById("refreshChar").addEventListener("click", () => loadTemplates(gtmState.activeId, charState.activeId));
+
+      function switchTab(tab) {
+        tabPanels.forEach((panel) => {
+          const active = panel.dataset.tabPanel === tab;
+          panel.hidden = !active;
+          panel.setAttribute("aria-hidden", active ? "false" : "true");
+        });
+        tabSwitch?.querySelectorAll("[data-tab]").forEach((btn) => {
+          const active = btn.dataset.tab === tab;
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+      }
+
+      tabSwitch?.addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-tab]");
+        if (!btn) return;
+        switchTab(btn.dataset.tab);
+      });
 
       const clone = (value) => (window.structuredClone ? structuredClone(value) : JSON.parse(JSON.stringify(value)));
       const createId = () =>
@@ -1405,6 +1454,7 @@
       });
 
       newCharBtn.addEventListener("click", async () => {
+        switchTab("characteristics");
         const res = await fetch("/api/characteristic-templates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1418,6 +1468,7 @@
         await loadTemplates(gtmState.activeId, created.id);
       });
 
+      switchTab("gtm");
       loadTemplates();
     </script>
     <footer class="site-footer">

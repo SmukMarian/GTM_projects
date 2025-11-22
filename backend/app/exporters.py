@@ -881,14 +881,21 @@ def import_projects_from_excel(
         return PRIORITY_ALIASES.get(normalized, PriorityLevel.__members__.get(normalized.upper(), None))
 
     def normalize_date(value):
+        if isinstance(value, datetime):
+            return value.date()
         if isinstance(value, date):
             return value
         if value is None:
             return None
-        try:
-            return date.fromisoformat(str(value))
-        except ValueError:
-            return None
+        text = str(value).strip()
+        if "T" in text or " " in text:
+            text = text.split("T")[0].split(" ")[0]
+        for parser in (date.fromisoformat, lambda val: datetime.fromisoformat(val).date()):
+            try:
+                return parser(text)
+            except ValueError:
+                continue
+        return None
 
     custom_fields_columns = [original_titles[key] for key in header_map if key.startswith(CUSTOM_FIELD_PREFIX.lower())]
 
@@ -1018,14 +1025,21 @@ def _parse_project_sheet(
         return PRIORITY_ALIASES.get(normalized, PriorityLevel.__members__.get(normalized.upper(), existing_project.priority))
 
     def normalize_date(value):
+        if isinstance(value, datetime):
+            return value.date()
         if isinstance(value, date):
             return value
         if value is None:
             return None
-        try:
-            return date.fromisoformat(str(value))
-        except ValueError:
-            return None
+        text = str(value).strip()
+        if "T" in text or " " in text:
+            text = text.split("T")[0].split(" ")[0]
+        for parser in (date.fromisoformat, lambda val: datetime.fromisoformat(val).date()):
+            try:
+                return parser(text)
+            except ValueError:
+                continue
+        return None
 
     data_rows = list(sheet.iter_rows(min_row=2, values_only=True))
     if not data_rows:

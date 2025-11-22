@@ -1332,24 +1332,26 @@ class LocalRepository:
 
         recent_events: list[RecentChange] = []
         risk_projects: list[RiskProject] = []
+        collect_recent = changes_limit > 0
         for project in filtered_projects:
             group_name = next((g.name for g in self.store.product_groups if g.id == project.group_id), "")
-            for event in project.history:
-                occurred_at = event.occurred_at
-                if occurred_at.tzinfo is None:
-                    occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-                if occurred_at < recent_threshold:
-                    continue
-                recent_events.append(
-                    RecentChange(
-                        project_id=project.id,
-                        project_name=project.name,
-                        group_name=group_name,
-                        occurred_at=occurred_at,
-                        summary=event.summary,
-                        details=event.details,
+            if collect_recent:
+                for event in project.history:
+                    occurred_at = event.occurred_at
+                    if occurred_at.tzinfo is None:
+                        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+                    if occurred_at < recent_threshold:
+                        continue
+                    recent_events.append(
+                        RecentChange(
+                            project_id=project.id,
+                            project_name=project.name,
+                            group_name=group_name,
+                            occurred_at=occurred_at,
+                            summary=event.summary,
+                            details=event.details,
+                        )
                     )
-                )
 
             if self._project_has_risk(project, today):
                 overdue_days = self._project_overdue_days(project, today)
@@ -1364,8 +1366,11 @@ class LocalRepository:
                     )
                 )
 
-        recent_events.sort(key=lambda item: item.occurred_at, reverse=True)
-        recent_events = recent_events[:changes_limit]
+        if collect_recent:
+            recent_events.sort(key=lambda item: item.occurred_at, reverse=True)
+            recent_events = recent_events[:changes_limit]
+        else:
+            recent_events = []
 
         total_projects = len(filtered_projects)
         overdue_projects = len(risk_projects)

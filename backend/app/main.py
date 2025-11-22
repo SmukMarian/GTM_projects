@@ -12,7 +12,6 @@ import zipfile
 from datetime import date
 import re
 from io import BytesIO
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -71,18 +70,14 @@ repository = LocalRepository(settings.primary_store)
 
 
 def configure_logging() -> logging.Logger:
-    """Настроить ротацию логов и фиксировать потенциальные 500-ошибки."""
+    """Настроить консольное логирование для отладки."""
 
-    log_file = settings.logs_dir / "app.log"
-    handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
     logging.basicConfig(
         level=logging.INFO,
-        handlers=[handler, logging.StreamHandler()],
+        handlers=[logging.StreamHandler()],
         format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
     )
-    logger = logging.getLogger("hpt")
-    logger.info("Логи пишутся в %s", log_file)
-    return logger
+    return logging.getLogger("hpt")
 
 
 logger = configure_logging()
@@ -197,6 +192,7 @@ def get_dashboard(
         group_id=group_id,
         brand=brand,
         statuses=status_set,
+        changes_limit=0,
     )
 
 

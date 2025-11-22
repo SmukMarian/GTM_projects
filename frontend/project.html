@@ -4136,6 +4136,7 @@
       const taskViewKey = "hpt_task_view_mode";
       const collapsedStagesKey = "hpt_collapsed_stages";
       const collapsedTasksKey = "hpt_collapsed_tasks";
+      const taskFilterKey = "hpt_task_filters";
       let stageViewMode = localStorage.getItem(stageViewKey) === "table" ? "table" : "cards";
       let taskViewMode = localStorage.getItem(taskViewKey) === "kanban" ? "kanban" : "table";
       let collapsedStages = new Set();
@@ -4154,6 +4155,56 @@
         search: "",
         sort: "stage",
       };
+      function persistTaskFilters() {
+        const payload = {
+          statuses: Array.from(taskFilterState.statuses),
+          due: Array.from(taskFilterState.due),
+          flags: taskFilterState.flags,
+          stageId: taskFilterState.stageId,
+          search: taskFilterState.search,
+          sort: taskFilterState.sort,
+        };
+        try {
+          localStorage.setItem(taskFilterKey, JSON.stringify(payload));
+        } catch (error) {
+          console.warn("Не удалось сохранить фильтры задач", error);
+        }
+      }
+      function restoreTaskFilters() {
+        const raw = localStorage.getItem(taskFilterKey);
+        if (!raw) return;
+        try {
+          const parsed = JSON.parse(raw);
+          taskFilterState.statuses = new Set(parsed?.statuses || []);
+          taskFilterState.due = new Set(parsed?.due || []);
+          taskFilterState.flags = {
+            important: !!parsed?.flags?.important,
+            urgent: !!parsed?.flags?.urgent,
+          };
+          taskFilterState.stageId = parsed?.stageId || "";
+          taskFilterState.search = parsed?.search || "";
+          taskFilterState.sort = parsed?.sort || "stage";
+        } catch (error) {
+          console.warn("Не удалось восстановить фильтры задач", error);
+          localStorage.removeItem(taskFilterKey);
+        }
+      }
+
+      function syncTaskFilterControls() {
+        taskFilterChips?.querySelectorAll(".filter-chip").forEach((chip) => {
+          const group = chip.dataset.filterGroup;
+          const value = chip.dataset.value;
+          if (!group || !value) return;
+          let active = false;
+          if (group === "status") active = taskFilterState.statuses.has(value);
+          if (group === "due") active = taskFilterState.due.has(value);
+          if (group === "flag") active = !!taskFilterState.flags[value];
+          chip.classList.toggle("active", active);
+        });
+        if (taskStageFilter) taskStageFilter.value = taskFilterState.stageId || "";
+        if (taskSortSelect) taskSortSelect.value = taskFilterState.sort;
+        if (taskSearchInput) taskSearchInput.value = taskFilterState.search;
+      }
       try {
         const storedStages = JSON.parse(localStorage.getItem(collapsedStagesKey) || "[]");
         if (Array.isArray(storedStages)) {
@@ -4172,6 +4223,8 @@
         console.warn("Не удалось прочитать состояние свернутых задач", error);
         collapsedTasks = new Set();
       }
+      restoreTaskFilters();
+      syncTaskFilterControls();
       let discussionContext = null;
       let focusTaskHandled = false;
       let draggedTaskId = null;
@@ -4236,15 +4289,18 @@
       taskFilterChips?.addEventListener("click", handleFilterChipClick);
       taskStageFilter?.addEventListener("change", (event) => {
         taskFilterState.stageId = event.target.value || "";
+        persistTaskFilters();
         renderCompactTaskView();
       });
       taskSortSelect?.addEventListener("change", (event) => {
         taskFilterState.sort = event.target.value || "due";
+        persistTaskFilters();
         renderCompactTaskView();
       });
       taskResetFilters?.addEventListener("click", resetTaskFilters);
       taskSearchInput?.addEventListener("input", (event) => {
         taskFilterState.search = (event.target.value || "").trim().toLowerCase();
+        persistTaskFilters();
         renderCompactTaskView();
       });
       closeDiscussionButton?.addEventListener("click", closeDiscussionModal);
@@ -5699,6 +5755,7 @@
           taskFilterState.flags[value] = !taskFilterState.flags[value];
           btn.classList.toggle("active", taskFilterState.flags[value]);
         }
+        persistTaskFilters();
         renderCompactTaskView();
       }
 
@@ -5720,10 +5777,8 @@
         taskFilterState.stageId = "";
         taskFilterState.search = "";
         taskFilterState.sort = "stage";
-        taskFilterChips?.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("active"));
-        if (taskStageFilter) taskStageFilter.value = "";
-        if (taskSortSelect) taskSortSelect.value = "stage";
-        if (taskSearchInput) taskSearchInput.value = "";
+        syncTaskFilterControls();
+        persistTaskFilters();
         renderCompactTaskView();
       }
 
@@ -6260,7 +6315,7 @@
           taskGtmStageSelect.appendChild(option);
         });
         if (taskStageFilter) {
-          const current = taskStageFilter.value;
+          const current = taskFilterState.stageId || taskStageFilter.value;
           taskStageFilter.innerHTML = '<option value="">Все этапы</option>';
         sorted.forEach((stage) => {
           const option = document.createElement("option");
@@ -6271,11 +6326,13 @@
         if (current) {
           const match = Array.from(taskStageFilter.options).some((opt) => opt.value === current);
           taskStageFilter.value = match ? current : "";
+          taskFilterState.stageId = taskStageFilter.value;
         }
         }
         if (taskSortSelect) {
           taskSortSelect.value = taskFilterState.sort;
         }
+        syncTaskFilterControls();
       }
 
       function taskStatusLabel(value) {
