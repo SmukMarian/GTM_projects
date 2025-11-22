@@ -20,38 +20,39 @@ from pydantic import BaseModel, ConfigDict, Field
 from .exporters import import_characteristics_from_excel as parse_characteristics_from_excel
 from .models import (
     BackupInfo,
+    BrandMetric,
     CharacteristicField,
+    CharacteristicFlatRecord,
     CharacteristicSection,
     CharacteristicTemplate,
     Comment,
-    BrandMetric,
     CustomFieldOption,
     CustomFieldFilterMeta,
     CustomFieldFilterRequest,
-    DashboardPayload,
     DashboardKPI,
+    DashboardPayload,
     FileAttachment,
-    GTMTemplate,
-    GTMStage,
-    GroupStatus,
     GTMDistribution,
+    GTMStage,
+    GTMTemplate,
+    GroupDashboardCard,
+    GroupStatus,
     HistoryEvent,
     ImageAttachment,
     ProductGroup,
     Project,
     ProjectStatus,
     RecentChange,
-    GroupDashboardCard,
     RiskProject,
     SpotlightTask,
+    StageStatus,
     StatusSummary,
-    TaskSpotlightSummary,
-    UpcomingItem,
     Subtask,
     Task,
+    TaskSpotlightSummary,
     TaskStatus,
     TaskUrgency,
-    StageStatus,
+    UpcomingItem,
 )
 
 
@@ -417,6 +418,16 @@ class LocalRepository:
         self._ensure_project_short_ids()
         self.save()
         return updated_projects
+
+    def replace_project(self, project_id: UUID, updated: Project) -> Project:
+        for idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                if updated.short_id is None:
+                    updated = updated.model_copy(update={"short_id": project.short_id})
+                self.store.projects[idx] = updated.model_copy(update={"id": project_id})
+                self.save()
+                return updated
+        raise KeyError(f"Project {project_id} not found")
 
     def _get_project_with_index(self, project_id: UUID) -> tuple[int, Project]:
         for idx, project in enumerate(self.store.projects):
@@ -890,6 +901,58 @@ class LocalRepository:
         self.store.projects[p_idx] = project
         self.save()
         return sections, [], report
+
+    def list_characteristics_overview(
+        self, *, group_id: UUID | None = None, query: str | None = None
+    ) -> list[CharacteristicFlatRecord]:
+        records: list[CharacteristicFlatRecord] = []
+        group_lookup = {g.id: g.name for g in self.store.product_groups}
+        normalized_query = query.strip().lower() if query else None
+
+        for project in self.store.projects:
+            if group_id and project.group_id != group_id:
+                continue
+            group_name = group_lookup.get(project.group_id)
+            for section in project.characteristics:
+                for field in section.fields:
+                    haystack = " ".join(
+                        [
+                            section.title or "",
+                            field.label_ru or "",
+                            field.label_en or "",
+                            str(field.value_ru or ""),
+                            str(field.value_en or ""),
+                            project.name or "",
+                            group_name or "",
+                        ]
+                    ).lower()
+                    if normalized_query and normalized_query not in haystack:
+                        continue
+                    records.append(
+                        CharacteristicFlatRecord(
+                            project_id=project.id,
+                            project_name=project.name,
+                            group_name=group_name,
+                            section=section.title,
+                            label_ru=field.label_ru,
+                            label_en=field.label_en,
+                            value_ru=field.value_ru,
+                            value_en=field.value_en,
+                            field_type=field.field_type,
+                        )
+                    )
+
+        return records
+
+    def apply_characteristics_bulk(self, updates: dict[UUID, list[CharacteristicSection]]) -> None:
+        if not updates:
+            return
+        for idx, project in enumerate(self.store.projects):
+            if project.id not in updates:
+                continue
+            project.characteristics = updates[project.id]
+            self.store.projects[idx] = project
+        self.save()
 
     # --- Files ---
     def list_files(self, project_id: UUID) -> list[FileAttachment]:

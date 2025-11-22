@@ -4182,12 +4182,12 @@
       addCustomFieldBtn?.addEventListener("click", () => focusCustomFieldsEditor(true));
       fileForm?.addEventListener("submit", handleFileSubmit);
       copyIdBtn?.addEventListener("click", copyProjectId);
-      exportProjectBtn?.addEventListener("click", exportStages);
+      exportProjectBtn?.addEventListener("click", exportProjectBundle);
       importProjectBtn?.addEventListener("click", () => projectExcelFile?.click());
       projectExcelFile?.addEventListener("change", async (event) => {
         const file = event.target.files?.[0];
         if (file) {
-          await importStagesFile(file);
+          await importProjectBundle(file);
         }
         event.target.value = "";
       });
@@ -6154,6 +6154,41 @@
         await importStagesFile(file);
         event.target.value = "";
       });
+
+      async function exportProjectBundle() {
+        const res = await fetch(`/api/projects/${projectId}/excel`);
+        if (!res.ok) {
+          alert("Не удалось выгрузить проект целиком");
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const safeName = (project?.name || "project").replace(/[\\/:*?\"<>|]/g, "_");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${safeName}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      async function importProjectBundle(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/projects/${projectId}/excel`, { method: "POST", body: formData });
+        if (!res.ok) {
+          const detail = await res.json().catch(() => null);
+          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта проекта");
+          return;
+        }
+        project = await res.json();
+        await loadProject();
+        await loadStages();
+        await loadTasks();
+        renderProjectMeta();
+        renderStages();
+        renderGtmProgress();
+        alert("Проект импортирован из Excel");
+      }
 
       async function exportStages() {
         const res = await fetch(`/api/projects/${projectId}/gtm-stages/export`);

@@ -156,6 +156,18 @@ class CharacteristicImportResponse(BaseModel):
     report: CharacteristicImportReport
 
 
+class CharacteristicFlatRecord(BaseModel):
+    project_id: UUID
+    project_name: str
+    group_name: str | None = None
+    section: str
+    label_ru: str
+    label_en: str
+    value_ru: str | int | float | bool | None = None
+    value_en: str | int | float | bool | None = None
+    field_type: FieldType
+
+
 class ChecklistItem(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     title: str

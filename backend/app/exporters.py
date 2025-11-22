@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from io import BytesIO
+import re
 from typing import Iterable
 from uuid import UUID, uuid4
 
 from openpyxl import Workbook, load_workbook
 
 from .models import (
+    CharacteristicField,
     CharacteristicSection,
     ChecklistItem,
+    Comment,
     FieldType,
     GTMStage,
     Project,
@@ -36,6 +39,22 @@ def _find_current_stage_name(project: Project) -> str | None:
 
 
 CUSTOM_FIELD_PREFIX = "CF:"
+EXCEL_SHEET_LIMIT = 31
+
+
+def _make_sheet_name(base: str, used: set[str]) -> str:
+    """Сформировать валидное имя листа и избежать дубликатов."""
+
+    cleaned = re.sub(r"[\\/*?:\[\]]", "_", base).strip() or "Проект"
+    trimmed = cleaned[:EXCEL_SHEET_LIMIT]
+    candidate = trimmed
+    suffix = 1
+    while candidate in used:
+        suffix_text = f"_{suffix}"
+        candidate = (trimmed[: EXCEL_SHEET_LIMIT - len(suffix_text)] + suffix_text) or f"{cleaned[:EXCEL_SHEET_LIMIT-2]}_{suffix}"
+        suffix += 1
+    used.add(candidate)
+    return candidate
 
 
 def export_projects_to_excel(
@@ -133,12 +152,8 @@ def export_projects_to_excel(
     return buffer.getvalue()
 
 
-def export_gtm_stages_to_excel(project: Project) -> bytes:
-    """Выгрузить этапы, задачи, подзадачи и комментарии в одну таблицу."""
-
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "GTM"
+def _write_gtm_sheet(workbook: Workbook, project: Project, title: str = "GTM") -> None:
+    sheet = workbook.create_sheet(title)
 
     headers = [
         "Порядок этапа",
@@ -171,7 +186,7 @@ def export_gtm_stages_to_excel(project: Project) -> bytes:
         project.tasks,
         key=lambda t: (
             stage_order_map.get(t.gtm_stage_id, 9999),
-            t.order if hasattr(t, "order") else 0,
+            getattr(t, "order", 0),
             (t.due_date or date.max),
             t.title.lower(),
         ),
@@ -216,18 +231,22 @@ def export_gtm_stages_to_excel(project: Project) -> bytes:
                     ]
                 )
 
+
+def export_gtm_stages_to_excel(project: Project) -> bytes:
+    """Выгрузить этапы, задачи, подзадачи и комментарии в одну таблицу."""
+
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    _write_gtm_sheet(workbook, project, "GTM")
+
     buffer = BytesIO()
     workbook.save(buffer)
     buffer.seek(0)
     return buffer.getvalue()
 
 
-def export_characteristics_to_excel(project: Project) -> bytes:
-    """Сформировать Excel-файл с характеристиками проекта."""
-
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Характеристики"
+def _write_characteristics_sheet(workbook: Workbook, project: Project, title: str = "Характеристики") -> None:
+    sheet = workbook.create_sheet(title)
 
     headers = [
         "Секция",
@@ -255,6 +274,85 @@ def export_characteristics_to_excel(project: Project) -> bytes:
                     field.order,
                 ]
             )
+
+
+def export_characteristics_to_excel(project: Project) -> bytes:
+    """Сформировать Excel-файл с характеристиками проекта."""
+
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    _write_characteristics_sheet(workbook, project, "Характеристики")
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+def _write_project_sheet(
+    workbook: Workbook, project: Project, title: str = "Проект", group_lookup: dict[UUID, str] | None = None
+) -> None:
+    sheet = workbook.create_sheet(title)
+
+    custom_keys = sorted(project.custom_fields.keys())
+    headers = [
+        "ID",
+        "Короткий ID",
+        "Название проекта",
+        "Продуктовая группа",
+        "Бренд",
+        "Рынок/регион",
+        "Статус",
+        "Плановая дата запуска",
+        "Фактическая дата запуска",
+        "Текущий GTM-этап",
+        "Приоритет",
+        "MOQ",
+        "FOB",
+        "PROMO",
+        "RRP",
+        "Краткое описание",
+        "Полное описание",
+    ]
+    headers.extend(f"{CUSTOM_FIELD_PREFIX}{key}" for key in custom_keys)
+    sheet.append(headers)
+
+    current_stage_name = _find_current_stage_name(project)
+    row = [
+        str(project.id),
+        project.short_id,
+        project.name,
+        group_lookup.get(project.group_id, project.group_id) if group_lookup else project.group_id,
+        project.brand,
+        project.market,
+        project.status.value,
+        project.planned_launch,
+        project.actual_launch,
+        current_stage_name,
+        project.priority.value if project.priority else None,
+        project.moq,
+        project.fob_price,
+        project.promo_price,
+        project.rrp_price,
+        project.short_description,
+        project.full_description,
+    ]
+    for key in custom_keys:
+        row.append(project.custom_fields.get(key))
+    sheet.append(row)
+
+
+def export_project_bundle(project: Project, groups: Iterable[ProductGroup] | None = None) -> bytes:
+    """Выгрузить проект с базовыми полями, характеристиками и GTM в один файл."""
+
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+
+    group_lookup = {g.id: g.name for g in groups} if groups else {}
+
+    _write_project_sheet(workbook, project, "Основные параметры", group_lookup)
+    _write_characteristics_sheet(workbook, project, "Характеристики")
+    _write_gtm_sheet(workbook, project, "GTM")
 
     buffer = BytesIO()
     workbook.save(buffer)
@@ -314,7 +412,10 @@ def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[T
         return [], [], [f"Не удалось прочитать Excel: {exc}"]
 
     sheet = workbook.active
+    return import_gtm_stages_from_sheet(sheet)
 
+
+def import_gtm_stages_from_sheet(sheet) -> tuple[list[GTMStage], list[Task], list[str]]:
     try:
         first_row = next(sheet.iter_rows(max_row=1))
     except StopIteration:
@@ -339,7 +440,7 @@ def import_gtm_stages_from_excel(content: bytes) -> tuple[list[GTMStage], list[T
     if combined_headers & set(header_map):
         return _import_gtm_single_sheet(sheet, header_map)
 
-    return _import_gtm_legacy(workbook, header_map)
+    return _import_gtm_legacy(sheet.parent, header_map)
 
 
 def _import_gtm_single_sheet(sheet, header_map: dict[str, int]):
@@ -750,8 +851,9 @@ def import_projects_from_excel(
     except StopIteration:
         return [], ["Файл Excel пуст"]
 
-    header_row = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
-    header_map = {title.lower(): idx for idx, title in enumerate(header_row) if title}
+    header_titles = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
+    header_map = {title.lower(): idx for idx, title in enumerate(header_titles) if title}
+    original_titles = {title.lower(): title for title in header_titles if title}
 
     required_columns = {"название проекта", "продуктовая группа", "бренд", "статус"}
     missing = required_columns - set(header_map)
@@ -788,7 +890,7 @@ def import_projects_from_excel(
         except ValueError:
             return None
 
-    custom_fields_columns = [key for key in header_map if key.startswith(CUSTOM_FIELD_PREFIX.lower())]
+    custom_fields_columns = [original_titles[key] for key in header_map if key.startswith(CUSTOM_FIELD_PREFIX.lower())]
 
     parsed: list[Project] = []
     errors: list[str] = []
@@ -843,8 +945,11 @@ def import_projects_from_excel(
             base_kwargs["current_gtm_stage_id"] = matched_stage.id if matched_stage else None
 
         for cf_col in custom_fields_columns:
+            raw_value = row[header_map[cf_col.lower()]]
+            if raw_value in (None, ""):
+                continue
             key = cf_col[len(CUSTOM_FIELD_PREFIX) :]
-            base_kwargs["custom_fields"][key] = row[header_map[cf_col]]
+            base_kwargs["custom_fields"][key] = raw_value
 
         short_id_val = row[col("короткий id")]
         if existing:
@@ -872,6 +977,226 @@ def import_projects_from_excel(
             )
 
     return parsed, errors
+
+
+def _parse_project_sheet(
+    sheet, groups: Iterable[ProductGroup], existing_project: Project
+) -> tuple[Project, list[str], str | None]:
+    try:
+        first_row = next(sheet.iter_rows(max_row=1))
+    except StopIteration:
+        return existing_project, ["Файл Excel пуст"], None
+
+    header_titles = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
+    header_map = {title.lower(): idx for idx, title in enumerate(header_titles) if title}
+    original_titles = {title.lower(): title for title in header_titles if title}
+
+    required_columns = {"название проекта", "продуктовая группа"}
+    missing = required_columns - set(header_map)
+    if missing:
+        return existing_project, [f"Отсутствуют обязательные столбцы: {', '.join(sorted(missing))}"], None
+
+    custom_fields_columns = [original_titles[key] for key in header_map if key.startswith(CUSTOM_FIELD_PREFIX.lower())]
+    group_by_name = {g.name.strip().lower(): g for g in groups}
+    errors: list[str] = []
+
+    def col(key: str, default: int | None = None) -> int | None:
+        if key in header_map:
+            return header_map[key]
+        return default
+
+    def parse_status(raw) -> ProjectStatus:
+        if raw is None:
+            return existing_project.status
+        normalized = str(raw).strip().lower()
+        return PROJECT_STATUS_ALIASES.get(normalized, ProjectStatus.__members__.get(normalized.upper(), existing_project.status))
+
+    def parse_priority(raw) -> PriorityLevel | None:
+        if raw is None or raw == "":
+            return existing_project.priority
+        normalized = str(raw).strip().lower()
+        return PRIORITY_ALIASES.get(normalized, PriorityLevel.__members__.get(normalized.upper(), existing_project.priority))
+
+    def normalize_date(value):
+        if isinstance(value, date):
+            return value
+        if value is None:
+            return None
+        try:
+            return date.fromisoformat(str(value))
+        except ValueError:
+            return None
+
+    data_rows = list(sheet.iter_rows(min_row=2, values_only=True))
+    if not data_rows:
+        return existing_project, ["Не найдены данные проекта"], None
+    row = data_rows[0]
+
+    name = row[col("название проекта")]
+    if not name:
+        errors.append("Не указано название проекта")
+
+    group_cell = row[col("продуктовая группа")]
+    group = group_by_name.get(str(group_cell).strip().lower()) if group_cell else None
+    if group is None:
+        errors.append(f"Продуктовая группа '{group_cell}' не найдена")
+
+    current_stage_title = row[col("текущий gtm-этап")] if col("текущий gtm-этап") is not None else None
+
+    base_kwargs = dict(
+        name=str(name).strip() if name else existing_project.name,
+        group_id=group.id if group else existing_project.group_id,
+        brand=str(row[col("бренд")]) if col("бренд") is not None and row[col("бренд")] is not None else existing_project.brand,
+        market=row[col("рынок/регион")]
+        if col("рынок/регион") is not None
+        else existing_project.market,
+        status=parse_status(row[col("статус")]) if col("статус") is not None else existing_project.status,
+        planned_launch=normalize_date(row[col("плановая дата запуска")])
+        if col("плановая дата запуска") is not None
+        else existing_project.planned_launch,
+        actual_launch=normalize_date(row[col("фактическая дата запуска")])
+        if col("фактическая дата запуска") is not None
+        else existing_project.actual_launch,
+        current_gtm_stage_id=existing_project.current_gtm_stage_id,
+        priority=parse_priority(row[col("приоритет")]) if col("приоритет") is not None else existing_project.priority,
+        moq=_coerce_value(row[col("moq")], FieldType.NUMBER)
+        if col("moq") is not None
+        else existing_project.moq,
+        fob_price=_coerce_value(row[col("fob")], FieldType.NUMBER)
+        if col("fob") is not None
+        else existing_project.fob_price,
+        promo_price=_coerce_value(row[col("promo")], FieldType.NUMBER)
+        if col("promo") is not None
+        else existing_project.promo_price,
+        rrp_price=_coerce_value(row[col("rrp")], FieldType.NUMBER)
+        if col("rrp") is not None
+        else existing_project.rrp_price,
+        short_description=row[col("краткое описание")]
+        if col("краткое описание") is not None
+        else existing_project.short_description,
+        full_description=row[col("полное описание")]
+        if col("полное описание") is not None
+        else existing_project.full_description,
+        custom_fields=dict(existing_project.custom_fields),
+    )
+
+    for cf_col in custom_fields_columns:
+        raw_value = row[header_map[cf_col.lower()]]
+        if raw_value in (None, ""):
+            continue
+        key = cf_col[len(CUSTOM_FIELD_PREFIX) :]
+        base_kwargs["custom_fields"][key] = raw_value
+
+    short_id_val = row[col("короткий id")]
+    updated = existing_project.model_copy(update=base_kwargs)
+    if short_id_val not in (None, ""):
+        try:
+            updated.short_id = int(short_id_val)
+        except (TypeError, ValueError):
+            errors.append("Некорректный Короткий ID")
+
+    return updated, errors, str(current_stage_title).strip() if current_stage_title else None
+
+
+def import_project_bundle_from_excel(
+    content: bytes, groups: Iterable[ProductGroup], existing_project: Project
+) -> tuple[Project, list[str]]:
+    try:
+        workbook = load_workbook(filename=BytesIO(content))
+    except Exception as exc:  # noqa: BLE001
+        return existing_project, [f"Не удалось прочитать Excel: {exc}"]
+
+    errors: list[str] = []
+
+    basics_sheet = workbook["Основные параметры"] if "Основные параметры" in workbook.sheetnames else workbook.active
+    project_core, core_errors, current_stage_title = _parse_project_sheet(basics_sheet, groups, existing_project)
+    errors.extend(core_errors)
+
+    gtm_sheet = workbook["GTM"] if "GTM" in workbook.sheetnames else None
+    stages, tasks, gtm_errors = import_gtm_stages_from_sheet(gtm_sheet) if gtm_sheet else ([], [], ["Лист GTM не найден"])
+    errors.extend(gtm_errors)
+
+    characteristics_sheet = (
+        workbook["Характеристики"] if "Характеристики" in workbook.sheetnames else None
+    )
+    if characteristics_sheet:
+        char_sections, char_errors, _ = import_characteristics_from_sheet(characteristics_sheet, project_core)
+        errors.extend(char_errors)
+    else:
+        char_sections, _ = project_core.characteristics, None
+        errors.append("Лист характеристик не найден")
+
+    if errors:
+        return project_core, errors
+
+    if current_stage_title:
+        matched_stage = next(
+            (s for s in stages if s.title and s.title.strip().lower() == current_stage_title.strip().lower()),
+            None,
+        )
+        project_core.current_gtm_stage_id = matched_stage.id if matched_stage else None
+
+    updated = project_core.model_copy(update={"gtm_stages": stages, "tasks": tasks, "characteristics": char_sections})
+    return updated, errors
+
+
+def export_all_characteristics(
+    projects: Iterable[Project],
+    groups: Iterable[ProductGroup],
+    project_filter: set[UUID] | None = None,
+) -> bytes:
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+
+    used_names: set[str] = set()
+    group_lookup = {g.id: g.name for g in groups}
+    exported_any = False
+
+    for project in projects:
+        if project_filter and project.id not in project_filter:
+            continue
+        sheet_name = _make_sheet_name(project.name or "Проект", used_names)
+        _write_characteristics_sheet(workbook, project, sheet_name)
+        sheet = workbook[sheet_name]
+        sheet.insert_rows(1)
+        sheet["A1"] = f"Проект: {project.name}"
+        sheet["B1"] = f"Группа: {group_lookup.get(project.group_id, '')}"
+        exported_any = True
+
+    if not exported_any:
+        sheet = workbook.create_sheet("Характеристики")
+        sheet.append(["Нет проектов для экспорта"])
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+def import_characteristics_bulk(
+    content: bytes, projects: Iterable[Project]
+) -> tuple[dict[UUID, list[CharacteristicSection]], list[str]]:
+    try:
+        workbook = load_workbook(filename=BytesIO(content))
+    except Exception as exc:  # noqa: BLE001
+        return {}, [f"Не удалось прочитать Excel: {exc}"]
+
+    project_index = {p.name.strip().lower(): p for p in projects}
+    updates: dict[UUID, list[CharacteristicSection]] = {}
+    errors: list[str] = []
+
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        project = project_index.get(sheet_name.strip().lower())
+        if project is None:
+            errors.append(f"Лист '{sheet_name}': проект не найден")
+            continue
+        sections, section_errors, _ = import_characteristics_from_sheet(sheet, project)
+        errors.extend([f"{sheet_name}: {err}" for err in section_errors])
+        if not section_errors:
+            updates[project.id] = sections
+
+    return updates, errors
 
 
 FIELD_TYPE_ALIASES = {
@@ -922,7 +1247,12 @@ def import_characteristics_from_excel(
         return [], [f"Не удалось прочитать Excel: {exc}"]
 
     sheet = workbook.active
+    return import_characteristics_from_sheet(sheet, project)
 
+
+def import_characteristics_from_sheet(
+    sheet, project: Project
+) -> tuple[list[CharacteristicSection], list[str], dict[str, int]]:
     try:
         first_row = next(sheet.iter_rows(max_row=1))
     except StopIteration:

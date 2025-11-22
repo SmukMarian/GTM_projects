@@ -10,6 +10,7 @@ import shutil
 import time
 import zipfile
 from datetime import date
+import re
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -25,12 +26,17 @@ from .exporters import (
     export_characteristics_to_excel,
     export_gtm_stages_to_excel,
     export_projects_to_excel,
+    export_project_bundle,
+    export_all_characteristics,
+    import_characteristics_bulk,
     import_gtm_stages_from_excel,
     import_projects_from_excel,
+    import_project_bundle_from_excel,
 )
 from .models import (
     BackupInfo,
     BackupRestoreRequest,
+    CharacteristicFlatRecord,
     CharacteristicField,
     CharacteristicSection,
     CharacteristicImportResponse,
@@ -367,6 +373,37 @@ async def import_projects(file: UploadFile = File(...), repo: LocalRepository = 
 
     projects = repo.import_projects(parsed)
     return projects
+
+
+@app.get("/api/projects/{project_id}/excel", response_class=StreamingResponse)
+def export_full_project(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> StreamingResponse:
+    project = repo.get_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    export_bytes = export_project_bundle(project, groups=repo.list_groups(include_archived=True))
+    safe_name = re.sub(r"[\\/*?:\[\]\"<>|]", "_", project.name or "project").strip() or "project"
+    headers = {"Content-Disposition": f"attachment; filename={safe_name}.xlsx"}
+    return StreamingResponse(
+        BytesIO(export_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@app.post("/api/projects/{project_id}/excel", response_model=Project)
+async def import_full_project(project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)) -> Project:
+    existing = repo.get_project(project_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    content = await file.read()
+    updated, errors = import_project_bundle_from_excel(content, repo.list_groups(include_archived=True), existing)
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+
+    saved = repo.replace_project(project_id, updated)
+    return saved
 
 
 @app.post("/api/projects", response_model=Project, status_code=201)
@@ -810,6 +847,51 @@ def import_characteristics(
         raise HTTPException(status_code=400, detail={"errors": errors})
     log_event(repo, project_id, "Импортированы характеристики (Excel)")
     return CharacteristicImportResponse(sections=sections, report=report)
+
+
+@app.get("/api/characteristics/overview", response_model=list[CharacteristicFlatRecord])
+def list_characteristics_overview(
+    group_id: UUID | None = None, search: str | None = None, repo: LocalRepository = Depends(get_repository)
+) -> list[CharacteristicFlatRecord]:
+    return repo.list_characteristics_overview(group_id=group_id, query=search)
+
+
+@app.get("/api/characteristics/export-all", response_class=StreamingResponse)
+def export_all_characteristics_excel(
+    group_id: UUID | None = None,
+    project_ids: list[UUID] | None = Query(default=None),
+    repo: LocalRepository = Depends(get_repository),
+) -> StreamingResponse:
+    projects = repo.list_projects(include_archived=True)
+    if group_id:
+        projects = [p for p in projects if p.group_id == group_id]
+    if project_ids:
+        project_filter = set(project_ids)
+    else:
+        project_filter = None
+    export_bytes = export_all_characteristics(
+        projects=projects,
+        groups=repo.list_groups(include_archived=True),
+        project_filter=project_filter,
+    )
+    headers = {"Content-Disposition": "attachment; filename=characteristics.xlsx"}
+    return StreamingResponse(
+        BytesIO(export_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@app.post("/api/characteristics/import-all", status_code=201)
+async def import_all_characteristics_excel(
+    file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
+) -> dict[str, int]:
+    content = await file.read()
+    updates, errors = import_characteristics_bulk(content, repo.list_projects(include_archived=True))
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+    repo.apply_characteristics_bulk(updates)
+    return {"updated": len(updates)}
 
 
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
