@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Характеристики — Projects Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script defer src="/theme.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        --bg: #f3f5f9;
+        --bg-alt: #eef1f6;
+        --surface: #ffffff;
+        --surface-muted: #f6f8fb;
+        --text: #121826;
+        --muted-text: #5f6b7a;
+        --border: #d7dee8;
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #2bb673;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --bg-alt: #0b1017;
+        --surface: #111827;
+        --surface-muted: #161f30;
+        --text: #e6edf3;
+        --muted-text: #9aa6b6;
+        --border: #1f2937;
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+        --accent: #10a37f;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        color: var(--text);
+      }
+
+      .app-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 14px 18px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+      }
+
+      nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      nav a:hover {
+        box-shadow: var(--shadow);
+      }
+
+      .theme-menu .theme-menu-dropdown {
+        display: none;
+      }
+
+      .theme-menu[open] .theme-menu-dropdown {
+        display: flex;
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 88px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      button,
+      .button-like {
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: var(--text);
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
+      .project-card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        background: var(--surface-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .muted {
+        color: var(--muted-text);
+        font-size: 0.9rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-weight: 700;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .chip {
+        display: inline-flex;
+        padding: 4px 10px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="topbar">
+        <a class="logo" href="/index.html" aria-label="Projects Tracker" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800">
+          <img src="/favicon.svg" alt="Projects Tracker" width="32" height="32" />
+          <div>Projects Tracker</div>
+        </a>
+        <nav aria-label="Главное меню">
+          <a href="/index.html">Дашборд</a>
+          <a href="/groups.html">Продуктовые группы</a>
+          <a href="/projects.html">Проекты</a>
+          <a href="/priority-tasks.html">Важные задачи</a>
+          <a href="/templates.html">Шаблоны</a>
+          <a href="/characteristics-board.html" aria-current="page">Характеристики</a>
+          <details class="theme-menu" style="display:inline-block; position:relative;">
+            <summary aria-label="Сменить тему" style="padding:6px; border:1px solid var(--border); border-radius:12px; background:var(--surface-muted); cursor:pointer;">🌗</summary>
+            <div class="theme-menu-dropdown" style="position:absolute; right:0; top:calc(100% + 6px); background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:6px; flex-direction:column; gap:4px;">
+              <button type="button" data-theme-select="light" style="border:none; background:transparent; padding:8px 10px; border-radius:10px; cursor:pointer;">☀️ Светлая</button>
+              <button type="button" data-theme-select="system" style="border:none; background:transparent; padding:8px 10px; border-radius:10px; cursor:pointer;">🖥️ Системная</button>
+              <button type="button" data-theme-select="dark" style="border:none; background:transparent; padding:8px 10px; border-radius:10px; cursor:pointer;">🌙 Тёмная</button>
+            </div>
+          </details>
+        </nav>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="card">
+        <div class="toolbar" style="justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap">
+          <div>
+            <p class="pill">Сводка характеристик</p>
+            <h1 style="margin: 6px 0 0">Все карточки проектов</h1>
+            <div class="muted">Экспорт и импорт по проектам на отдельных вкладках Excel</div>
+          </div>
+          <div class="toolbar">
+            <select id="groupFilter" class="button-like"></select>
+            <input id="searchInput" class="button-like" placeholder="Поиск по секциям и значениям" />
+            <button id="exportAll" class="primary">📥 Экспорт по фильтру</button>
+            <button id="importAll">📤 Импорт по вкладкам</button>
+            <input type="file" id="importAllInput" accept=".xlsx,.xls" style="display:none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="projectsGrid"></div>
+    </div>
+
+    <script>
+      const groupFilter = document.getElementById("groupFilter");
+      const searchInput = document.getElementById("searchInput");
+      const projectsGrid = document.getElementById("projectsGrid");
+      const exportAllBtn = document.getElementById("exportAll");
+      const importAllBtn = document.getElementById("importAll");
+      const importAllInput = document.getElementById("importAllInput");
+
+      let groups = [];
+      let projects = [];
+      let overview = [];
+
+      importAllBtn.addEventListener("click", () => importAllInput.click());
+      importAllInput.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/characteristics/import-all`, { method: "POST", body: formData });
+        if (res.ok) {
+          await loadOverview();
+          renderProjects();
+          alert("Импорт завершён");
+        } else {
+          const detail = await res.json().catch(() => null);
+          alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+        }
+        event.target.value = "";
+      });
+
+      exportAllBtn.addEventListener("click", async () => {
+        const filteredProjects = getFilteredProjects();
+        const params = new URLSearchParams();
+        const groupId = groupFilter.value;
+        if (groupId) params.set("group_id", groupId);
+        filteredProjects.forEach((p) => params.append("project_ids", p.id));
+        const res = await fetch(`/api/characteristics/export-all?${params.toString()}`);
+        if (!res.ok) {
+          alert("Не удалось выгрузить характеристики");
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "characteristics.xlsx";
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+
+      searchInput.addEventListener("input", async () => {
+        await loadOverview();
+        renderProjects();
+      });
+      groupFilter.addEventListener("change", async () => {
+        await loadOverview();
+        renderProjects();
+      });
+
+      init();
+
+      async function init() {
+        await loadGroups();
+        await loadProjects();
+        await loadOverview();
+        renderFilters();
+        renderProjects();
+      }
+
+      async function loadGroups() {
+        const res = await fetch(`/api/groups?include_archived=true`);
+        groups = res.ok ? await res.json() : [];
+      }
+
+      async function loadProjects() {
+        const res = await fetch(`/api/projects?include_archived=true`);
+        projects = res.ok ? await res.json() : [];
+      }
+
+      async function loadOverview() {
+        const params = new URLSearchParams();
+        if (groupFilter.value) params.set("group_id", groupFilter.value);
+        if (searchInput.value.trim()) params.set("search", searchInput.value.trim());
+        const res = await fetch(`/api/characteristics/overview?${params.toString()}`);
+        overview = res.ok ? await res.json() : [];
+      }
+
+      function renderFilters() {
+        groupFilter.innerHTML = "";
+        const anyOption = document.createElement("option");
+        anyOption.value = "";
+        anyOption.textContent = "Все группы";
+        groupFilter.appendChild(anyOption);
+        groups.forEach((group) => {
+          const opt = document.createElement("option");
+          opt.value = group.id;
+          opt.textContent = group.name;
+          groupFilter.appendChild(opt);
+        });
+      }
+
+      function getFilteredProjects() {
+        const groupId = groupFilter.value;
+        const query = searchInput.value.trim().toLowerCase();
+        return projects.filter((project) => {
+          if (groupId && project.group_id !== groupId) return false;
+          if (!query) return true;
+          const groupName = groups.find((g) => g.id === project.group_id)?.name || "";
+          return `${project.name} ${groupName}`.toLowerCase().includes(query);
+        });
+      }
+
+      function renderProjects() {
+        const filteredProjects = getFilteredProjects();
+        const overviewByProject = overview.reduce((acc, item) => {
+          acc[item.project_id] = acc[item.project_id] || [];
+          acc[item.project_id].push(item);
+          return acc;
+        }, {});
+
+        projectsGrid.innerHTML = "";
+        if (!filteredProjects.length) {
+          projectsGrid.innerHTML = '<div class="muted">Нет проектов для отображения</div>';
+          return;
+        }
+
+        filteredProjects.forEach((project) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "project-card";
+
+          const header = document.createElement("div");
+          header.style.display = "flex";
+          header.style.justifyContent = "space-between";
+          header.style.gap = "8px";
+          header.style.alignItems = "flex-start";
+
+          const left = document.createElement("div");
+          const title = document.createElement("h3");
+          title.style.margin = "4px 0";
+          title.textContent = project.name;
+          const groupName = groups.find((g) => g.id === project.group_id)?.name || "—";
+          const meta = document.createElement("div");
+          meta.className = "muted";
+          meta.textContent = `${groupName} • ${project.brand || "—"}`;
+          left.append(title, meta);
+
+          const actions = document.createElement("div");
+          actions.className = "toolbar";
+          const viewBtn = document.createElement("a");
+          viewBtn.href = `/project.html?id=${project.id}`;
+          viewBtn.className = "button-like";
+          viewBtn.textContent = "Открыть";
+
+          const exportBtn = document.createElement("button");
+          exportBtn.textContent = "📥 Экспорт";
+          exportBtn.addEventListener("click", () => downloadFile(`/api/projects/${project.id}/characteristics/export`, `${project.name}_chars.xlsx`));
+
+          const importBtn = document.createElement("button");
+          importBtn.textContent = "📤 Импорт";
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = ".xlsx,.xls";
+          input.style.display = "none";
+          importBtn.addEventListener("click", () => input.click());
+          input.addEventListener("change", async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await fetch(`/api/projects/${project.id}/characteristics/import`, { method: "POST", body: formData });
+            if (res.ok) {
+              await loadOverview();
+              renderProjects();
+              alert("Импортирован набор характеристик");
+            } else {
+              const detail = await res.json().catch(() => null);
+              alert(detail?.detail?.errors?.join("\n") || "Ошибка импорта");
+            }
+            event.target.value = "";
+          });
+
+          actions.append(viewBtn, exportBtn, importBtn, input);
+          header.append(left, actions);
+
+          const list = document.createElement("div");
+          list.className = "list";
+          const records = overviewByProject[project.id]?.slice(0, 5) || [];
+          if (!records.length) {
+            const empty = document.createElement("div");
+            empty.className = "muted";
+            empty.textContent = "Нет заполненных характеристик";
+            list.appendChild(empty);
+          } else {
+            records.forEach((record) => {
+              const row = document.createElement("div");
+              row.innerHTML = `<strong>${record.section}</strong> — ${record.label_ru || record.label_en}: <span class="muted">${record.value_ru ?? record.value_en ?? "—"}</span>`;
+              list.appendChild(row);
+            });
+          }
+
+          wrapper.append(header, list);
+          projectsGrid.appendChild(wrapper);
+        });
+      }
+
+      function downloadFile(url, filename) {
+        fetch(url).then(async (res) => {
+          if (!res.ok) {
+            alert("Не удалось скачать файл");
+            return;
+          }
+          const blob = await res.blob();
+          const objectUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = objectUrl;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(objectUrl);
+        });
+      }
+    </script>
+  </body>
+</html>
