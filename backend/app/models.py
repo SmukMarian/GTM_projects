@@ -23,9 +23,17 @@ class GroupStatus(str, Enum):
 
 
 class ProjectStatus(str, Enum):
-    ACTIVE = "active"
+    IN_PROGRESS = "in_progress"
+    LAUNCHED = "launched"
     CLOSED = "closed"
+    EOL = "eol"
     ARCHIVED = "archived"
+
+    @classmethod
+    def _missing_(cls, value):  # type: ignore[override]
+        if isinstance(value, str) and value.strip().lower() == "active":
+            return cls.IN_PROGRESS
+        return None
 
 
 class StageStatus(str, Enum):
@@ -250,6 +258,7 @@ class ImageAttachment(BaseModel):
     order: int = 0
     is_cover: bool = False
     path: Path
+    preview_path: Path | None = None
 
 
 class HistoryEvent(BaseModel):
@@ -285,7 +294,7 @@ class Project(Timestamped):
     fob_price: float | None = None
     short_description: str | None = None
     full_description: str | None = None
-    status: ProjectStatus = ProjectStatus.ACTIVE
+    status: ProjectStatus = ProjectStatus.IN_PROGRESS
     current_gtm_stage_id: UUID | None = None
     planned_launch: date | None = None
     actual_launch: date | None = None
@@ -325,8 +334,10 @@ class ProjectExport(BaseModel):
 class StatusSummary(BaseModel):
     """Счётчики проектов по статусам для дашборда."""
 
-    active: int = 0
+    in_progress: int = 0
+    launched: int = 0
     closed: int = 0
+    eol: int = 0
     archived: int = 0
 
 
@@ -369,8 +380,10 @@ class DashboardKPI(BaseModel):
     """Ключевые показатели для дашборда."""
 
     total_projects: int = 0
-    active: int = 0
+    in_progress: int = 0
+    launched: int = 0
     closed: int = 0
+    eol: int = 0
     archived: int = 0
     completion_rate: float = 0.0
     overdue_projects: int = 0

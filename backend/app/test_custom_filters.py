@@ -45,7 +45,7 @@ def make_repo(tmp_path: Path) -> LocalRepository:
                 group_id=group_a.id,
                 brand="Alpha",
                 market="RU",
-                status=ProjectStatus.ACTIVE,
+                status=ProjectStatus.IN_PROGRESS,
                 custom_fields={"color": "red", "size": 10, "approved": True},
             ),
             Project(
@@ -63,7 +63,7 @@ def make_repo(tmp_path: Path) -> LocalRepository:
                 group_id=group_c.id,
                 brand="Alpha",
                 market="RU",
-                status=ProjectStatus.ACTIVE,
+                status=ProjectStatus.IN_PROGRESS,
                 planned_launch=date(2024, 12, 31),
                 custom_fields={"color": "red", "size": 15},
             ),
