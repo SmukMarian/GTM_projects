@@ -10,11 +10,13 @@ import shutil
 import time
 import zipfile
 from datetime import date
+import re
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from PIL import Image
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,11 +26,17 @@ from .exporters import (
     export_characteristics_to_excel,
     export_gtm_stages_to_excel,
     export_projects_to_excel,
+    export_project_bundle,
+    export_all_characteristics,
+    import_characteristics_bulk,
     import_gtm_stages_from_excel,
+    import_projects_from_excel,
+    import_project_bundle_from_excel,
 )
 from .models import (
     BackupInfo,
     BackupRestoreRequest,
+    CharacteristicFlatRecord,
     CharacteristicField,
     CharacteristicSection,
     CharacteristicImportResponse,
@@ -125,6 +133,36 @@ def save_uploaded_file(upload: UploadFile, base_dir: Path) -> Path:
     with target.open("wb") as buffer:
         shutil.copyfileobj(upload.file, buffer)
     return target.relative_to(settings.data_dir)
+
+
+def save_image_with_preview(upload: UploadFile, base_dir: Path) -> tuple[Path, Path | None]:
+    """Сохранить оригинал и сжатый превью-файл для изображений."""
+
+    base_dir.mkdir(parents=True, exist_ok=True)
+    preview_dir = base_dir / "previews"
+    preview_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = upload.filename or "image"
+    target = base_dir / f"{uuid4().hex}_{filename}"
+
+    try:
+        upload.file.seek(0)
+    except Exception:
+        pass
+    data = upload.file.read()
+    target.write_bytes(data)
+
+    preview_path: Path | None = None
+    try:
+        image = Image.open(BytesIO(data))
+        image.thumbnail((1280, 1280))
+        preview_target = preview_dir / f"preview_{target.name}"
+        image.save(preview_target, format=image.format or "JPEG", optimize=True, quality=80)
+        preview_path = preview_target
+    except Exception:
+        preview_path = None
+
+    return target.relative_to(settings.data_dir), preview_path.relative_to(settings.data_dir) if preview_path else None
 
 
 def log_event(repo: LocalRepository, project_id: UUID, summary: str, details: str | None = None) -> None:
@@ -320,6 +358,52 @@ def export_projects(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers=headers,
     )
+
+
+@app.post("/api/import/projects", response_model=list[Project], status_code=201)
+async def import_projects(file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)) -> list[Project]:
+    content = await file.read()
+    parsed, errors = import_projects_from_excel(
+        content,
+        groups=repo.list_groups(include_archived=True),
+        existing_projects=repo.list_projects(include_archived=True),
+    )
+    if errors:
+        raise HTTPException(status_code=400, detail={"message": "Ошибка импорта проектов", "errors": errors})
+
+    projects = repo.import_projects(parsed)
+    return projects
+
+
+@app.get("/api/projects/{project_id}/excel", response_class=StreamingResponse)
+def export_full_project(project_id: UUID, repo: LocalRepository = Depends(get_repository)) -> StreamingResponse:
+    project = repo.get_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    export_bytes = export_project_bundle(project, groups=repo.list_groups(include_archived=True))
+    safe_name = re.sub(r"[\\/*?:\[\]\"<>|]", "_", project.name or "project").strip() or "project"
+    headers = {"Content-Disposition": f"attachment; filename={safe_name}.xlsx"}
+    return StreamingResponse(
+        BytesIO(export_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@app.post("/api/projects/{project_id}/excel", response_model=Project)
+async def import_full_project(project_id: UUID, file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)) -> Project:
+    existing = repo.get_project(project_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    content = await file.read()
+    updated, errors = import_project_bundle_from_excel(content, repo.list_groups(include_archived=True), existing)
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+
+    saved = repo.replace_project(project_id, updated)
+    return saved
 
 
 @app.post("/api/projects", response_model=Project, status_code=201)
@@ -765,6 +849,51 @@ def import_characteristics(
     return CharacteristicImportResponse(sections=sections, report=report)
 
 
+@app.get("/api/characteristics/overview", response_model=list[CharacteristicFlatRecord])
+def list_characteristics_overview(
+    group_id: UUID | None = None, search: str | None = None, repo: LocalRepository = Depends(get_repository)
+) -> list[CharacteristicFlatRecord]:
+    return repo.list_characteristics_overview(group_id=group_id, query=search)
+
+
+@app.get("/api/characteristics/export-all", response_class=StreamingResponse)
+def export_all_characteristics_excel(
+    group_id: UUID | None = None,
+    project_ids: list[UUID] | None = Query(default=None),
+    repo: LocalRepository = Depends(get_repository),
+) -> StreamingResponse:
+    projects = repo.list_projects(include_archived=True)
+    if group_id:
+        projects = [p for p in projects if p.group_id == group_id]
+    if project_ids:
+        project_filter = set(project_ids)
+    else:
+        project_filter = None
+    export_bytes = export_all_characteristics(
+        projects=projects,
+        groups=repo.list_groups(include_archived=True),
+        project_filter=project_filter,
+    )
+    headers = {"Content-Disposition": "attachment; filename=characteristics.xlsx"}
+    return StreamingResponse(
+        BytesIO(export_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@app.post("/api/characteristics/import-all", status_code=201)
+async def import_all_characteristics_excel(
+    file: UploadFile = File(...), repo: LocalRepository = Depends(get_repository)
+) -> dict[str, int]:
+    content = await file.read()
+    updates, errors = import_characteristics_bulk(content, repo.list_projects(include_archived=True))
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+    repo.apply_characteristics_bulk(updates)
+    return {"updated": len(updates)}
+
+
 @app.get("/api/projects/{project_id}/tasks", response_model=list[Task])
 def list_tasks(
     project_id: UUID,
@@ -1031,7 +1160,7 @@ def upload_image(
     if repo.get_project(project_id) is None:
         raise HTTPException(status_code=404, detail="Проект не найден")
 
-    stored_path = save_uploaded_file(file, settings.images_dir / str(project_id))
+    stored_path, preview_path = save_image_with_preview(file, settings.images_dir / str(project_id))
     order = len(repo.list_images(project_id))
     image = ImageAttachment(
         filename=file.filename or "image",
@@ -1039,6 +1168,7 @@ def upload_image(
         is_cover=is_cover,
         order=order,
         path=stored_path,
+        preview_path=preview_path,
     )
     created = repo.add_image(project_id, image)
     if created.is_cover:
@@ -1085,10 +1215,13 @@ def delete_image(project_id: UUID, image_id: UUID, repo: LocalRepository = Depen
         raise HTTPException(status_code=404, detail="Изображение не найдено или проект не существует")
 
     stored_path = resolve_storage_path(image.path)
+    preview_path = resolve_storage_path(image.preview_path) if image.preview_path else None
     try:
         repo.delete_image(project_id, image_id)
         if stored_path.exists():
             stored_path.unlink()
+        if preview_path and preview_path.exists():
+            preview_path.unlink()
         log_event(repo, project_id, "Удалено изображение", image.filename)
     except KeyError:
         raise HTTPException(status_code=404, detail="Изображение не найдено или проект не существует")
@@ -1144,6 +1277,23 @@ def download_image(project_id: UUID, image_id: UUID, repo: LocalRepository = Dep
         raise HTTPException(status_code=404, detail="Физический файл не найден")
 
     return FileResponse(stored_path, filename=image.filename)
+
+
+@app.get("/api/projects/{project_id}/images/{image_id}/preview")
+def download_image_preview(project_id: UUID, image_id: UUID, repo: LocalRepository = Depends(get_repository)) -> FileResponse:
+    try:
+        image = next((item for item in repo.list_images(project_id) if item.id == image_id), None)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+
+    if image is None:
+        raise HTTPException(status_code=404, detail="Изображение не найдено")
+
+    preview_path = resolve_storage_path(image.preview_path) if image.preview_path else resolve_storage_path(image.path)
+    if not preview_path.exists():
+        raise HTTPException(status_code=404, detail="Превью не найдено")
+
+    return FileResponse(preview_path, filename=image.filename)
 
 
 @app.get("/api/projects/{project_id}/comments", response_model=list[Comment])

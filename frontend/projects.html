@@ -743,6 +743,7 @@
           <a href="/projects.html">Проекты</a>
           <a href="/priority-tasks.html">Важные задачи</a>
           <a href="/templates.html">Шаблоны</a>
+          <a href="/characteristics-board.html">Характеристики</a>
           <details class="theme-menu">
             <summary aria-label="Сменить тему">
               <span aria-hidden="true">🌗</span>
@@ -757,6 +758,7 @@
         </nav>
       </div>
     </div>
+    <input type="file" id="importProjectsInput" accept=".xlsx" hidden />
     <div class="page">
       <div class="flex space-between" style="align-items: baseline">
         <div>
@@ -792,8 +794,10 @@
         <div class="form-field status-field">
           <span>Статусы</span>
           <div class="checkbox-list status-row">
-            <label class="checkbox"><input type="checkbox" value="active" class="status-filter" /> <span>Активные</span></label>
-            <label class="checkbox"><input type="checkbox" value="closed" class="status-filter" /> <span>Закрытые</span></label>
+            <label class="checkbox"><input type="checkbox" value="in_progress" class="status-filter" /> <span>В работе</span></label>
+            <label class="checkbox"><input type="checkbox" value="launched" class="status-filter" /> <span>Запущен</span></label>
+            <label class="checkbox"><input type="checkbox" value="closed" class="status-filter" /> <span>Закрытый</span></label>
+            <label class="checkbox"><input type="checkbox" value="eol" class="status-filter" /> <span>EOL</span></label>
             <label class="checkbox"><input type="checkbox" value="archived" class="status-filter" /> <span>Архив</span></label>
             <label class="checkbox"><input type="checkbox" id="showArchived" /> <span>Показывать архив</span></label>
           </div>
@@ -814,6 +818,7 @@
     <div class="toolbar" style="margin-top: 0">
       <button id="toggleView">Показать таблицей</button>
       <button id="newProject" class="primary">+ Новый проект</button>
+      <button id="importProjects">Импортировать список</button>
       <button id="exportProjects">Экспортировать список</button>
     </div>
 
@@ -891,9 +896,11 @@
           <label>
             Статус
             <select name="status">
-              <option value="active">Активный</option>
-              <option value="closed">Закрыт</option>
-              <option value="archived">Архивирован</option>
+              <option value="in_progress">В работе</option>
+              <option value="launched">Запущен</option>
+              <option value="closed">Закрытый</option>
+              <option value="eol">EOL</option>
+              <option value="archived">Архивный</option>
             </select>
           </label>
           <div class="row">
@@ -953,6 +960,8 @@
       const resetFilters = document.getElementById("resetFilters");
       const toggleViewBtn = document.getElementById("toggleView");
       const newProjectBtn = document.getElementById("newProject");
+      const importProjectsBtn = document.getElementById("importProjects");
+      const importProjectsInput = document.getElementById("importProjectsInput");
       const exportProjectsBtn = document.getElementById("exportProjects");
       const summary = document.getElementById("summary");
       const cardView = document.getElementById("cardView");
@@ -984,9 +993,11 @@
       const groupSelect = document.getElementById("groupSelect");
 
       const statusLabels = {
-        active: "Активный",
-        closed: "Закрыт",
-        archived: "Архивирован",
+        in_progress: "В работе",
+        launched: "Запущен",
+        closed: "Закрытый",
+        eol: "EOL",
+        archived: "Архивный",
       };
 
       const priorityLabels = {
@@ -1266,14 +1277,18 @@
       }
 
       function renderSummary() {
-        const active = projects.filter((p) => p.status === "active").length;
+        const inProgress = projects.filter((p) => p.status === "in_progress").length;
+        const launched = projects.filter((p) => p.status === "launched").length;
         const closed = projects.filter((p) => p.status === "closed").length;
+        const eol = projects.filter((p) => p.status === "eol").length;
         const archived = projects.filter((p) => p.status === "archived").length;
         summary.innerHTML = `
           <div class="flex" style="gap: 12px; align-items: center">
             <strong>Всего проектов:</strong> ${projects.length}
-            <span class="chip">Активные: ${active}</span>
-            <span class="chip">Закрытые: ${closed}</span>
+            <span class="chip">В работе: ${inProgress}</span>
+            <span class="chip">Запущен: ${launched}</span>
+            <span class="chip">Закрытый: ${closed}</span>
+            <span class="chip">EOL: ${eol}</span>
             <span class="chip">Архив: ${archived}</span>
           </div>
         `;
@@ -1523,7 +1538,7 @@
         projectForm.dataset.id = "";
         projectForm.reset();
         projectForm.group_id.value = groupFilter.value || "";
-        projectForm.status.value = "active";
+        projectForm.status.value = "in_progress";
         projectForm.moq.value = "";
         projectForm.promo_price.value = "";
         projectForm.rrp_price.value = "";
@@ -1717,7 +1732,7 @@
             : { label: "Архивировать", fn: () => archiveProject(project.id) },
           project.status !== "closed"
             ? { label: "Закрыть проект", fn: () => changeStatus(project.id, "closed") }
-            : { label: "Сделать активным", fn: () => changeStatus(project.id, "active") },
+            : { label: "Сделать в работе", fn: () => changeStatus(project.id, "in_progress") },
           { label: "Удалить", fn: () => deleteProject(project.id) },
         ];
         actions.forEach((action) => {
@@ -1786,6 +1801,27 @@
         window.location.href = `/api/export/projects?${params.toString()}`;
       }
 
+      async function importProjectsFromExcel(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/api/import/projects", { method: "POST", body: form });
+        importProjectsInput.value = "";
+
+        if (!res.ok) {
+            const payload = await res.json().catch(() => ({}));
+            const message = payload?.detail?.message || "Не удалось импортировать проекты";
+            const details = Array.isArray(payload?.detail?.errors) ? payload.detail.errors.join("\n") : "";
+            alert(`${message}${details ? "\n" + details : ""}`);
+            return;
+        }
+
+        await loadProjects();
+        alert("Импорт завершён");
+      }
+
       applyFilters.addEventListener("click", () => {
         persistFilters();
         loadProjects();
@@ -1814,6 +1850,8 @@
       });
       toggleViewBtn.addEventListener("click", toggleView);
       newProjectBtn.addEventListener("click", openCreate);
+      importProjectsBtn.addEventListener("click", () => importProjectsInput.click());
+      importProjectsInput.addEventListener("change", importProjectsFromExcel);
       exportProjectsBtn.addEventListener("click", exportProjects);
       projectForm.addEventListener("submit", submitForm);
       addCustomFieldBtn.addEventListener("click", () => addCustomFieldRow());

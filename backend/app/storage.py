@@ -20,38 +20,39 @@ from pydantic import BaseModel, ConfigDict, Field
 from .exporters import import_characteristics_from_excel as parse_characteristics_from_excel
 from .models import (
     BackupInfo,
+    BrandMetric,
     CharacteristicField,
+    CharacteristicFlatRecord,
     CharacteristicSection,
     CharacteristicTemplate,
     Comment,
-    BrandMetric,
     CustomFieldOption,
     CustomFieldFilterMeta,
     CustomFieldFilterRequest,
-    DashboardPayload,
     DashboardKPI,
+    DashboardPayload,
     FileAttachment,
-    GTMTemplate,
-    GTMStage,
-    GroupStatus,
     GTMDistribution,
+    GTMStage,
+    GTMTemplate,
+    GroupDashboardCard,
+    GroupStatus,
     HistoryEvent,
     ImageAttachment,
     ProductGroup,
     Project,
     ProjectStatus,
     RecentChange,
-    GroupDashboardCard,
     RiskProject,
     SpotlightTask,
+    StageStatus,
     StatusSummary,
-    TaskSpotlightSummary,
-    UpcomingItem,
     Subtask,
     Task,
+    TaskSpotlightSummary,
     TaskStatus,
     TaskUrgency,
-    StageStatus,
+    UpcomingItem,
 )
 
 
@@ -180,7 +181,7 @@ def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) ->
     if flt.type == "number":
         target = _normalize_number(fields.get(flt.field_id))
         if target is None:
-            return False
+            return flt.value_from is None and flt.value_to is None
         if flt.value_from is not None and target < flt.value_from:
             return False
         if flt.value_to is not None and target > flt.value_to:
@@ -202,7 +203,7 @@ def _matches_filter(fields: dict[str, object], flt: CustomFieldFilterRequest) ->
     if flt.type == "date":
         target = _normalize_date(fields.get(flt.field_id))
         if target is None:
-            return False
+            return flt.date_from is None and flt.date_to is None
         if flt.date_from and target < flt.date_from:
             return False
         if flt.date_to and target > flt.date_to:
@@ -331,7 +332,7 @@ class LocalRepository:
     ) -> list[Project]:
         projects: Iterable[Project] = self.store.projects
         if not include_archived:
-            projects = [p for p in projects if p.status.value != "archived"]
+            projects = [p for p in projects if p.status != ProjectStatus.ARCHIVED]
         if group_id:
             projects = [p for p in projects if p.group_id == group_id]
         if statuses:
@@ -395,6 +396,37 @@ class LocalRepository:
                 self.store.projects.pop(idx)
                 self.save()
                 return
+        raise KeyError(f"Project {project_id} not found")
+
+    def import_projects(self, projects: list[Project]) -> list[Project]:
+        """Импортировать или обновить список проектов из Excel."""
+
+        existing_map = {p.id: idx for idx, p in enumerate(self.store.projects)}
+        updated_projects = list(self.store.projects)
+
+        for project in projects:
+            if project.id in existing_map:
+                idx = existing_map[project.id]
+                updated_projects[idx] = project
+            else:
+                if project.short_id is None:
+                    project.short_id = self.store.next_project_short_id
+                    self.store.next_project_short_id += 1
+                updated_projects.append(project)
+
+        self.store.projects = updated_projects
+        self._ensure_project_short_ids()
+        self.save()
+        return updated_projects
+
+    def replace_project(self, project_id: UUID, updated: Project) -> Project:
+        for idx, project in enumerate(self.store.projects):
+            if project.id == project_id:
+                if updated.short_id is None:
+                    updated = updated.model_copy(update={"short_id": project.short_id})
+                self.store.projects[idx] = updated.model_copy(update={"id": project_id})
+                self.save()
+                return updated
         raise KeyError(f"Project {project_id} not found")
 
     def _get_project_with_index(self, project_id: UUID) -> tuple[int, Project]:
@@ -870,6 +902,58 @@ class LocalRepository:
         self.save()
         return sections, [], report
 
+    def list_characteristics_overview(
+        self, *, group_id: UUID | None = None, query: str | None = None
+    ) -> list[CharacteristicFlatRecord]:
+        records: list[CharacteristicFlatRecord] = []
+        group_lookup = {g.id: g.name for g in self.store.product_groups}
+        normalized_query = query.strip().lower() if query else None
+
+        for project in self.store.projects:
+            if group_id and project.group_id != group_id:
+                continue
+            group_name = group_lookup.get(project.group_id)
+            for section in project.characteristics:
+                for field in section.fields:
+                    haystack = " ".join(
+                        [
+                            section.title or "",
+                            field.label_ru or "",
+                            field.label_en or "",
+                            str(field.value_ru or ""),
+                            str(field.value_en or ""),
+                            project.name or "",
+                            group_name or "",
+                        ]
+                    ).lower()
+                    if normalized_query and normalized_query not in haystack:
+                        continue
+                    records.append(
+                        CharacteristicFlatRecord(
+                            project_id=project.id,
+                            project_name=project.name,
+                            group_name=group_name,
+                            section=section.title,
+                            label_ru=field.label_ru,
+                            label_en=field.label_en,
+                            value_ru=field.value_ru,
+                            value_en=field.value_en,
+                            field_type=field.field_type,
+                        )
+                    )
+
+        return records
+
+    def apply_characteristics_bulk(self, updates: dict[UUID, list[CharacteristicSection]]) -> None:
+        if not updates:
+            return
+        for idx, project in enumerate(self.store.projects):
+            if project.id not in updates:
+                continue
+            project.characteristics = updates[project.id]
+            self.store.projects[idx] = project
+        self.save()
+
     # --- Files ---
     def list_files(self, project_id: UUID) -> list[FileAttachment]:
         _, project = self._get_project_with_index(project_id)
@@ -1145,10 +1229,14 @@ class LocalRepository:
 
         status_summary = StatusSummary()
         for project in filtered_projects:
-            if project.status == ProjectStatus.ACTIVE:
-                status_summary.active += 1
+            if project.status == ProjectStatus.IN_PROGRESS:
+                status_summary.in_progress += 1
+            elif project.status == ProjectStatus.LAUNCHED:
+                status_summary.launched += 1
             elif project.status == ProjectStatus.CLOSED:
                 status_summary.closed += 1
+            elif project.status == ProjectStatus.EOL:
+                status_summary.eol += 1
             elif project.status == ProjectStatus.ARCHIVED:
                 status_summary.archived += 1
 
@@ -1284,8 +1372,11 @@ class LocalRepository:
         active_groups = len(groups)
         risky_groups = len([g for g in group_cards if g.risk])
         completion_rate = 0.0
-        if status_summary.active + status_summary.closed:
-            completion_rate = status_summary.closed / (status_summary.active + status_summary.closed)
+        in_work_total = (
+            status_summary.in_progress + status_summary.launched + status_summary.eol + status_summary.closed
+        )
+        if in_work_total:
+            completion_rate = (status_summary.closed + status_summary.eol) / in_work_total
         overdue_rate = 0.0
         if total_projects:
             overdue_rate = overdue_projects / total_projects
@@ -1295,8 +1386,10 @@ class LocalRepository:
             groups=group_cards,
             kpis=DashboardKPI(
                 total_projects=total_projects,
-                active=status_summary.active,
+                in_progress=status_summary.in_progress,
+                launched=status_summary.launched,
                 closed=status_summary.closed,
+                eol=status_summary.eol,
                 archived=status_summary.archived,
                 completion_rate=round(completion_rate, 3),
                 overdue_projects=overdue_projects,
