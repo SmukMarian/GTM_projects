@@ -423,6 +423,14 @@ def import_gtm_stages_from_sheet(sheet) -> tuple[list[GTMStage], list[Task], lis
     header_row = [str(cell.value).strip() if cell.value is not None else "" for cell in first_row]
     header_map = {title.lower(): idx for idx, title in enumerate(header_row) if title}
 
+    def normalize(value: str | None) -> str:
+        return value.strip().lower() if value else ""
+
+    def col(key: str, default: int | None = None) -> int | None:
+        if key in header_map:
+            return header_map[key]
+        return default
+
     required_columns = {"название этапа"}
     missing = required_columns - set(header_map)
     if missing:
