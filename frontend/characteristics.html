@@ -179,6 +179,67 @@
         box-shadow: var(--shadow);
       }
 
+      .nav-dropdown {
+        position: relative;
+      }
+
+      .nav-dropdown summary {
+        list-style: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .nav-dropdown summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .nav-dropdown[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .nav-dropdown-menu {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 8px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 8px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 200px;
+        z-index: 940;
+      }
+
+      .nav-dropdown[open] .nav-dropdown-menu {
+        display: flex;
+      }
+
+      .nav-dropdown-menu a {
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .nav-dropdown-menu a:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
       .sr-only {
         position: absolute;
         width: 1px;
@@ -618,7 +679,13 @@
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
           <a href="/priority-tasks.html">Важные задачи</a>
-          <a href="/templates.html">Шаблоны</a>
+          <details class="nav-dropdown">
+            <summary>Инструменты</summary>
+            <div class="nav-dropdown-menu" role="menu" aria-label="Инструменты">
+              <a href="/templates.html" role="menuitem">Шаблоны</a>
+              <a href="/characteristics-board.html" role="menuitem">Характеристики</a>
+            </div>
+          </details>
           <details class="theme-menu">
             <summary aria-label="Сменить тему">
               <span class="sr-only">Сменить тему</span>

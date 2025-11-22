@@ -131,6 +131,67 @@
 
       nav a:hover { box-shadow: var(--shadow); }
 
+      .nav-dropdown {
+        position: relative;
+      }
+
+      .nav-dropdown summary {
+        list-style: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .nav-dropdown summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .nav-dropdown[open] summary {
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .nav-dropdown-menu {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 8px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 8px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 200px;
+        z-index: 940;
+      }
+
+      .nav-dropdown[open] .nav-dropdown-menu {
+        display: flex;
+      }
+
+      .nav-dropdown-menu a {
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .nav-dropdown-menu a:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
       header {
         display: flex;
         align-items: flex-start;
@@ -634,7 +695,13 @@
           <a href="/groups.html">Продуктовые группы</a>
           <a href="/projects.html">Проекты</a>
           <a href="/priority-tasks.html">Важные задачи</a>
-          <a href="/templates.html">Шаблоны</a>
+          <details class="nav-dropdown">
+            <summary>Инструменты</summary>
+            <div class="nav-dropdown-menu" role="menu" aria-label="Инструменты">
+              <a href="/templates.html" role="menuitem">Шаблоны</a>
+              <a href="/characteristics-board.html" role="menuitem">Характеристики</a>
+            </div>
+          </details>
           <details class="theme-menu">
             <summary aria-label="Сменить тему">
               <span aria-hidden="true">🌗</span>
@@ -736,15 +803,6 @@
         <div id="groupGrid" class="grid"></div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Последние изменения</h2>
-        </div>
-        <div id="recentChanges" class="recent-grid"></div>
-        <div class="card-footer" id="recentPager" hidden>
-          <button id="showMoreChanges" class="ghost" type="button">Показать ещё</button>
-        </div>
-      </div>
     </div>
 
     <div id="contextMenu" class="context-menu" hidden>
@@ -757,9 +815,6 @@
       const statusList = document.getElementById("statusSummary");
       const groupGrid = document.getElementById("groupGrid");
       const upcomingTable = document.getElementById("upcomingTable");
-      const recentList = document.getElementById("recentChanges");
-      const recentPager = document.getElementById("recentPager");
-      const showMoreChanges = document.getElementById("showMoreChanges");
       const groupFilter = document.getElementById("groupFilter");
       const brandFilter = document.getElementById("brandFilter");
       const statusFilter = document.getElementById("statusFilter");
@@ -773,10 +828,6 @@
       const riskList = document.getElementById("riskList");
       const dashboardError = document.getElementById("dashboardError");
       const filterStorageKey = "hpt-dashboard-filters";
-      const CHANGES_PAGE_SIZE = 8;
-      const CHANGES_MAX = 24;
-      let recentChangesData = [];
-      let recentVisible = 0;
 
       async function loadGroupsForFilter() {
         const res = await fetch("/api/groups?include_archived=true");
@@ -967,58 +1018,6 @@
           });
       }
 
-      function setRecentChanges(items) {
-        recentChangesData = (items || []).slice(0, CHANGES_MAX);
-        recentVisible = Math.min(CHANGES_PAGE_SIZE, recentChangesData.length);
-        renderRecentChanges();
-      }
-
-      function renderRecentChanges() {
-        recentList.innerHTML = "";
-        if (!recentChangesData.length) {
-          recentList.innerHTML = '<p class="empty-state">Нет изменений</p>';
-          if (recentPager) {
-            recentPager.hidden = true;
-          }
-          return;
-        }
-
-        recentChangesData.slice(0, recentVisible).forEach((item) => {
-          const card = document.createElement("article");
-          card.className = "change-card";
-          card.dataset.projectId = item.project_id;
-          card.dataset.groupId = item.group_id || "";
-
-          const headerEl = document.createElement("header");
-          headerEl.innerHTML = `<div><strong><a href="/project.html?id=${item.project_id}">${item.project_name}</a></strong> <span class="muted">(${item.group_name})</span></div><span class="muted">${new Date(item.occurred_at).toLocaleString()}</span>`;
-          const summary = document.createElement("div");
-          summary.textContent = item.summary;
-          card.appendChild(headerEl);
-          card.appendChild(summary);
-          if (item.details) {
-            const details = document.createElement("div");
-            details.className = "muted";
-            details.textContent = item.details;
-            card.appendChild(details);
-          }
-
-          card.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-            openContextMenu(event, "project", {
-              id: item.project_id,
-              group_id: item.group_id || null,
-              name: item.project_name,
-            });
-          });
-
-          recentList.appendChild(card);
-        });
-
-        if (recentPager) {
-          recentPager.hidden = recentVisible >= recentChangesData.length;
-        }
-      }
-
       function renderRisks(items) {
         riskList.innerHTML = "";
         if (!items || !items.length) {
@@ -1037,16 +1036,6 @@
             });
           });
           riskList.appendChild(li);
-        });
-      }
-
-      if (showMoreChanges) {
-        showMoreChanges.addEventListener("click", () => {
-          recentVisible = Math.min(
-            recentVisible + CHANGES_PAGE_SIZE,
-            recentChangesData.length,
-          );
-          renderRecentChanges();
         });
       }
 
@@ -1133,7 +1122,6 @@
           renderGroups(payload.groups || []);
           renderRisks(payload.risk_projects || []);
           renderUpcoming(payload.upcoming || []);
-          setRecentChanges(payload.recent_changes || []);
         } catch (err) {
           console.error("Не удалось загрузить дашборд", err);
           dashboardError.textContent = `Не удалось загрузить дашборд: ${err.message || err}`;
@@ -1144,7 +1132,6 @@
           renderGroups([]);
           renderRisks([]);
           renderUpcoming([]);
-          setRecentChanges([]);
         }
       }
 
